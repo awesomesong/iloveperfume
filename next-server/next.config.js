@@ -9,8 +9,8 @@ const nextConfig = {
         return [
             {
                 source: '/:path*',
-                has: [{ type: 'host', value: 'devsonghee.com' }],
-                destination: 'https://www.devsonghee.com/:path*',
+                has: [{ type: 'host', value: 'iloveperfume.co.kr' }],
+                destination: 'https://www.iloveperfume.co.kr/:path*',
                 permanent: true,
             },
         ];
