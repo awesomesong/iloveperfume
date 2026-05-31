@@ -1,13 +1,12 @@
-import ScentMemoriesHero from "@/src/app/components/main/ScentMemoriesHero";
-import ProductFragrance from "@/src/app/components/main/ProductFragrance";
-import GuideBanner from "@/src/app/components/main/GuideBanner";
+import FeatureShowcase from '@/src/app/components/main/FeatureShowcase';
+import ProductFragrance from '@/src/app/components/main/ProductFragrance';
+import GuideBanner from '@/src/app/components/main/GuideBanner';
 
-export default async function Home() {
-
+export default function Home() {
   return (
-    <div className='flex flex-col relative'>
+    <div className="flex flex-col relative">
       <GuideBanner />
-      <ScentMemoriesHero />
+      <FeatureShowcase />
       <ProductFragrance />
     </div>
   );
