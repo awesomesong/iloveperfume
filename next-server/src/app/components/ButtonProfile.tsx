@@ -2,7 +2,7 @@
 import { Tooltip } from "@heroui/react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import ScentUserAvatar from "./ScentUserAvatar";
+import ILPUserAvatar from "./ILPUserAvatar";
 import ShapesSkeleton from "./skeleton/ShapesSkeleton";
 import clsx from "clsx";
 import FallbackNextImage from "./FallbackNextImage";
@@ -18,7 +18,7 @@ const ButtonProfile = () => {
       content="프로필"
       size="lg"
       classNames={{
-        content: "bg-[var(--scent-gradient-mid)] text-[var(--bg-page)]",
+        content: "bg-[var(--ilp-gradient-mid)] text-[var(--bg-page)]",
       }}
     >
       <Link
@@ -46,7 +46,7 @@ const ButtonProfile = () => {
             className="object-cover drop-shadow-sm rounded-full"
           />
         ) : (
-          <ScentUserAvatar className="drop-shadow-lg" />
+          <ILPUserAvatar className="drop-shadow-lg" />
         )}
       </Link>
     </Tooltip>

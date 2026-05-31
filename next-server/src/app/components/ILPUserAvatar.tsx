@@ -3,23 +3,23 @@ import { useId } from "react";
 import { PiUserCircleDuotone } from "react-icons/pi";
 import clsx from "clsx";
 
-type ScentUserAvatarProps = {
+type ILPUserAvatarProps = {
     className?: string;
 };
 
 /**
- * ScentUserAvatar
- * A reusable user avatar component with the brand's signature scent-gradient.
+ * ILPUserAvatar
+ * A reusable user avatar component with the brand's signature ilp-gradient.
  */
-const ScentUserAvatar = ({ className }: ScentUserAvatarProps) => {
+const ILPUserAvatar = ({ className }: ILPUserAvatarProps) => {
     const gradientId = useId();
     return (
-        <span className="scent-avatar-root block w-full h-full">
+        <span className="ilp-avatar-root block w-full h-full">
             <svg width="0" height="0" className="absolute">
                 <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="var(--scent-gradient-start)" />
-                    <stop offset="55%" stopColor="var(--scent-gradient-mid)" />
-                    <stop offset="100%" stopColor="var(--scent-gradient-end)" />
+                    <stop offset="0%" stopColor="var(--ilp-gradient-start)" />
+                    <stop offset="55%" stopColor="var(--ilp-gradient-mid)" />
+                    <stop offset="100%" stopColor="var(--ilp-gradient-end)" />
                 </linearGradient>
             </svg>
             <PiUserCircleDuotone
@@ -31,4 +31,4 @@ const ScentUserAvatar = ({ className }: ScentUserAvatarProps) => {
     );
 };
 
-export default ScentUserAvatar;
+export default ILPUserAvatar;

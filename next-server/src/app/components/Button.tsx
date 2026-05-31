@@ -53,7 +53,7 @@ export const FormSubmitActions: React.FC<FormSubmitActionsProps> = ({
   wrapperClassName,
 }) => (
   <div className={clsx("flex flex-row gap-2 sm:gap-4", wrapperClassName)}>
-    <Button type="submit" variant="scent" disabled={submitDisabled} className={submitClassName}>
+    <Button type="submit" variant="ilp" disabled={submitDisabled} className={submitClassName}>
       {submitLabel}
     </Button>
     <Button type="button" variant="ghostLavender" onClick={onCancel}>
@@ -72,7 +72,7 @@ interface ButtonProps {
   onClick?: () => void;
   onPress?: () => void;
   color?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
-  variant?: 'solid' | 'bordered' | 'light' | 'flat' | 'faded' | 'shadow' | 'ghost' | 'ghostLavender' | 'scent';
+  variant?: 'solid' | 'bordered' | 'light' | 'flat' | 'faded' | 'shadow' | 'ghost' | 'ghostLavender' | 'ilp';
   size?: 'sm' | 'md' | 'lg';
   radius?: 'none' | 'sm' | 'md' | 'lg' | 'full';
   className?: string;
@@ -95,12 +95,12 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const handleClick = onPress ?? onClick;
   const isGhostLavender = variant === "ghostLavender";
-  const isScent = variant === "scent";
+  const isILP = variant === "ilp";
 
-  if (isGhostLavender || isScent) {
+  if (isGhostLavender || isILP) {
     const isSmall = size === "sm";
     const isMedium = size === "md";
-    const appliedClass = isScent
+    const appliedClass = isILP
       ? (isSmall ? submitSmallButtonClassName : (isMedium ? submitMediumButtonClassName : submitButtonClassName))
       : (isSmall ? ghostSmallButtonClassName : (isMedium ? ghostMediumButtonClassName : ghostButtonClassName));
 

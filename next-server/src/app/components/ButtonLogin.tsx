@@ -13,7 +13,7 @@ const ButtonLogin = () => {
     return (
         <Link
             href={signInHref}
-            className="font-josefin text-gradient-scent font-semibold tracking-[0.03em] capitalize drop-shadow-sm focus:outline-none"
+            className="font-josefin text-gradient-ilp font-semibold tracking-[0.03em] capitalize drop-shadow-sm focus:outline-none"
         >
             login
         </Link>

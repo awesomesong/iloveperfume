@@ -14,7 +14,7 @@ const ButtonLogout = () => {
     return (
         <button
             type="button"
-            className="font-josefin text-gradient-scent font-semibold tracking-[0.03em] capitalize drop-shadow-sm cursor-pointer"
+            className="font-josefin text-gradient-ilp font-semibold tracking-[0.03em] capitalize drop-shadow-sm cursor-pointer"
             onClick={onClick}
         >
             Logout

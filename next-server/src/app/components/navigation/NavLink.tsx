@@ -36,7 +36,7 @@ const NavLink: React.FC<NavLinkProps> = ({
         onFocus={onFocus}
         onBlur={onBlur}
         className={clsx(
-          'text-gradient-scent'
+          'text-gradient-ilp'
         )}
       >
         {label}

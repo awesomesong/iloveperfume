@@ -5,12 +5,12 @@ import { useTheme } from "next-themes";
 import ShapesSkeleton from "./skeleton/ShapesSkeleton";
 
 const moonGradientStroke = {
-  stroke: "url(#scent-theme-switch-gradient)",
+  stroke: "url(#ilp-theme-switch-gradient)",
   fill: "none",
 } as const;
 
 /** FiSun과 동일 geometry; stroke+gradient URL은 WebKit에서 깨져 마스크+그라데이션 rect로 처리 */
-function FiSunWithScentGradient(
+function FiSunWithILPGradient(
   props: React.SVGProps<SVGSVGElement> & { maskId: string }
 ) {
   const { maskId, ...svgProps } = props;
@@ -55,7 +55,7 @@ function FiSunWithScentGradient(
       <rect
         width="24"
         height="24"
-        fill="url(#scent-theme-switch-gradient)"
+        fill="url(#ilp-theme-switch-gradient)"
         mask={`url(#${maskId})`}
       />
     </svg>
@@ -87,19 +87,19 @@ export default function ThemeSwitch() {
     <>
       <svg width="0" height="0" className="absolute" aria-hidden>
         <linearGradient
-          id="scent-theme-switch-gradient"
+          id="ilp-theme-switch-gradient"
           x1="0%"
           y1="0%"
           x2="100%"
           y2="100%"
         >
-          <stop offset="0%" stopColor="var(--scent-gradient-start)" />
-          <stop offset="55%" stopColor="var(--scent-gradient-mid)" />
-          <stop offset="100%" stopColor="var(--scent-gradient-end)" />
+          <stop offset="0%" stopColor="var(--ilp-gradient-start)" />
+          <stop offset="55%" stopColor="var(--ilp-gradient-mid)" />
+          <stop offset="100%" stopColor="var(--ilp-gradient-end)" />
         </linearGradient>
       </svg>
       {resolvedTheme === "dark" ? (
-        <FiSunWithScentGradient
+        <FiSunWithILPGradient
           maskId={sunMaskId}
           onClick={() => setTheme("light")}
           tabIndex={0}

@@ -45,8 +45,8 @@ const SelectBox: React.FC<SelctProps> = ({
             </label>
             {isOpen && (
                 <Select<OptionType, true>
-                    className="scent-select-container"
-                    classNamePrefix="scent-select"
+                    className="ilp-select-container"
+                    classNamePrefix="ilp-select"
                     classNames={{
                         control: (state) => `
                                 !border-none !shadow-none textfield-input-boundary relative
@@ -55,15 +55,15 @@ const SelectBox: React.FC<SelctProps> = ({
                                 after:scale-x-0 after:origin-center after:transition-transform after:duration-300
                                 ${state.isFocused ? "after:scale-x-100" : ""}
                             `,
-                        menu: () => "scent-select__menu",
+                        menu: () => "ilp-select__menu",
                         option: (state) => `
-                                scent-select__option 
-                                ${state.isFocused ? "scent-select__option--is-focused" : ""} 
-                                ${state.isSelected ? "scent-select__option--is-selected" : ""}
+                                ilp-select__option 
+                                ${state.isFocused ? "ilp-select__option--is-focused" : ""} 
+                                ${state.isSelected ? "ilp-select__option--is-selected" : ""}
                             `,
-                        dropdownIndicator: () => "scent-select__dropdown-indicator scent-select__indicator",
-                        clearIndicator: () => "scent-select__clear-indicator scent-select__indicator",
-                        indicatorSeparator: () => "scent-select__indicator-separator",
+                        dropdownIndicator: () => "ilp-select__dropdown-indicator ilp-select__indicator",
+                        clearIndicator: () => "ilp-select__clear-indicator ilp-select__indicator",
+                        indicatorSeparator: () => "ilp-select__indicator-separator",
                     }}
                     ref={selectRef}
                     isDisabled={disabled}

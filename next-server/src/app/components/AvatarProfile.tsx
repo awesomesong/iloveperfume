@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import Button, { ghostMediumButtonClassName } from "./Button";
 import FallbackNextImage from "./FallbackNextImage";
 import { updateProfile } from "@/src/app/lib/updateProfile";
-import ScentUserAvatar from "./ScentUserAvatar";
+import ILPUserAvatar from "./ILPUserAvatar";
 import clsx from "clsx";
 
 interface AvatarProfileProps {
@@ -112,7 +112,7 @@ const AvatarProfile: React.FC<AvatarProfileProps> = ({ user }) => {
       "
     >
       <h2 className="text-xl">
-        <span className="text-gradient-scent">프로필 관리</span>
+        <span className="text-gradient-ilp">프로필 관리</span>
       </h2>
       <div
         className="
@@ -143,7 +143,7 @@ const AvatarProfile: React.FC<AvatarProfileProps> = ({ user }) => {
             />
           </span>
         ) : (
-          <ScentUserAvatar className="drop-shadow-lg" />
+          <ILPUserAvatar className="drop-shadow-lg" />
         )}
       </div>
       <div className="flex flex-row flex-wrap justify-center gap-2 sm:gap-3">
@@ -168,7 +168,7 @@ const AvatarProfile: React.FC<AvatarProfileProps> = ({ user }) => {
           <IoCamera size={20} aria-hidden />
           프로필 사진 편집
         </CldUploadButton>
-        <Button type="submit" variant="scent" size="md" className="gap-2">
+        <Button type="submit" variant="ilp" size="md" className="gap-2">
           <RiSave3Fill size={20} aria-hidden />
           사진 저장
         </Button>

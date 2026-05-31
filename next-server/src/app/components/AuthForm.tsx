@@ -34,7 +34,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
                     text-2xl
                     tracking-tight
                 '>
-                    <span className="text-gradient-scent">{title}</span>
+                    <span className="text-gradient-ilp">{title}</span>
                 </h2>
             </div>
             <div

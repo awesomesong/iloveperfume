@@ -3,7 +3,7 @@ import useActiveList from "@/src/app/hooks/useActiveList";
 import { IUserList } from "@/src/app/types/common";
 import clsx from "clsx";
 import FallbackNextImage from "./FallbackNextImage";
-import ScentUserAvatar from "./ScentUserAvatar";
+import ILPUserAvatar from "./ILPUserAvatar";
 import { memo, useMemo } from "react";
 
 type AvatarProps = {
@@ -46,7 +46,7 @@ const Avatar= ({user, isOwn, isAIChat} :AvatarProps) => {
             className="object-cover"
           />
         ) : (
-          <ScentUserAvatar className="drop-shadow-lg w-full h-full" />
+          <ILPUserAvatar className="drop-shadow-lg w-full h-full" />
         )}
       </div>
       {isActive ? (
