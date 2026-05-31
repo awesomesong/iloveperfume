@@ -37,7 +37,7 @@ export default function NotFound() {
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
             <Button
               type="button"
-              variant="scent"
+              variant="ilp"
               onClick={() => router.push('/')}
               className="px-8"
             >

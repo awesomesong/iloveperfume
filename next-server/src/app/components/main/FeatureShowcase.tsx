@@ -270,7 +270,7 @@ function StepList({ steps }: { steps: { label: string; desc: string }[] }) {
           transition={{ duration: 0.5, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
         >
           <span
-            className="text-gradient-scent font-bold shrink-0 leading-none mt-0.5 tabular-nums"
+            className="text-gradient-ilp font-bold shrink-0 leading-none mt-0.5 tabular-nums"
             style={{ fontSize: 'clamp(1.35rem, 2.2vw, 1.85rem)' }}
             aria-hidden
           >
@@ -316,7 +316,7 @@ function ShowcaseSection({ feature }: { feature: (typeof FEATURES)[number] }) {
         </span>
 
         <h2
-          className="text-gradient-scent font-bold leading-[1.15] tracking-tight"
+          className="text-gradient-ilp font-bold leading-[1.15] tracking-tight"
           style={{ fontSize: 'clamp(1rem, 2.1vw, 1.6rem)' }}
         >
           {headline[0]} {headline[1]}
@@ -357,7 +357,7 @@ export default function FeatureShowcase() {
       >
         <div className="line-gradient-deco w-20 mx-auto mb-8" aria-hidden />
         <p className="text-[0.68rem] tracking-[0.35em] mb-3 font-medium text-secondary uppercase">How it works</p>
-        <h2 className="text-gradient-scent page-title-gradient">이렇게 사용하면 돼요</h2>
+        <h2 className="text-gradient-ilp page-title-gradient">이렇게 사용하면 돼요</h2>
       </motion.div>
 
       <div>

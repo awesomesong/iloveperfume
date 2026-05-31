@@ -15,7 +15,7 @@ import { upsertNoticeCardById, noticeDetailKey, NOTICE_LIST_KEY } from '@/src/ap
 import type { NoticeDetailQueryData } from '@/src/app/types/notice';
 import { NoticeDetailSkeleton } from '@/src/app/components/skeleton/NoticeDetailSkeleton';
 import FallbackNextImage from '@/src/app/components/FallbackNextImage';
-import ScentUserAvatar from '@/src/app/components/ScentUserAvatar';
+import ILPUserAvatar from '@/src/app/components/ILPUserAvatar';
 import DOMPurify from 'dompurify';
 import StatusMessage from '@/src/app/components/StatusMessage';
 
@@ -170,7 +170,7 @@ const NoticeDetailPage = ({ params } : {
                             {hasEditPermission && <NoticeDelete noticeId={id} noticeTitle={data?.notice?.title} /> }
                         </div>
                         <h1 className="notice-detail__title">
-                            <span className="text-gradient-scent">{data?.notice?.title}</span>
+                            <span className="text-gradient-ilp">{data?.notice?.title}</span>
                         </h1>
                         <div className="notice-card__meta">
                           <span className="notice-meta__avatar">
@@ -184,7 +184,7 @@ const NoticeDetailPage = ({ params } : {
                                 className="object-cover"
                               />
                             ) : (
-                              <ScentUserAvatar className="drop-shadow-lg" />
+                              <ILPUserAvatar className="drop-shadow-lg" />
                             )}
                           </span>
                           <span>{data?.notice?.author?.name ?? "알 수 없음"}</span>

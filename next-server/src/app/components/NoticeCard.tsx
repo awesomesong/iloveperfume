@@ -6,7 +6,7 @@ import { formatNumber } from "@/src/app/utils/formatNumber";
 import FallbackNextImage from "./FallbackNextImage";
 import ImageSlider from "./ImageSlider";
 import { memo, useState } from "react";
-import ScentUserAvatar from "./ScentUserAvatar";
+import ILPUserAvatar from "./ILPUserAvatar";
 
 const NoticeCard = ({ notice }: { notice: Notice }) => {
   const [sliderIndex, setSliderIndex] = useState(0);
@@ -55,7 +55,7 @@ const NoticeCard = ({ notice }: { notice: Notice }) => {
       )}
       <div className="notice-card__body">
         <h2 className="notice-card__title">
-          <span className="text-gradient-scent">{notice.title}</span>
+          <span className="text-gradient-ilp">{notice.title}</span>
         </h2>
         <div className="notice-card__meta">
           <span className="notice-meta__avatar">
@@ -69,7 +69,7 @@ const NoticeCard = ({ notice }: { notice: Notice }) => {
                 className="object-cover"
               />
             ) : (
-              <ScentUserAvatar className="drop-shadow-lg" />
+              <ILPUserAvatar className="drop-shadow-lg" />
             )}
           </span>
           <span>{notice.author?.name ?? "알 수 없음"}</span>

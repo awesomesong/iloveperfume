@@ -7,7 +7,7 @@ import ImageModal from '@/src/app/components/ImageModal';
 import clsx from 'clsx';
 
 const ON_THIS_PAGE = [
-  { href: '#overview', label: 'Scent Memories란?' },
+  { href: '#overview', label: 'I Love Perfume란?' },
   { href: '#features', label: '주요 기능' },
   { href: '#preview', label: '반응형 레이아웃' },
   { href: '#howto', label: '로그인 · 데모 계정 안내' },
@@ -109,9 +109,9 @@ const SectionLabel = memo(function SectionLabel({ index, title }: { index: strin
         {index}
       </p>
       <h2 className="text-xl font-bold">
-        <span className="text-gradient-scent">{title}</span>
+        <span className="text-gradient-ilp">{title}</span>
       </h2>
-      <div className="mt-3 h-px w-12 [background:var(--bg-gradient-scent)]" />
+      <div className="mt-3 h-px w-12 [background:var(--bg-gradient-ilp)]" />
     </div>
   );
 });
@@ -321,7 +321,7 @@ function StepGuideSection({
                   <span
                     className={clsx(
                       'w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold',
-                      'text-[var(--color-ivory)] [background:var(--bg-gradient-scent)]',
+                      'text-[var(--color-ivory)] [background:var(--bg-gradient-ilp)]',
                       'dark:text-[var(--color-lavender-light)] dark:[background:var(--color-lavender-pale)] dark:border dark:border-[var(--color-lavender-border)]',
                     )}
                   >
@@ -715,9 +715,9 @@ export default function GuideContent({
       {/* ── 히어로 ── */}
       <section className="mb-12">
         <h1 className="font-josefin text-3xl font-light tracking-tight leading-[1.15] mb-2">
-          <span className="text-gradient-scent italic">Scent</span>
+          <span className="text-gradient-ilp italic">I Love</span>
           <br />
-          <span className="text-gradient-memories">Memories</span>
+          <span className="text-gradient-memories">Perfume</span>
         </h1>
 
         <p
@@ -790,12 +790,12 @@ export default function GuideContent({
           >
 
             <section id="overview" className="scroll-mt-[var(--guide-scroll-offset)]">
-              <SectionLabel index="01" title="Scent Memories란?" />
+              <SectionLabel index="01" title="I Love Perfume란?" />
               <div
                 className="space-y-4 text-sm leading-[1.9] text-[var(--color-text-primary)]"
               >
                 <p>
-                  <strong>Scent Memories</strong>는 향수를 사랑하는 사람들이 모여 시향 기록을 남기고
+                  <strong>I Love Perfume</strong>는 향수를 사랑하는 사람들이 모여 시향 기록을 남기고
                   자유롭게 소통하는 커뮤니티입니다. 향수 정보를 일일이 찾아 기록하는 번거로움을 줄이기 위해
                   AI 이미지 분석 기술을 도입했습니다.<br/>
                   향수 사진을 업로드하면 제품 정보가 등록 폼에 자동 입력되며, 사용자는 AI가 추출한 정보를 확인하고 필요한 부분만 수정하여 빠르게 기록을 마칠 수 있습니다.<br/>
@@ -874,7 +874,7 @@ export default function GuideContent({
                       <span
                         className={clsx(
                           'w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold z-10 shrink-0',
-                          'text-[var(--color-ivory)] [background:var(--bg-gradient-scent)]',
+                          'text-[var(--color-ivory)] [background:var(--bg-gradient-ilp)]',
                           'dark:text-[var(--color-lavender-light)] dark:[background:var(--color-lavender-pale)] dark:border dark:border-[var(--color-lavender-border)]',
                         )}
                       >
@@ -986,7 +986,7 @@ export default function GuideContent({
               id="chat-move-guide"
               index="10"
               title="채팅 화면으로 이동하기"
-              intro="Scent Memories에서 다른 사용자들과 채팅할 수 있습니다. 채팅 멤버 목록이나 대화방 목록으로 이동하는 두 가지 방법을 안내합니다."
+              intro="I Love Perfume에서 다른 사용자들과 채팅할 수 있습니다. 채팅 멤버 목록이나 대화방 목록으로 이동하는 두 가지 방법을 안내합니다."
               steps={chatMoveGuideSteps}
               openZoom={openZoom}
             />
@@ -1031,7 +1031,7 @@ export default function GuideContent({
               <SectionLabel index="15" title="UI 테마 (다크 / 라이트 모드)" />
               <div className="space-y-3 text-sm leading-[1.8] text-[var(--color-text-secondary)] mb-8 break-keep">
                 <p>
-                  Scent Memories는 <strong className="text-[var(--color-text-primary)]">시스템 설정을 자동으로 감지</strong>하여 첫 접속 시 테마를 적용합니다.
+                  I Love Perfume는 <strong className="text-[var(--color-text-primary)]">시스템 설정을 자동으로 감지</strong>하여 첫 접속 시 테마를 적용합니다.
                   기기가 다크 모드로 설정되어 있으면 처음부터 다크 모드로, 라이트 모드로 설정되어 있으면 라이트 모드로 표시됩니다.
                 </p>
                 <p>

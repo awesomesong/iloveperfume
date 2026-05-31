@@ -530,7 +530,7 @@ const MilkyWayCanvas = memo(({ isLightMode }: MilkyWayCanvasProps) => {
 MilkyWayCanvas.displayName = 'MilkyWayCanvas';
 
 // ─── 히어로 섹션 ────────────────────────────────────────────────
-const ScentMemoriesHero = memo(function ScentMemoriesHero() {
+const ILPHero = memo(function ILPHero() {
     const { resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
@@ -539,45 +539,45 @@ const ScentMemoriesHero = memo(function ScentMemoriesHero() {
     const isLightMode = resolvedTheme !== 'dark';
 
     return (
-        <section className="scent-hero">
-            <div className="scent-hero-bg" />
+        <section className="ilp-hero">
+            <div className="ilp-hero-bg" />
             {mounted && <MilkyWayCanvas isLightMode={isLightMode} />}
 
-            <div className="scent-hero-content">
+            <div className="ilp-hero-content">
                 <motion.div
-                    className="scent-bottle-wrap"
+                    className="ilp-bottle-wrap"
                     initial={{ opacity: 0, scale: 0.88 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
                 >
-                    <div className="scent-bottle-glow" />
+                    <div className="ilp-bottle-glow" />
                     <motion.div
                         animate={{ y: [0, -16, 0] }}
                         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
                     >
                         <Image
                             src="/image/fragrance/chanel/CHANCE_EAU_SPLENDIDE.png"
-                            alt="Scent Memories Fragrance"
+                            alt="I Love Perfume Fragrance"
                             width={320}
                             height={320}
                             priority
                             fetchPriority="high"
-                            className="scent-bottle-img"
+                            className="ilp-bottle-img"
                         />
                     </motion.div>
                 </motion.div>
 
-                <div className="scent-brand-bottom">
+                <div className="ilp-brand-bottom">
                     <motion.div
-                        className="scent-deco-line"
+                        className="ilp-deco-line"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 1.2, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
                     />
-                    <h1 className="scent-brand-title">Scent Memories</h1>
-                    <p className="scent-brand-desc">향수를 수집하고 기록하는 공간</p>
+                    <h1 className="ilp-brand-title">I Love Perfume</h1>
+                    <p className="ilp-brand-desc">향수를 수집하고 기록하는 공간</p>
                     <motion.div
-                        className="scent-deco-line"
+                        className="ilp-deco-line"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 1.2, delay: 0.7, ease: [0.22, 1, 0.36, 1] }}
@@ -588,4 +588,4 @@ const ScentMemoriesHero = memo(function ScentMemoriesHero() {
     );
 });
 
-export default ScentMemoriesHero;
+export default ILPHero;
