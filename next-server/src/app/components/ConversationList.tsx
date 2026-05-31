@@ -80,7 +80,7 @@ const ConversationList = memo(function ConversationList() {
         )}>
         <div className="chat-sidebar__header">
           <div className="
-            text-gradient-scent
+            text-gradient-ilp
             chat-sidebar__title
           ">
             대화방

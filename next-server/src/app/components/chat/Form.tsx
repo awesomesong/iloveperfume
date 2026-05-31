@@ -324,7 +324,7 @@ const Form = () => {
     handleChange,
     handleCompositionStart,
     handleCompositionEndSync,
-  } = useChatInput("scent-chat-msg");
+  } = useChatInput("ilp-chat-msg");
 
   const conversationIdRef = useRef(conversationId);
   conversationIdRef.current = conversationId;
@@ -410,14 +410,14 @@ const Form = () => {
         onChange={handleFileChange}
       />
       <button type="button" onClick={handleUploadClick} className="shrink-0 pt-2">
-        <HiPhoto size={30} fill="url(#scent-nav-gradient)" />
+        <HiPhoto size={30} fill="url(#ilp-nav-gradient)" />
       </button>
       <form
         onSubmit={handleFormSubmit}
         className="flex items-center gap-2 w-full"
       >
         <TextareaAutosize
-          id="scent-chat-msg"
+          id="ilp-chat-msg"
           minRows={2}
           maxRows={4}
           ref={setTextareaRef}

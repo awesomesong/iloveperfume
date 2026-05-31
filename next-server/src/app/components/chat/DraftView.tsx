@@ -90,7 +90,7 @@ const DraftView: React.FC<DraftViewProps> = ({
                         href="/conversations"
                         className="lg:hidden block transition cursor-pointer hover:opacity-70"
                     >
-                        <HiChevronLeft size={32} fill="url(#scent-nav-gradient)" />
+                        <HiChevronLeft size={32} fill="url(#ilp-nav-gradient)" />
                     </Link>
                     <div className="shrink">
                         {isAI ? (
@@ -99,7 +99,7 @@ const DraftView: React.FC<DraftViewProps> = ({
                                 isAIChat
                             />
                         ) : isGroup ? (
-                            <div className="w-10 h-10 rounded-full bg-gradient-scent-avatar flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-gradient-ilp-avatar flex items-center justify-center">
                                 <HiUserGroup size={20} className="text-white" />
                             </div>
                         ) : (

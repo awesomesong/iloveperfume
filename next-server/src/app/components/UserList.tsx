@@ -108,7 +108,7 @@ const UserList = () => {
           <div className="chat-sidebar__header">
             <span
               className="
-                text-gradient-scent
+                text-gradient-ilp
                 chat-sidebar__title
               "
             >

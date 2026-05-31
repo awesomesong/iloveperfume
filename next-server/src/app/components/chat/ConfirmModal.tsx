@@ -152,7 +152,7 @@ const ConfirmModal: React.FC<ModalProps> = ({ isOpen, onCloseModal, name }) => {
           <Button
             disabled={isLoading}
             onClick={onDelete}
-            variant="scent"
+            variant="ilp"
             className="px-6"
           >
             {isLoading ? "삭제 중" : "확인"}

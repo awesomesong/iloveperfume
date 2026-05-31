@@ -105,7 +105,7 @@ const AIChatForm = ({
     handleChange,
     handleCompositionStart,
     handleCompositionEndSync,
-  } = useChatInput("scent-ai-msg");
+  } = useChatInput("ilp-ai-msg");
 
   useLayoutEffect(() => {
     focusAndHold();
@@ -132,19 +132,19 @@ const AIChatForm = ({
     if (hasPendingTriggeredRef.current) return;
     if (sessionStatus !== "authenticated" || !session?.user?.id) return;
 
-    const pendingStr = sessionStorage.getItem("scent:pendingAI");
+    const pendingStr = sessionStorage.getItem("ilp:pendingAI");
     if (!pendingStr) return;
 
     let pending: { conversationId: string; userMessage: string; userMessageId: string };
     try {
       pending = JSON.parse(pendingStr);
     } catch {
-      sessionStorage.removeItem("scent:pendingAI"); return;
+      sessionStorage.removeItem("ilp:pendingAI"); return;
     }
     if (pending.conversationId !== conversationId) return;
 
     hasPendingTriggeredRef.current = true;
-    sessionStorage.removeItem("scent:pendingAI");
+    sessionStorage.removeItem("ilp:pendingAI");
 
     const user = session.user;
     let started = false;
@@ -168,7 +168,7 @@ const AIChatForm = ({
       clearTimeout(tid);
       if (!started) {
         hasPendingTriggeredRef.current = false;
-        sessionStorage.setItem("scent:pendingAI", JSON.stringify(pending));
+        sessionStorage.setItem("ilp:pendingAI", JSON.stringify(pending));
       }
     };
   }, [sessionStatus, session, conversationId, requestAI]);
@@ -314,7 +314,7 @@ const AIChatForm = ({
         noValidate
       >
         <TextareaAutosize
-          id="scent-ai-msg"
+          id="ilp-ai-msg"
           minRows={2}
           maxRows={4}
           ref={setTextareaRef}

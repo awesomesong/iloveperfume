@@ -11,7 +11,7 @@ const ChatMenu = () => {
                 content="채팅"
                 size='lg'
                 classNames={{
-                    content: "bg-[var(--scent-gradient-mid)] text-[var(--bg-page)]",
+                    content: "bg-[var(--ilp-gradient-mid)] text-[var(--bg-page)]",
                 }}
             >
                 <Link
@@ -27,7 +27,7 @@ const ChatMenu = () => {
                 '
                 >
                     <Image
-                        src='/image/scent_memories_chat.png'
+                        src='/image/ilp_chat.png'
                         alt=''
                         width={60}
                         height={60}

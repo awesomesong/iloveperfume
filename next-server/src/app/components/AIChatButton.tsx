@@ -21,7 +21,7 @@ const AIChatButton = ({
   return (
     <Button
       onClick={handleClick}
-      variant="scent"
+      variant="ilp"
       className="px-6"
     >
       향수 AI 어시스턴트와 채팅

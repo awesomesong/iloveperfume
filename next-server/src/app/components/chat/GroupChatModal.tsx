@@ -215,7 +215,7 @@ const GroupChatModal: React.FC<GroupChatModalProps> = ({
             disabled={isLoading}
             form="form"
             type="submit"
-            variant="scent"
+            variant="ilp"
             className="px-8"
           >
             확인

@@ -47,7 +47,7 @@ const ChatSubmitButton = ({
       className="
         rounded-full
         p-2
-        bg-gradient-scent
+        bg-gradient-ilp
         cursor-pointer
         hover:opacity-80
         transition

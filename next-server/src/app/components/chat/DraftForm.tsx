@@ -57,7 +57,7 @@ const DraftForm: React.FC<DraftFormProps> = ({
         handleChange,
         handleCompositionStart,
         handleCompositionEndSync,
-    } = useChatInput('scent-draft-msg');
+    } = useChatInput('ilp-draft-msg');
 
     useLayoutEffect(() => {
         focusAndHold();
@@ -121,7 +121,7 @@ const DraftForm: React.FC<DraftFormProps> = ({
             if (typeof window !== 'undefined') {
                 const doDeferred = () => {
                     if (isAI && messageText) {
-                        sessionStorage.setItem('scent:pendingAI', JSON.stringify({
+                        sessionStorage.setItem('ilp:pendingAI', JSON.stringify({
                             conversationId: conv.id,
                             userMessage: messageText,
                             userMessageId: messageId,
@@ -133,7 +133,7 @@ const DraftForm: React.FC<DraftFormProps> = ({
                         }
                         socket.emit('send:message', { newMessage });
                     }
-                    sessionStorage.setItem('scent:focusMessage', '1');
+                    sessionStorage.setItem('ilp:focusMessage', '1');
                 };
                 setTimeout(doDeferred, 0);
             }
@@ -187,13 +187,13 @@ const DraftForm: React.FC<DraftFormProps> = ({
                         onChange={handleFileChange}
                     />
                     <button type="button" onClick={handleUploadClick} className="shrink-0 pt-2">
-                        <HiPhoto size={30} fill="url(#scent-nav-gradient)" />
+                        <HiPhoto size={30} fill="url(#ilp-nav-gradient)" />
                     </button>
                 </>
             )}
             <form onSubmit={submit} className="flex items-center gap-2 w-full">
                 <TextareaAutosize
-                    id="scent-draft-msg"
+                    id="ilp-draft-msg"
                     minRows={2}
                     maxRows={4}
                     ref={setTextareaRef}

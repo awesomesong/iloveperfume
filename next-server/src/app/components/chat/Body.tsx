@@ -565,7 +565,7 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
             bottom-28
             right-1/2
             p-2
-            bg-gradient-scent
+            bg-gradient-ilp
             rounded-full
             shadow-lg
             opacity-90
