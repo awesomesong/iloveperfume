@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+// https://nextjs.org/docs/app/api-reference/config/next-config-js
 const nextConfig = {
     onDemandEntries: {
         // Keep pages in memory longer during dev to reduce route-change recompiles.
