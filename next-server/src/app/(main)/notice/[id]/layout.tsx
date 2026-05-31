@@ -13,7 +13,7 @@ const getParams = cache(async (params: Promise<{ id: string }>) => {
 // 공지사항 데이터를 가져오는 함수 (캐시 적용)
 const getNoticData = cache(async (id: string) => {
   try {
-    const base = 'https://www.devsonghee.com';
+    const base = 'https://iloveperfume.co.kr';
     const res = await fetch(`${base}/api/notice/${id}`, { 
       next: { revalidate: 3600 } // 1시간 캐시
     });
@@ -31,7 +31,7 @@ const getNoticData = cache(async (id: string) => {
 
 // 동기적으로 메타데이터를 생성하는 함수
 const createMetadata = async (id: string) => {
-  const base = 'https://www.devsonghee.com';
+  const base = 'https://iloveperfume.co.kr';
   
   // 공지사항 데이터 가져오기
   const notice = await getNoticData(id);
@@ -62,7 +62,7 @@ const createMetadata = async (id: string) => {
     description,
     keywords: [
       '공지사항',
-      'Scent Memories 공지사항',
+      'I Love Perfume 공지사항',
       '사용안내',
       '서비스 소개',
       notice.title,

@@ -11,7 +11,7 @@ const getParams = cache(async (params: Promise<{ id: string }>) => {
   return await params;
 });
 
-const base = 'https://www.devsonghee.com';
+const base = 'https://iloveperfume.co.kr';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await getParams(params);

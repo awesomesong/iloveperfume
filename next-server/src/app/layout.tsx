@@ -33,15 +33,15 @@ const josefinSans = Josefin_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.devsonghee.com"),
+  metadataBase: new URL("https://iloveperfume.co.kr"),
   title: {
-    default: "Scent Memories | 강송희 프론트엔드 포트폴리오",
-    template: "%s | Scent Memories",
+    default: "I Love Perfume | 강송희 프론트엔드 포트폴리오",
+    template: "%s | I Love Perfume",
   },
   description:
-    "Scent Memories는 향수를 수집하고 기록하는 프론트엔드 포트폴리오 사이트입니다. Next.js 15, React 19, Socket.io, OpenAI Vision, Three.js 등을 활용하여 향수 갤러리, AI 이미지 분석, 실시간 채팅, 3D 인터랙션 기능을 구현하였습니다.",
+    "I Love Perfume는 향수를 수집하고 기록하는 프론트엔드 포트폴리오 사이트입니다. Next.js 15, React 19, Socket.io, OpenAI Vision, Three.js 등을 활용하여 향수 갤러리, AI 이미지 분석, 실시간 채팅, 3D 인터랙션 기능을 구현하였습니다.",
   keywords: [
-    "Scent Memories",
+    "I Love Perfume",
     "강송희",
     "프론트엔드 포트폴리오",
     "Next.js",
@@ -54,16 +54,16 @@ export const metadata: Metadata = {
     "프론트엔드 개발자",
   ],
   openGraph: {
-    title: "Scent Memories | 강송희 프론트엔드 포트폴리오",
+    title: "I Love Perfume | 강송희 프론트엔드 포트폴리오",
     description:
-      "Scent Memories는 향수를 수집하고 기록하는 공간입니다. Next.js와 다양한 기술을 사용하여 갤러리, 채팅, 3D 기능 등을 구현한 포트폴리오입니다.",
-    siteName: "Scent Memories",
+      "I Love Perfume는 향수를 수집하고 기록하는 공간입니다. Next.js와 다양한 기술을 사용하여 갤러리, 채팅, 3D 기능 등을 구현한 포트폴리오입니다.",
+    siteName: "I Love Perfume",
     images: [
       {
         url: "/image/metadata/main_web.png", // og:image 경로
         width: 1200,
         height: 627,
-        alt: "Scent Memories 포트폴리오 썸네일",
+        alt: "I Love Perfume 포트폴리오 썸네일",
       },
     ],
     type: "website",
