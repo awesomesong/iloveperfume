@@ -30,18 +30,18 @@ const AnimatedLogo = () => {
   return (
     <Link href="/" className="inline-flex flex-col items-start leading-none select-none gap-0">
 
-      {/* "Scent" — italic, normal weight */}
+      {/* "I Love" — italic, normal weight */}
       <motion.div
         custom={0}
         variants={wordVariants}
         initial="hidden"
         animate="visible"
-        className="text-gradient-scent font-josefin text-sm italic font-light tracking-[0.02em]"
+        className="text-gradient-ilp font-josefin text-sm italic font-light tracking-[0.02em]"
       >
-        Scent
+        I Love
       </motion.div>
 
-      {/* "Memories" — upright, slight weight */}
+      {/* "Perfume" — upright, slight weight */}
       <motion.div
         custom={0.28}
         variants={wordVariants}
@@ -49,7 +49,7 @@ const AnimatedLogo = () => {
         animate="visible"
         className="text-gradient-memories font-josefin text-sm font-normal tracking-[0.03em]"
       >
-        Memories
+        Perfume
       </motion.div>
 
       {/* 장식 라인 */}

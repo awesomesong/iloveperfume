@@ -44,11 +44,11 @@ blockquote{
   --guide-scroll-offset: calc(var(--header-height) + 1.5rem);
   --header-bg: rgba(255, 252, 250, 0.88);
   --header-border: rgba(45, 32, 64, 0.08);
-  --scent-gradient-start: #a67d5c;
-  --scent-gradient-mid: #5c4a7a;
-  --scent-gradient-end: #b07d82;
+  --ilp-gradient-start: #a67d5c;
+  --ilp-gradient-mid: #5c4a7a;
+  --ilp-gradient-end: #b07d82;
   /* 공통 브랜드 그라데이션 */
-  --bg-gradient-scent: linear-gradient(115deg, var(--scent-gradient-start) 0%, var(--scent-gradient-mid) 55%, var(--scent-gradient-end) 100%);
+  --bg-gradient-ilp: linear-gradient(115deg, var(--ilp-gradient-start) 0%, var(--ilp-gradient-mid) 55%, var(--ilp-gradient-end) 100%);
   /* 라이트: 아이보리 + 라벤더 악센트 */
   --color-ivory: #fffcfa;
   --color-ivory-soft: #f8f6f3;
@@ -110,9 +110,9 @@ blockquote{
   --bg-page-reverse: #fffcfa;
   --header-bg: rgba(26, 22, 37, 0.92);
   --header-border: rgba(200, 180, 255, 0.12);
-  --scent-gradient-start: #fff5f8;
-  --scent-gradient-mid: #ddd0ff;
-  --scent-gradient-end: #ffe8b4;
+  --ilp-gradient-start: #fff5f8;
+  --ilp-gradient-mid: #ddd0ff;
+  --ilp-gradient-end: #ffe8b4;
   /* 다크: 딥 톤 + 라벤더 */
   --color-ivory: #fffcfa;
   --color-ivory-soft: #2d2640;
@@ -155,20 +155,20 @@ blockquote{
   --points-ball-5: #ddd0f8;
 }
 
-:root .force-light-scent-gradient,
-.dark .force-light-scent-gradient,
-[data-theme] .force-light-scent-gradient {
-  --scent-gradient-start: #a67d5c;
-  --scent-gradient-mid: #5c4a7a;
-  --scent-gradient-end: #b07d82;
+:root .force-light-ilp-gradient,
+.dark .force-light-ilp-gradient,
+[data-theme] .force-light-ilp-gradient {
+  --ilp-gradient-start: #a67d5c;
+  --ilp-gradient-mid: #5c4a7a;
+  --ilp-gradient-end: #b07d82;
 }
 
-/* ScentUserAvatar: 다크모드에서만 밝은 그라데이션 (컴포넌트 내부 한 곳에서 처리) */
-.dark .scent-avatar-root,
-[data-theme="dark"] .scent-avatar-root {
-  --scent-gradient-start: #fff5f8;
-  --scent-gradient-mid: #ddd0ff;
-  --scent-gradient-end: #ffe8b4;
+/* ILPUserAvatar: 다크모드에서만 밝은 그라데이션 (컴포넌트 내부 한 곳에서 처리) */
+.dark .ilp-avatar-root,
+[data-theme="dark"] .ilp-avatar-root {
+  --ilp-gradient-start: #fff5f8;
+  --ilp-gradient-mid: #ddd0ff;
+  --ilp-gradient-end: #ffe8b4;
 }
 
 :root,
@@ -382,7 +382,7 @@ h6 {
   .notice-grid-skeleton > *:nth-child(n + 9) { display: none; }
 }
 
-/* 공지사항 카드 — 글자 그라데이션(scent) 색상 기반, 라이트 파스텔 / 다크 연하게 */
+/* 공지사항 카드 — 글자 그라데이션(ilp) 색상 기반, 라이트 파스텔 / 다크 연하게 */
 .notice-card {
   display: flex;
   flex-direction: column;
@@ -455,7 +455,7 @@ h6 {
   position: relative;
 }
 
-/* 공지 상세 페이지 제목 (카드 제목과 톤 맞춤, 클램프 없음. 색은 내부 text-gradient-scent 등으로 처리) */
+/* 공지 상세 페이지 제목 (카드 제목과 톤 맞춤, 클램프 없음. 색은 내부 text-gradient-ilp 등으로 처리) */
 .notice-detail__title {
   font-weight: 600;
   font-size: 1.25rem;
@@ -490,12 +490,12 @@ h6 {
   height: 2px;
   border-radius: 1px;
   transition: all 0.2s cubic-bezier(0.075, 0.82, 0.165, 1);
-  /* 라이트: 어두운 그라데이션, 다크: 밝은 그라데이션 (text-gradient-scent 계열) */
-  background: var(--bg-gradient-scent);
+  /* 라이트: 어두운 그라데이션, 다크: 밝은 그라데이션 (text-gradient-ilp 계열) */
+  background: var(--bg-gradient-ilp);
 }
 
 .dark .hamburger-menu > div {
-  background: var(--bg-gradient-scent);
+  background: var(--bg-gradient-ilp);
 }
 
 /* 가운데 막대는 보간 잔상(*) 방지를 위해 opacity 즉시 토글 */
@@ -1291,109 +1291,109 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 
 /* react-select dark mode */
 @layer components {
-  /* .scent-select-container {
+  /* .ilp-select-container {
   } */
-  .scent-select-container .scent-select__control {
+  .ilp-select-container .ilp-select__control {
     @apply bg-transparent border-none shadow-none rounded-none;
   }
 
-  .scent-select-container .scent-select__control--is-focused {
+  .ilp-select-container .ilp-select__control--is-focused {
     @apply border-none shadow-none;
   }
 
-  .scent-select__menu {
+  .ilp-select__menu {
     /* Always use ivory background to support the dark text requested by user */
     @apply bg-[var(--color-ivory)] border-1 border-[var(--color-lavender-border)] rounded-xl shadow-2xl overflow-hidden mt-1;
     z-index: 1000 !important;
   }
 
-  .scent-select__option {
+  .ilp-select__option {
     @apply px-4 py-3 text-sm cursor-pointer transition-all duration-200;
     @apply !text-[#2d2040] bg-transparent;
   }
 
-  .scent-select__option--is-focused {
+  .ilp-select__option--is-focused {
     /* Use the same high-contrast light palette for hover in both modes */
     @apply bg-[#e8e0ff] !text-[#7c5eb0];
   }
 
-  .scent-select__option--is-selected {
+  .ilp-select__option--is-selected {
     @apply bg-[#b094e0] !text-white;
   }
 
-  .scent-select__indicator {
+  .ilp-select__indicator {
     @apply !cursor-pointer
   }
 
-  .scent-select__indicator:hover {
+  .ilp-select__indicator:hover {
     @apply !text-[#7c5eb0] dark:!text-[#ffffff];
   }
 
-  .scent-select__clear-indicator,
-  .scent-select__dropdown-indicator {
+  .ilp-select__clear-indicator,
+  .ilp-select__dropdown-indicator {
     @apply cursor-pointer !text-[#b094e0] dark:!text-[#c8b4ff];
   }
 
-  .scent-select__clear-indicator:hover,
-  .scent-select__dropdown-indicator:hover {
+  .ilp-select__clear-indicator:hover,
+  .ilp-select__dropdown-indicator:hover {
     @apply !text-[#7c5eb0] dark:!text-[#a89ec4];
   }
 
-  .scent-select__indicator-separator {
+  .ilp-select__indicator-separator {
     @apply bg-[#b094e0] dark:bg-[#c8b4ff] opacity-40;
   }
 
-  .scent-select__input-container,
-  .scent-select__single-value,
-  .scent-select__input {
+  .ilp-select__input-container,
+  .ilp-select__single-value,
+  .ilp-select__input {
     @apply !text-[var(--color-text-primary)];
   }
 
-  .scent-select__placeholder {
+  .ilp-select__placeholder {
     @apply !text-[var(--color-lavender-muted)] !opacity-60;
   }
 
   /* Multi-value container and labels */
-  .scent-select__multi-value {
+  .ilp-select__multi-value {
     @apply bg-[var(--color-lavender-pale)] rounded-md border-1 border-[var(--color-lavender-border)];
   }
 
-  .scent-select__multi-value__label {
+  .ilp-select__multi-value__label {
     @apply !text-[var(--color-text-primary)];
   }
 
   /* Multi-value remove button and SVG */
-  .scent-select__multi-value__remove {
+  .ilp-select__multi-value__remove {
     @apply !text-[var(--color-lavender)] hover:!bg-[var(--color-lavender-light)] hover:!text-[#2d2040] transition-colors;
   }
 
-  .scent-select__multi-value__remove svg {
+  .ilp-select__multi-value__remove svg {
     @apply fill-current;
   }
 
   /* Clear and dropdown indicator */
-  .scent-select-container .scent-select__clear-indicator,
-  .scent-select-container .scent-select__dropdown-indicator {
+  .ilp-select-container .ilp-select__clear-indicator,
+  .ilp-select-container .ilp-select__dropdown-indicator {
     @apply text-[#b094e0] dark:text-[#c8b4ff];
   }
 
-  .scent-select-container .scent-select__clear-indicator:hover,
-  .scent-select-container .scent-select__dropdown-indicator:hover {
+  .ilp-select-container .ilp-select__clear-indicator:hover,
+  .ilp-select-container .ilp-select__dropdown-indicator:hover {
     @apply text-[#7c5eb0] dark:text-[#a89ec4];
   }
 
-  .scent-select-container .scent-select__clear-indicator .css-tj5bde-Svg,
-  .scent-select-container
-  .scent-select__dropdown-indicator
+  .ilp-select-container .ilp-select__clear-indicator .css-tj5bde-Svg,
+  .ilp-select-container
+  .ilp-select__dropdown-indicator
   .css-tj5bde-Svg {
     @apply fill-current;
   }
 
-  /* ── Scent / Nav 공통 그라데이션 (로고·네비 텍스트·장식라인) ── */
+  /* ── ILP / Nav 공통 그라데이션 (로고·네비 텍스트·장식라인) ── */
   /* 라이트 모드: 흰 배경에 잘 보이도록 같은 계열, 채도·명도 조정 (웜브라운→퍼플→더스티로즈) */
-  .text-gradient-scent {
+  .text-gradient-ilp {
     display: inline-block;
-    background: var(--bg-gradient-scent);
+    background: var(--bg-gradient-ilp);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1425,8 +1425,8 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   }
 
   /* 다크 모드: 기존 밝은 그라데이션만 적용, 배경색 없이 글자에만 표시 */
-  .dark .text-gradient-scent {
-    background: var(--bg-gradient-scent);
+  .dark .text-gradient-ilp {
+    background: var(--bg-gradient-ilp);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1441,20 +1441,20 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
     color: transparent;
   }
 
-  .bg-gradient-scent {
-    background: var(--bg-gradient-scent);
+  .bg-gradient-ilp {
+    background: var(--bg-gradient-ilp);
   }
 
   /* 아바타/아이콘 배경용: 다크 모드에서도 흰 아이콘 대비를 위해 어두운 그라데이션 유지 */
-  .bg-gradient-scent-avatar {
-    background: var(--bg-gradient-scent);
+  .bg-gradient-ilp-avatar {
+    background: var(--bg-gradient-ilp);
   }
-  .dark .bg-gradient-scent-avatar {
+  .dark .bg-gradient-ilp-avatar {
     background: linear-gradient(115deg, #a67d5c 0%, #5c4a7a 55%, #b07d82 100%);
   }
 
   .modal-title {
-    @apply font-bold tracking-tight text-gradient-scent;
+    @apply font-bold tracking-tight text-gradient-ilp;
     font-size: clamp(1rem, 3vw, 1.2rem);
     line-height: 1.2;
     word-break: break-all;
@@ -1465,7 +1465,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   }
 
   .chat-item__title {
-    @apply line-clamp-1 text-gradient-scent tracking-tight;
+    @apply line-clamp-1 text-gradient-ilp tracking-tight;
   }
 
   /* 사이드바 리스트: 제목 가독성 위해 단색 적용 */
@@ -1691,10 +1691,10 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 }
 
 /* =============================================
-   Scent Memories Hero Section
+   I Love Perfume Hero Section
    ============================================= */
 /* 헤더 영역 제외한 브라우저 전체 높이(100dvh - header). 스켈레톤·히어로 동일 적용 */
-.scent-hero {
+.ilp-hero {
   position: relative;
   width: 100%;
   height: calc(100dvh - var(--header-height));
@@ -1707,12 +1707,12 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 }
 
 /* 다크 모드: 더 짙은 보라/네이비 */
-.dark .scent-hero {
+.dark .ilp-hero {
   background: linear-gradient(160deg, #0f0c18 0%, #0c0a14 50%, #090610 100%);
 }
 
 /* 히어로 스켈레톤: 큰 네모 + 그라데이션 shimmer */
-.scent-hero-skeleton-gradient {
+.ilp-hero-skeleton-gradient {
   position: absolute;
   inset: 0;
   background: linear-gradient(
@@ -1724,9 +1724,9 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
     rgba(240, 235, 220, 0.4) 100%
   );
   background-size: 200% 100%;
-  animation: scent-hero-skeleton-shimmer 1.8s ease-in-out infinite;
+  animation: ilp-hero-skeleton-shimmer 1.8s ease-in-out infinite;
 }
-.dark .scent-hero-skeleton-gradient {
+.dark .ilp-hero-skeleton-gradient {
   background: linear-gradient(
     110deg,
     rgba(30, 25, 45, 0.6) 0%,
@@ -1736,15 +1736,15 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
     rgba(30, 25, 45, 0.6) 100%
   );
   background-size: 200% 100%;
-  animation: scent-hero-skeleton-shimmer 1.8s ease-in-out infinite;
+  animation: ilp-hero-skeleton-shimmer 1.8s ease-in-out infinite;
 }
-@keyframes scent-hero-skeleton-shimmer {
+@keyframes ilp-hero-skeleton-shimmer {
   0%, 100% { background-position: 200% 0; }
   50% { background-position: 0 0; }
 }
 
 /* 라이트: 아이보리 배경에 맞는 은은한 비네팅 */
-.scent-hero-bg {
+.ilp-hero-bg {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse 85% 85% at 50% 40%, transparent 50%, rgba(240, 235, 220, 0.3) 100%);
@@ -1752,12 +1752,12 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 }
 
 /* 다크 모드: 방사형 비네팅 */
-.dark .scent-hero-bg {
+.dark .ilp-hero-bg {
   background: radial-gradient(ellipse 80% 80% at 50% 40%, transparent 40%, rgba(0,0,0,0.6) 100%);
 }
 
 /* 콘텐츠 컨테이너: 이미지·글자 한 덩어리로 가운데 정렬, 높이 줄어들어도 잘리지 않게 */
-.scent-hero-content {
+.ilp-hero-content {
   position: relative;
   z-index: 2;
   display: flex;
@@ -1772,7 +1772,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 }
 
 /* 향수병 래퍼 — 가운데, 높이에 맞춰 줄어듦 */
-.scent-bottle-wrap {
+.ilp-bottle-wrap {
   position: relative;
   display: flex;
   align-items: center;
@@ -1782,7 +1782,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 }
 
 /* 병 주변 글로우 — 오로라 퍼플/라벤더 */
-.scent-bottle-glow {
+.ilp-bottle-glow {
   position: absolute;
   width: 80%;
   height: 80%;
@@ -1792,17 +1792,17 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
     transparent 72%
   );
   border-radius: 50%;
-  animation: scent-glow-pulse 4s ease-in-out infinite;
+  animation: ilp-glow-pulse 4s ease-in-out infinite;
   z-index: -1;
 }
 
-@keyframes scent-glow-pulse {
+@keyframes ilp-glow-pulse {
   0%, 100% { transform: scale(1);    opacity: 0.75; }
   50%       { transform: scale(1.22); opacity: 1; }
 }
 
 /* 향수 이미지 — 높이에 비례해 크기 제한, 항상 보이게 */
-.scent-bottle-img {
+.ilp-bottle-img {
   width: auto !important;
   height: auto !important;
   max-width: min(290px, 58vw);
@@ -1815,7 +1815,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 }
 
 /* 브랜드 하단 텍스트 그룹 — 가운데, 높이 줄면 같이 줄어듦 */
-.scent-brand-bottom {
+.ilp-brand-bottom {
   text-align: center;
   flex-shrink: 1;
   display: flex;
@@ -1826,14 +1826,14 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 }
 
 /* 장식 분리선 — 라벤더/퍼플 */
-.scent-deco-line {
+.ilp-deco-line {
   width: clamp(60px, 12vw, 120px);
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(180,155,255,0.65), transparent);
 }
 
 /* 메인 타이틀 — 라이트: 진한 라벤더(아이보리 대비), 다크: 밝은 라벤더 */
-.scent-brand-title {
+.ilp-brand-title {
   font-family: 'Georgia', 'Garamond', 'Times New Roman', serif;
   font-size: clamp(1.1rem, 4dvh, 3.8rem);
   font-weight: 300;
@@ -1847,7 +1847,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   text-transform: none;
 }
 
-.dark .scent-brand-title {
+.dark .ilp-brand-title {
   color: rgba(240, 235, 255, 0.96);
   text-shadow:
     0 0 30px rgba(180, 155, 255, 0.50),
@@ -1856,7 +1856,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 }
 
 /* 서브 디스크립션 — 라이트/다크 모두 가독성 확보, 세련된 sans */
-.scent-brand-desc {
+.ilp-brand-desc {
   font-family: var(--font-nanum-gothic), 'Pretendard', system-ui, sans-serif;
   font-style: normal;
   font-weight: 400;
@@ -1867,17 +1867,17 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   opacity: 1;
 }
 
-.dark .scent-brand-desc {
+.dark .ilp-brand-desc {
   color: rgba(229, 223, 249, 0.92);
 }
 
 /* ── 반응형: 작은 높이에서도 한 화면에 맞춤 ── */
 @media (max-width: 480px) {
-  .scent-bottle-img {
+  .ilp-bottle-img {
     max-width: 70vw;
     max-height: min(44dvh, 38vh);
   }
-  .scent-brand-title {
+  .ilp-brand-title {
     font-size: clamp(1rem, 3.5dvh, 1.55rem);
     letter-spacing: 0.2em;
   }
