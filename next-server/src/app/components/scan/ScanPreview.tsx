@@ -53,7 +53,7 @@ export default function ScanPreview({ imageUrl, onRetake, onAnalyze }: Props) {
 
         <div className="flex flex-row gap-2 sm:gap-4">
           <Button
-            variant="scent"
+            variant="ilp"
             onClick={onAnalyze}
             className="flex-1"
           >

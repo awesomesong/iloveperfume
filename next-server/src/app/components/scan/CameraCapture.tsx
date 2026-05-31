@@ -144,7 +144,7 @@ export default function CameraCapture({ onCapture, onActiveChange, autoStart }: 
       // 비활성 entry는 자연 폭 + 가운데 정렬 (active 시 비디오가 부모 폭을 채움).
       <div className="flex justify-center">
         <Button
-          variant="scent"
+          variant="ilp"
           onClick={startCamera}
           disabled={starting}
           className="px-10"
@@ -182,7 +182,7 @@ export default function CameraCapture({ onCapture, onActiveChange, autoStart }: 
         {/* FormSubmitActions 패턴 — 주요(촬영) flex-1, 보조(취소) 자연 폭 */}
         <div className="flex flex-row gap-2 sm:gap-4">
           <Button
-            variant="scent"
+            variant="ilp"
             onClick={capture}
             className="flex-1"
           >

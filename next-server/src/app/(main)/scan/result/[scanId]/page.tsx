@@ -51,7 +51,7 @@ export default async function ScanResultPage({ params }: Props) {
         </p>
         {/* Name — 메인 헤드라인: 브레이크포인트별 크기 조정 */}
         <h2 className="font-josefin font-bold text-[22px] md:text-[28px] lg:text-4xl leading-tight tracking-tight">
-          <span className="text-gradient-scent">{scan.name}</span>
+          <span className="text-gradient-ilp">{scan.name}</span>
         </h2>
       </div>
       <section className="mt-6 md:mt-10">

@@ -34,7 +34,7 @@ interface ApiResponse {
 }
 
 /*
-  신뢰 배지 — scent-memories 갤러리 무드 통일 + 가시성 확보.
+  신뢰 배지 — i-love-perfume 갤러리 무드 통일 + 가시성 확보.
   위계:
     - "최저가" (별도, 그라데이션) — 페이지 hero
     - "정품 매칭" — lavender outline (주요 신뢰 신호, hero와 분리되면서도 또렷)
@@ -278,10 +278,10 @@ export default function PriceCards({ scanId }: Props) {
                   {idx === 0 && (
                     /*
                       inline-flex items-center로 배지 안 글자 세로 가운데 정렬.
-                      다크모드의 bg-gradient-scent는 밝은 파스텔(#fff5f8/#ddd0ff/#ffe8b4)이라
+                      다크모드의 bg-gradient-ilp는 밝은 파스텔(#fff5f8/#ddd0ff/#ffe8b4)이라
                       text-white면 글자가 묻힘 — 다크에선 어두운 글자로 대비 확보.
                     */
-                    <span className="inline-flex items-center bg-gradient-scent text-white dark:text-stone-900 text-xs font-medium tracking-[0.04em] leading-none px-3 py-1.5 rounded-full">
+                    <span className="inline-flex items-center bg-gradient-ilp text-white dark:text-stone-900 text-xs font-medium tracking-[0.04em] leading-none px-3 py-1.5 rounded-full">
                       최저가
                     </span>
                   )}

@@ -95,14 +95,14 @@ export default function ScanResult({ data }: Props) {
         <div className="mt-4 flex flex-row gap-3 w-full">
           {matchedFragrance ? (
             <Link href={`/fragrance/${matchedFragrance.slug}`} className="flex-[3]">
-              <Button variant="scent" fullWidth className="!px-4">
+              <Button variant="ilp" fullWidth className="!px-4">
                 <HiOutlineArrowRight className="size-4 shrink-0" aria-hidden />
                 향수 페이지 보기
               </Button>
             </Link>
           ) : (
             <Button
-              variant="scent"
+              variant="ilp"
               fullWidth
               className="flex-[3] !px-4"
               disabled={isEnriching}
@@ -112,7 +112,7 @@ export default function ScanResult({ data }: Props) {
               }}
             >
               <HiOutlinePlus className="size-4 shrink-0" aria-hidden />
-              {isEnriching ? '불러오는 중...' : 'Scent Memories에 등록'}
+              {isEnriching ? '불러오는 중...' : 'I Love Perfume에 등록'}
             </Button>
           )}
           <Link href="/scan?camera=true" className="flex-[2]">
