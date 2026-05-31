@@ -6,11 +6,6 @@ import FragranceDetailSkeleton from '@/src/app/components/FragranceDetailSkeleto
 // 향수 상세는 데이터 변경 빈도가 낮으므로 ISR로 캐싱 (1시간)
 export const revalidate = 3600;
 
-// 빌드 시 pre-render 없이 ISR로 동작
-// 첫 요청 시 렌더링 후 1시간 캐시, 이후 revalidate
-export async function generateStaticParams() {
-  return [];
-}
 
 type Props = {
   params: Promise<{ id: string }>;
