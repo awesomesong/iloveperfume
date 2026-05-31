@@ -187,11 +187,7 @@ export const authOptions: AuthOptions = {
         },
         redirect: async ({ url, baseUrl }) => {
             if (url.startsWith("/")) return `${baseUrl}${url}`
-            try {
-                if (new URL(url).origin === baseUrl) return url
-            } catch {
-                // url이 유효하지 않으면 baseUrl로 fallback
-            }
+            if (URL.canParse(url) && new URL(url).origin === baseUrl) return url
             return baseUrl
         }
     },
