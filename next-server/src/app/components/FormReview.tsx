@@ -216,7 +216,7 @@ const FormReview = ({
             onClick={handleSubmitReview}
             type="submit"
             size="md"
-            variant="scent"
+            variant="ilp"
           >
             {submitLabel}
           </Button>

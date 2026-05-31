@@ -39,7 +39,7 @@ const FragranceEditPage = ({ params }: ParamsProps) => {
     return (
         <div className="p-4 md:p-8 max-w-[1440px] w-full mx-auto">
             <h2 className="w-full text-center text-2xl font-light tracking-widest mb-8">
-                <span className="text-gradient-scent">향수 정보 수정</span>
+                <span className="text-gradient-ilp">향수 정보 수정</span>
             </h2>
             {content}
         </div>

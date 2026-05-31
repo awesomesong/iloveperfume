@@ -25,7 +25,7 @@ import { SOCKET_EVENTS } from "../lib/react-query/utils";
 import type { CommentPage } from "@/src/app/types/comments";
 import DOMPurify from "dompurify";
 import EditableItemRow from "./EditableItemRow";
-import ScentUserAvatar from "./ScentUserAvatar";
+import ILPUserAvatar from "./ILPUserAvatar";
 
 type CommentsProps = {
   noticeId: string;
@@ -207,7 +207,7 @@ const Comments = ({ noticeId, user }: CommentsProps) => {
     <section className="mt-6">
       {commentsCount !== undefined && (
         <h4 className="section-title">
-          <span className="text-gradient-scent">댓글 {commentsCount}개</span>
+          <span className="text-gradient-ilp">댓글 {commentsCount}개</span>
         </h4>
       )}
       {status === "pending" ? (
@@ -240,7 +240,7 @@ const Comments = ({ noticeId, user }: CommentsProps) => {
                       }}
                       deleteConfirmMessage="댓글을 지우시겠습니까?"
                       updatingLabel="댓글 저장 중 입니다"
-                      avatarFallback={<ScentUserAvatar />}
+                      avatarFallback={<ILPUserAvatar />}
                       editForm={
                         <FormComment
                           noticeId={noticeId}

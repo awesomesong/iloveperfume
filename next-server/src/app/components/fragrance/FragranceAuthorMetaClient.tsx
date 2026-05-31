@@ -1,7 +1,7 @@
 "use client";
 
 import FallbackNextImage from "@/src/app/components/FallbackNextImage";
-import ScentUserAvatar from "@/src/app/components/ScentUserAvatar";
+import ILPUserAvatar from "@/src/app/components/ILPUserAvatar";
 import clsx from "clsx";
 
 type Props = {
@@ -26,7 +26,7 @@ export default function FragranceAuthorMetaClient({
       className={clsx(
         "flex w-full text-[13px] md:text-[14px] text-stone-500",
         align === "center" ? "justify-center" : "justify-start",
-        variant === "light" ? "force-light-scent-gradient" : "dark:text-stone-300/80",
+        variant === "light" ? "force-light-ilp-gradient" : "dark:text-stone-300/80",
         className
       )}
     >
@@ -42,7 +42,7 @@ export default function FragranceAuthorMetaClient({
               className="object-cover"
             />
           ) : (
-            <ScentUserAvatar className="drop-shadow-lg" />
+            <ILPUserAvatar className="drop-shadow-lg" />
           )}
         </span>
         <span className="min-w-0 break-all whitespace-normal text-left">

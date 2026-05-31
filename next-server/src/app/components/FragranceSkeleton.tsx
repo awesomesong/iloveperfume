@@ -1,13 +1,13 @@
 "use client";
 
 /**
- * ScentMemoriesHeroSkeleton
- * Hero section loading placeholder — same section structure as ScentMemoriesHero.
+ * ILPHeroSkeleton
+ * Hero section loading placeholder — same section structure as ILPHero.
  */
-export const ScentMemoriesHeroSkeleton = () => {
+export const ILPHeroSkeleton = () => {
     return (
-        <section className="scent-hero" aria-label="로딩 중">
-            <div className="scent-hero-skeleton-gradient" />
+        <section className="ilp-hero" aria-label="로딩 중">
+            <div className="ilp-hero-skeleton-gradient" />
         </section>
     );
 };

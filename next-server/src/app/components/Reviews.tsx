@@ -4,7 +4,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import ScentUserAvatar from "./ScentUserAvatar";
+import ILPUserAvatar from "./ILPUserAvatar";
 import { getFragranceReviews } from "@/src/app/lib/getFragranceReviews";
 import { Fragment, useEffect, useState, useMemo } from "react";
 import { useInView } from "react-intersection-observer";
@@ -229,7 +229,7 @@ const Reviews = ({ id, name, user }: ReviewsProps) => {
             <Fragment key={i}>
               {"reviewsCount" in page && (
                 <h4 className="section-title">
-                  <span className="text-gradient-scent">{name} - 리뷰 {page.reviewsCount}개</span>
+                  <span className="text-gradient-ilp">{name} - 리뷰 {page.reviewsCount}개</span>
                 </h4>
               )}
             </Fragment>
@@ -260,7 +260,7 @@ const Reviews = ({ id, name, user }: ReviewsProps) => {
                       }}
                       deleteConfirmMessage="리뷰를 지우시겠습니까?"
                       updatingLabel="리뷰 저장 중 입니다"
-                      avatarFallback={<ScentUserAvatar />}
+                      avatarFallback={<ILPUserAvatar />}
                       editForm={
                         <FormReview
                           id={id}

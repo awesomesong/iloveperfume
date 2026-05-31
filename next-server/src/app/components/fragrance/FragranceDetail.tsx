@@ -55,7 +55,7 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance }: P
                 <div className="flex flex-col">
                   {fragrance.brand && (
                     <h2 className="text-top">
-                      <span className="text-gradient-scent">
+                      <span className="text-gradient-ilp">
                         {fragrance.brand} · {fragrance.name}
                       </span>
                     </h2>
@@ -81,7 +81,7 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance }: P
               {fragrance.notes && (
                 <FragranceMotionWrapper delay={0}>
                   <div className="pt-8 border-t border-stone-200/60 dark:border-stone-700/40">
-                    <h3 className="text-gradient-scent text-sm font-bold tracking-[0.2em] uppercase text-stone-400 dark:text-stone-300 mb-4">
+                    <h3 className="text-gradient-ilp text-sm font-bold tracking-[0.2em] uppercase text-stone-400 dark:text-stone-300 mb-4">
                       노트 상세 정보
                     </h3>
                     <div

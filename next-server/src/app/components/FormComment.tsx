@@ -224,7 +224,7 @@ const FormComment = ({
             onClick={handleSubmitComment}
             type="submit"
             size="md"
-            variant="scent"
+            variant="ilp"
           >
             {submitLabel}
           </Button>
