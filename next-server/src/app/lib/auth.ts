@@ -186,10 +186,12 @@ export const authOptions: AuthOptions = {
             };
         },
         redirect: async ({ url, baseUrl }) => {
-            // Allows relative callback URLs
             if (url.startsWith("/")) return `${baseUrl}${url}`
-            // Allows callback URLs on the same origin
-            else if (new URL(url).origin === baseUrl) return url
+            try {
+                if (new URL(url).origin === baseUrl) return url
+            } catch {
+                // url이 유효하지 않으면 baseUrl로 fallback
+            }
             return baseUrl
         }
     },
