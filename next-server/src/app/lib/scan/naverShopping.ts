@@ -352,49 +352,6 @@ function buildItemUrl(originalLink: string, title: string): string {
  *  - 200~399: 살아있음
  *  - 4xx/5xx: 죽었거나 비활성 → 제외
  */
-async function checkUrlAlive(url: string): Promise<boolean> {
-  if (!url || !url.startsWith('http')) return false;
-  try {
-    const res = await fetch(url, {
-      method: 'HEAD',
-      signal: AbortSignal.timeout(3000),
-      redirect: 'follow',
-    });
-    return res.status >= 200 && res.status < 400;
-  } catch {
-    // timeout, network error, HEAD 차단 등 → 보수적으로 통과 (false negative 회피)
-    return true;
-  }
-}
-
-/**
- * 신뢰 점수 정렬된 후보 목록에서 URL 검증 통과한 항목만 골라 target개 채움.
- *
- *  - 후보를 순서대로 검증, 통과한 것만 result에 추가
- *  - target개 채워지면 즉시 종료 (불필요한 HEAD 요청 절약)
- *  - 후보 부족(검증 통과가 target 미만)이면 통과한 것만 반환
- *
- * HEAD 요청 병렬화: 한 번에 5개씩 batch로 검증해서 응답 시간 단축.
- */
-async function verifyAndFill<T extends { url: string }>(
-  candidates: T[],
-  target: number,
-): Promise<T[]> {
-  const result: T[] = [];
-  const batchSize = 5;
-
-  for (let i = 0; i < candidates.length && result.length < target; i += batchSize) {
-    const batch = candidates.slice(i, i + batchSize);
-    const aliveFlags = await Promise.all(batch.map((c) => checkUrlAlive(c.url)));
-
-    for (let j = 0; j < batch.length; j++) {
-      if (result.length >= target) break;
-      if (aliveFlags[j]) result.push(batch[j]);
-    }
-  }
-
-  return result;
-}
 
 /**
  * 향수 카테고리 매칭 패턴 (네이버 응답의 category1~4 중 하나라도 매칭되면 통과).
@@ -907,12 +864,9 @@ export async function searchNaverShopping(
     return a.price - b.price;
   });
 
-  // URL 검증 + 후보 보충 (link 작동 확인)
-  //  - 신뢰 점수가 높은 순으로 검증
-  //  - 죽은 mall(404 등)은 건너뛰고 다음 후보로 보충
-  //  - display개 채워지면 즉시 종료 → 불필요한 HEAD 절약
-  //  - 첫 스캔만 비용 발생, 두 번째부터는 24h prices 캐시 hit
-  const resultInternal = await verifyAndFill(sorted, display);
+  // Naver API가 방금 반환한 URL은 대부분 유효 — HEAD 검증 생략.
+  // (HEAD 요청이 네이버 봇 감지를 유발해 쇼핑 서비스 차단 트리거됨)
+  const resultInternal = sorted.slice(0, display);
 
   logSearchSummary(round, sorted, resultInternal, koreanRound);
 
