@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 import EmptyState from "@/src/app/components/EmptyState";
 
 export default async function ChatPage() {

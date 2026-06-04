@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 import FormFragrance from '@/src/app/components/FormFragrance';
 
 const FragranceCreatePage = () => {

@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 import type { Metadata } from 'next';
 import ScanClient from '@/src/app/components/scan/ScanClient';
 

@@ -1,4 +1,3 @@
-export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import { getFragranceBySlugServer } from '@/src/app/lib/getFragrances';
 import FragranceDetail from '@/src/app/components/fragrance/FragranceDetail';
@@ -6,8 +5,6 @@ import FragranceDetailSkeleton from '@/src/app/components/FragranceDetailSkeleto
 
 // 향수 상세는 데이터 변경 빈도가 낮으므로 ISR로 캐싱 (1시간)
 export const revalidate = 3600;
-
-
 type Props = {
   params: Promise<{ id: string }>;
 };
