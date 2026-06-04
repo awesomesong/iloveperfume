@@ -1,7 +1,8 @@
-'use client';
 import { Suspense } from "react";
 import RegisterForm from "../../components/RegisterForm";
 import AuthFormSkeleton from "../../components/skeleton/AuthFormSkeleton";
+
+export const dynamic = 'force-dynamic';
 
 const RegisterPage = () => {
 
