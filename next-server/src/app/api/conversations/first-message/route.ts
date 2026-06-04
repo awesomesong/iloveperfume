@@ -178,7 +178,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { userId, isGroup, members, name, aiAgentType, message, image, messageId } = body;
+    const { userId, isGroup, members, name, aiAgentType, message, image, messageId, reuseExisting } = body;
 
     const hasContent = !!(image || message?.trim());
     if (!hasContent) {
@@ -191,17 +191,40 @@ export async function POST(req: Request) {
     const msgId = messageId || randomUUID();
     const inferredType = image ? "image" : "text";
 
-    // ── AI 채팅: 항상 새 대화방 → 순차 create (트랜잭션 불필요) ─────────────
+    // ── AI 채팅 ──────────────────────────────────────────────────────────────
     if (aiAgentType) {
-      const conv = await prisma.conversation.create({
-        data: {
-          isAIChat: true,
-          aiAgentType,
-          userIds: [user.id],
-          users: { connect: [{ id: user.id }] },
-        },
-        include: convInclude,
-      });
+      // reuseExisting=true 면 가장 최근 AI 대화방 재사용, 없으면 새로 생성
+      let conv: ConvShape | null = null;
+
+      if (reuseExisting && message) {
+        // 동일한 메시지를 내가 보낸 AI 대화방이 있는지 확인
+        const existingMsg = await prisma.message.findFirst({
+          where: {
+            body: message.trim(),
+            senderId: user.id,
+            conversation: { isAIChat: true, aiAgentType },
+          },
+          select: { conversationId: true },
+        });
+        if (existingMsg) {
+          return NextResponse.json({
+            conversation: { id: existingMsg.conversationId, existingConversation: true },
+          });
+        }
+      }
+
+      if (!conv) {
+        conv = await prisma.conversation.create({
+          data: {
+            isAIChat: true,
+            aiAgentType,
+            userIds: [user.id],
+            users: { connect: [{ id: user.id }] },
+          },
+          include: convInclude,
+        });
+      }
+
       const msg = await insertMessage(msgId, message, image, inferredType, conv.id, user.id);
       fireUpdateLastMessage(conv.id, msg.createdAt, msg.id);
       return buildResponse(conv, msg, false);

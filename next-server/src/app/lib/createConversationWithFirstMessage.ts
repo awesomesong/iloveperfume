@@ -9,6 +9,8 @@ type CreateConversationWithFirstMessageProps = {
   message?: string;
   image?: string;
   messageId: string;
+  // AI 채팅 전용: true면 기존 방 재사용 (없으면 새로 생성)
+  reuseExisting?: boolean;
 };
 
 /**
@@ -23,6 +25,7 @@ export const createConversationWithFirstMessage = async ({
   message,
   image,
   messageId,
+  reuseExisting,
 }: CreateConversationWithFirstMessageProps) => {
   const res = await fetch("/api/conversations/first-message", {
     method: "POST",
@@ -36,6 +39,7 @@ export const createConversationWithFirstMessage = async ({
       message,
       image,
       messageId,
+      reuseExisting,
     }),
   });
 

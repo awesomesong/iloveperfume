@@ -147,6 +147,24 @@ const AIChatForm = ({
     sessionStorage.removeItem("ilp:pendingAI");
 
     const user = session.user;
+
+    // 유저 메시지를 캐시에 먼저 추가해 화면에 즉시 표시
+    const optimisticUserMsg: FullMessageType = {
+      id: pending.userMessageId,
+      body: pending.userMessage,
+      image: null,
+      createdAt: new Date(),
+      type: "text",
+      conversationId,
+      senderId: user.id,
+      sender: { id: user.id, name: user.name ?? null, email: user.email ?? null, image: user.image ?? null },
+      conversation: { isGroup: false, userIds: [user.id] },
+      isAIResponse: false,
+      isError: false,
+    };
+    upsertMessageSortedInCache(queryClient, conversationId, optimisticUserMsg);
+    notifyNewContent();
+
     let started = false;
     const tid = setTimeout(() => {
       started = true;
@@ -171,6 +189,7 @@ const AIChatForm = ({
         sessionStorage.setItem("ilp:pendingAI", JSON.stringify(pending));
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionStatus, session, conversationId, requestAI]);
 
   const onSubmit = useCallback<SubmitHandler<Form>>(async ({ message }) => {
