@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import EmptyState from "@/src/app/components/EmptyState";
 import useConversation from "../../hooks/useConversation";
 import clsx from "clsx";

@@ -1,5 +1,6 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
 import FormFragrance from "@/src/app/components/FormFragrance";
 import FragranceDetailSkeleton from "@/src/app/components/FragranceDetailSkeleton";
 import { getFragrance } from "@/src/app/lib/getFragrance";

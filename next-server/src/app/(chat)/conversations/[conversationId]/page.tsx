@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import EmptyState from "@/src/app/components/EmptyState";
 import getConversationById from "@/src/app/lib/getConversationById";
 import UnavailableChatForm from "@/src/app/components/UnavailableChatForm";

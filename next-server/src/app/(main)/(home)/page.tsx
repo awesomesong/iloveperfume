@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import FeatureShowcase from '@/src/app/components/main/FeatureShowcase';
 import ProductFragrance from '@/src/app/components/main/ProductFragrance';

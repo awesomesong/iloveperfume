@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import Notices from '@/src/app/components/Notices';
 import CreateNoticeBtn from "@/src/app/components/CreateNoticeBtn";
 import { getCurrentUser } from "@/src/app/lib/session";

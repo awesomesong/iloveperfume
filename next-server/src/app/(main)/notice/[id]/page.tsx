@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 import { use, useMemo, useRef, useEffect, useState } from 'react';
 import Comments from '@/src/app/components/Comments';
 import FormComment from '@/src/app/components/FormComment';

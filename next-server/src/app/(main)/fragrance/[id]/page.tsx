@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import { getFragranceBySlugServer } from '@/src/app/lib/getFragrances';
 import FragranceDetail from '@/src/app/components/fragrance/FragranceDetail';

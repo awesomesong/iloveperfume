@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = 'force-dynamic';
 import { FormNotice } from "@/src/app/components/FormNotice";
 import { NoticeSkeleton } from "@/src/app/components/skeleton/NoticeSkeleton";
 import getNotice from "@/src/app/lib/getNotice";
