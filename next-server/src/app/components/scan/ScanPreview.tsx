@@ -34,7 +34,7 @@ export default function ScanPreview({ imageUrl, onRetake, onAnalyze }: Props) {
         className="flex flex-col gap-5 max-w-full"
         style={{ width: `calc(70vh * ${aspectRatio})` }}
       >
-        <p className="text-center text-sm md:text-[15px] font-medium text-stone-700 dark:text-stone-200">
+        <p className="text-center text-sm md:text-[15px] font-medium text-text-primary">
           이 사진으로 분석할까요?
         </p>
 
@@ -47,7 +47,7 @@ export default function ScanPreview({ imageUrl, onRetake, onAnalyze }: Props) {
           style={{ aspectRatio }}
         />
 
-        <p className="text-[13px] text-stone-400 dark:text-stone-500 text-center font-light tracking-wide">
+        <p className="text-[13px] text-center font-light tracking-wide text-secondary">
           향수병이 선명하게 보일수록 더 정확하게 인식할 수 있어요.
         </p>
 
