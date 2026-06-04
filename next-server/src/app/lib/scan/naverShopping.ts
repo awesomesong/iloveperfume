@@ -374,10 +374,6 @@ const FRAGRANCE_CATEGORY_REGEX = /향수|perfume|fragrance|코롱|cologne|오\s*
 const TITLE_FRAGRANCE_KEYWORDS_REGEX =
   /향수|코롱|오\s*드\s*(퍼퓸|뚜왈렛|뚜왈레|코롱)|오드퍼퓸|오드뚜왈렛|perfume|fragrance|cologne|eau\s*de|\bedp\b|\bedt\b|\bedc\b|parfum|extrait/i;
 
-function hasTitleFragranceSignal(title: string): boolean {
-  return TITLE_FRAGRANCE_KEYWORDS_REGEX.test(title);
-}
-
 /**
  * title에 명백한 비-향수(옷·잡화) 단어가 있으면 차단 (negative signal).
  *
@@ -872,6 +868,7 @@ export async function searchNaverShopping(
 
   // 내부 필드 strip + koreanName 함께 반환
   const items = resultInternal.map(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ({ _hasFragranceCat, _categoryPath, ...publicFields }) => publicFields,
   );
   return {
