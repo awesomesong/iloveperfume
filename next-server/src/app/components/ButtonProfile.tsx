@@ -16,9 +16,9 @@ const ButtonProfile = () => {
     <Tooltip
       showArrow={false}
       content="프로필"
-      size="lg"
+      size="sm"
       classNames={{
-        content: "bg-[var(--ilp-gradient-mid)] text-[var(--bg-page)]",
+        content: "bg-[var(--color-text-primary)] text-[var(--bg-page)] font-pretendard font-normal tracking-[0.02em]",
       }}
     >
       <Link

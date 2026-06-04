@@ -9,7 +9,12 @@ module.exports = {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['var(--font-nanum-gothic)', ...defaultTheme.fontFamily.sans],
+                sans: ['"Pretendard Variable"', 'Pretendard', 'var(--font-nanum-gothic)', ...defaultTheme.fontFamily.sans],
+                josefin: ['var(--font-josefin-sans)', ...defaultTheme.fontFamily.sans],
+                'noto-serif-kr': ['var(--font-noto-serif-kr)', 'serif'],
+                'pretendard': ['"Pretendard Variable"', 'Pretendard', 'var(--font-ibm-plex-sans-kr)', 'sans-serif'],
+                'ibm-plex-sans-kr': ['var(--font-ibm-plex-sans-kr)', 'sans-serif'],
+                'nanum-pen-script': ['var(--font-nanum-pen-script)', 'cursive'],
             },
             fontSize: {
                 xs: ['0.8125rem', { lineHeight: '1.125rem' }],

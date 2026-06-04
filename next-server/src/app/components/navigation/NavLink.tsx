@@ -36,18 +36,18 @@ const NavLink: React.FC<NavLinkProps> = ({
         onFocus={onFocus}
         onBlur={onBlur}
         className={clsx(
-          'text-gradient-ilp'
+          'font-pretendard text-[14px] md:text-[15px] font-normal tracking-[0.04em] text-text-primary nav-hover'
         )}
       >
         {label}
       </Link>
-      <span
-        className={clsx(
-          'line-gradient-deco absolute left-0 -bottom-1 w-full min-w-[100%] origin-left transition-transform duration-300 ease-out',
-          showLineOnActive && isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
-        )}
-        aria-hidden
-      />
+      {/* active 상태 표시만 유지 */}
+      {showLineOnActive && isActive && (
+        <span
+          className="line-gradient-deco absolute left-0 -bottom-1 w-full"
+          aria-hidden
+        />
+      )}
     </span>
   );
 };

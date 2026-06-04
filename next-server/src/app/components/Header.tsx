@@ -33,8 +33,6 @@ export const Header = () => {
                 max-w-[1440px]
                 mx-auto
                 h-full
-                text-sm
-                md:text-base
             '>
                 <div className='
                     flex

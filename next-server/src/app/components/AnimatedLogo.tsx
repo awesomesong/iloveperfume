@@ -1,66 +1,44 @@
 'use client';
 import Link from 'next/link';
-import { motion, Variants } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 
-// 단어 단위 fade-up — 스태거 없이 부드럽게
-const wordVariants: Variants = {
-  hidden: { opacity: 0.15, y: 4 },
-  visible: (delay: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay,
-      duration: 0.9,
-      ease: [0.25, 0.46, 0.45, 0.94], // easeOutQuart
-    },
-  }),
-};
+const chars = ['아', '이', '러', '브', '퍼', '퓸'];
+// 왼쪽에서 오른쪽으로 순서대로 — 명조체엔 바운스보다 흐르는 느낌이 잘 맞음
+const ENTER_DELAYS = chars.map((_, i) => i * 0.08);
 
-// 언더라인 슬라이드인
-const lineVariants: Variants = {
-  hidden: { scaleX: 0, opacity: 0 },
-  visible: {
-    scaleX: 1,
-    opacity: 1,
-    transition: { delay: 0.9, duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] },
-  },
-};
+export default function AnimatedLogo() {
+  const [play, setPlay] = useState(false);
 
-const AnimatedLogo = () => {
+  useEffect(() => {
+    const trigger = () => setPlay(true);
+    if (document.readyState === 'complete') {
+      trigger();
+    } else {
+      window.addEventListener('load', trigger, { once: true });
+    }
+    return () => window.removeEventListener('load', trigger);
+  }, []);
+
   return (
-    <Link href="/" className="inline-flex flex-col items-start leading-none select-none gap-0">
-
-      {/* "I Love" — italic, normal weight */}
-      <motion.div
-        custom={0}
-        variants={wordVariants}
-        initial="hidden"
-        animate="visible"
-        className="text-gradient-ilp font-josefin text-sm italic font-light tracking-[0.02em]"
-      >
-        I Love
-      </motion.div>
-
-      {/* "Perfume" — upright, slight weight */}
-      <motion.div
-        custom={0.28}
-        variants={wordVariants}
-        initial="hidden"
-        animate="visible"
-        className="text-gradient-memories font-josefin text-sm font-normal tracking-[0.03em]"
-      >
-        Perfume
-      </motion.div>
-
-      {/* 장식 라인 */}
-      <motion.div
-        variants={lineVariants}
-        initial="hidden"
-        animate="visible"
-        className="line-gradient-deco"
-      />
+    <Link href="/" className="inline-flex items-center leading-none select-none">
+      <div className="flex items-baseline gap-[1px]">
+        {chars.map((char, i) => (
+          <motion.span
+            key={i}
+            className="font-pretendard text-[18px] font-medium tracking-[0.02em] text-text-primary inline-block"
+            // initial 없음 → SSR/로딩 중 그대로 보임
+            animate={play ? { y: [0, -7, 0] } : {}}
+            transition={play ? {
+              delay:    ENTER_DELAYS[i],
+              duration: 0.65,
+              ease:     [0.22, 1, 0.36, 1],
+            } : {}}
+          >
+            {char}
+          </motion.span>
+        ))}
+      </div>
     </Link>
   );
-};
-
-export default AnimatedLogo;
+}

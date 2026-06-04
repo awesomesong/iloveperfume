@@ -4,7 +4,7 @@ import { Button as Btn } from "@heroui/react";
 
 /** 제출용 그라데이션 버튼 공통 핵심 스타일 (배경 그라데이션, 텍스트 효과, 호버 애니메이션, 그림자 없음) */
 export const submitButtonBaseClassName =
-  "rounded-full bg-gradient-to-r from-[#b094e0] to-[#5c4a7a] text-white uppercase shadow-none hover:shadow-none hover:brightness-110 hover:saturate-150 transition-all duration-300";
+  "rounded-full bg-[#1a1825] dark:bg-[#f0ece6] text-white dark:text-[#1a1825] uppercase shadow-none hover:shadow-none hover:opacity-85 transition-all duration-300";
 
 /** 공통 제출 버튼 스타일 (FormFragrance, RegisterForm, SignInForm 등에서 사용) */
 export const submitButtonClassName =
@@ -20,7 +20,7 @@ export const submitMediumButtonClassName =
 
 /** ghostLavender 공통 핵심 스타일 (색상, 테두리, 트랜지션) */
 export const ghostLavenderBaseClassName =
-  "rounded-full border border-[#d4cce2] dark:border-[#c8b4ff60] bg-transparent text-[#5c4a7a] dark:text-[#e0dcf5] shadow-none transition-all duration-300 hover:bg-[var(--color-lavender-pale)] hover:border-[#b094e0] dark:hover:bg-[var(--color-lavender-pale)] dark:hover:border-[#c8b4ff]";
+  "rounded-full border border-[#c0aed8] dark:border-[rgba(200,195,188,0.30)] bg-transparent text-[#2d2040] dark:text-[#e0dcf5] shadow-none transition-all duration-300 hover:bg-[var(--color-lavender-pale)] hover:border-[#6b4a90] dark:hover:bg-[rgba(200,195,188,0.08)] dark:hover:border-[rgba(200,195,188,0.50)]";
 
 /** 취소 및 소셜 로그인 버튼 등 표준 Ghost 스타일 */
 export const ghostButtonClassName =
