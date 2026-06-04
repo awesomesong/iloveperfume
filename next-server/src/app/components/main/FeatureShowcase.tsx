@@ -4,6 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { HiArrowRight } from 'react-icons/hi2';
+import HomeImageUpload from '@/src/app/components/scan/HomeImageUpload';
+import HomeAIChatInput from '@/src/app/components/main/HomeAIChatInput';
 
 /* ──────────────────────────────────────────────
    데이터
@@ -70,26 +72,24 @@ function BrowserFrame({ src, alt }: { src: string; alt: string }) {
     <div
       style={{
         borderRadius: '14px',
-        background: 'linear-gradient(160deg, #2a2440 0%, #1a1628 40%, #0e0c18 100%)',
+        background: 'linear-gradient(160deg, #282624 0%, #1a1816 40%, #0f0e0c 100%)',
         boxShadow: [
-          '0 60px 120px rgba(0,0,0,0.65)',
-          '0 28px 56px rgba(0,0,0,0.38)',
-          '0 8px 20px rgba(0,0,0,0.22)',
-          'inset 0 1.5px 0 rgba(255,255,255,0.14)',
-          'inset 0 -1px 0 rgba(0,0,0,0.5)',
-          '0 0 40px 6px rgba(80,50,150,0.10)',
+          '0 20px 48px rgba(0,0,0,0.28)',
+          '0 8px 16px rgba(0,0,0,0.16)',
+          'inset 0 1.5px 0 rgba(255,255,255,0.1)',
+          'inset 0 -1px 0 rgba(0,0,0,0.4)',
         ].join(', '),
         padding: '1.5px',
       }}
     >
-      <div style={{ borderRadius: '13px', overflow: 'hidden', background: '#0e0c18' }}>
+      <div style={{ borderRadius: '13px', overflow: 'hidden', background: '#0f0e0c' }}>
         {/* 툴바 */}
         <div
           style={{
             height: '36px',
-            background: 'linear-gradient(180deg, #252040 0%, #1c1832 100%)',
+            background: 'linear-gradient(180deg, #201e1c 0%, #181614 100%)',
             display: 'flex', alignItems: 'center', padding: '0 14px', gap: '10px',
-            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
         >
           <div style={{ display: 'flex', gap: '5px' }}>
@@ -97,9 +97,9 @@ function BrowserFrame({ src, alt }: { src: string; alt: string }) {
               <div key={color} style={{ width: '9px', height: '9px', borderRadius: '50%', background: color, boxShadow: `0 0 4px ${color}66` }} />
             ))}
           </div>
-          <div style={{ flex: 1, height: '20px', borderRadius: '5px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+          <div style={{ flex: 1, height: '20px', borderRadius: '5px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(80,200,120,0.7)' }} />
-            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.38)', letterSpacing: '0.02em' }}>iloveperfume.co.kr</span>
+            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.02em' }}>iloveperfume.co.kr</span>
           </div>
           <div style={{ display: 'flex', gap: '4px' }}>
             {[1, 2, 3].map((i) => (
@@ -108,7 +108,7 @@ function BrowserFrame({ src, alt }: { src: string; alt: string }) {
           </div>
         </div>
         {/* 화면 */}
-        <div className="relative overflow-hidden" style={{ aspectRatio: '16 / 10', background: '#050410' }}>
+        <div className="relative overflow-hidden" style={{ aspectRatio: '16 / 10', background: '#0a0908' }}>
           <Image
             src={src}
             alt={alt}
@@ -116,8 +116,8 @@ function BrowserFrame({ src, alt }: { src: string; alt: string }) {
             className="object-cover object-top"
             sizes="(max-width: 1024px) 0px, (max-width: 1280px) 380px, 460px"
           />
-          <div aria-hidden style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', background: 'linear-gradient(to bottom, transparent, rgba(5,4,16,0.85))', pointerEvents: 'none', zIndex: 5 }} />
-          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 25%, transparent 50%)', pointerEvents: 'none', zIndex: 6 }} />
+          <div aria-hidden style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', background: 'linear-gradient(to bottom, transparent, rgba(10,9,8,0.85))', pointerEvents: 'none', zIndex: 5 }} />
+          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 25%, transparent 50%)', pointerEvents: 'none', zIndex: 6 }} />
         </div>
       </div>
     </div>
@@ -135,28 +135,26 @@ function PhoneFrame({ src, alt, aspectRatio = '9 / 19.5' }: { src: string; alt: 
       animate={{ y: [0, -10, 0] }}
       transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
     >
-      <div aria-hidden style={{ position: 'absolute', bottom: '-40px', left: '-20%', right: '-20%', height: '80px', background: 'var(--color-lavender)', opacity: 0.2, filter: 'blur(48px)', borderRadius: '50%', zIndex: -1 }} />
-      <div aria-hidden style={{ position: 'absolute', inset: '-20px', background: 'radial-gradient(ellipse at 50% 58%, rgba(90,55,160,0.18) 0%, transparent 62%)', filter: 'blur(16px)', zIndex: -1, borderRadius: '5rem' }} />
-      <div style={{ borderRadius: '1.5rem', padding: '4px', background: 'linear-gradient(148deg, #343048 0%, #1a1626 18%, #0e0c18 45%, #171328 70%, #2a2440 88%, #1e1a30 100%)', boxShadow: ['0 60px 110px rgba(0,0,0,0.70)', '0 28px 56px rgba(0,0,0,0.40)', '0 0 24px 4px rgba(80,50,150,0.12)', 'inset 0 2px 0 rgba(255,255,255,0.18)'].join(', ') }}>
-        <div style={{ borderRadius: '1.2rem', padding: '1.5px', background: '#0a0812', boxShadow: 'inset 0 0 0 0.5px rgba(255,255,255,0.07)' }}>
-          <div className="relative overflow-hidden flex flex-col" style={{ borderRadius: '1.1rem', background: '#050410' }}>
+      <div aria-hidden style={{ position: 'absolute', bottom: '-24px', left: '-12%', right: '-12%', height: '48px', background: 'rgba(180,170,160,0.12)', filter: 'blur(32px)', borderRadius: '50%', zIndex: -1 }} />
+      <div style={{ borderRadius: '1.5rem', padding: '4px', background: 'linear-gradient(148deg, #2c2a28 0%, #1a1816 18%, #0f0e0c 45%, #161412 70%, #222020 88%, #1c1a18 100%)', boxShadow: ['0 18px 44px rgba(0,0,0,0.32)', '0 6px 14px rgba(0,0,0,0.2)', 'inset 0 2px 0 rgba(255,255,255,0.12)'].join(', ') }}>
+        <div style={{ borderRadius: '1.2rem', padding: '1.5px', background: '#0c0b0a', boxShadow: 'inset 0 0 0 0.5px rgba(255,255,255,0.06)' }}>
+          <div className="relative overflow-hidden flex flex-col" style={{ borderRadius: '1.1rem', background: '#0a0908' }}>
             {/* 상태바 */}
-            <div aria-hidden style={{ height: '20px', flexShrink: 0, background: '#050410', position: 'relative', zIndex: 12 }}>
-              <div aria-hidden style={{ position: 'absolute', top: '4px', left: '50%', transform: 'translateX(-50%)', width: '22%', height: '10px', background: '#1a1a1a', borderRadius: '99px' }} />
+            <div aria-hidden style={{ height: '20px', flexShrink: 0, background: '#0a0908', position: 'relative', zIndex: 12 }}>
+              <div aria-hidden style={{ position: 'absolute', top: '4px', left: '50%', transform: 'translateX(-50%)', width: '22%', height: '10px', background: '#1a1a18', borderRadius: '99px' }} />
             </div>
             {/* 이미지 — 비율 그대로 */}
             <div className="relative" style={{ width: '100%', aspectRatio }}>
               <Image src={src} alt={alt} fill className="object-cover object-top" sizes="(max-width: 1024px) 220px, (max-width: 1280px) 160px, 190px" priority />
             </div>
-            <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 22%, transparent 48%)' }} />
-            <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 9, pointerEvents: 'none', boxShadow: 'inset 0 0 20px rgba(80,45,160,0.22)', borderRadius: '1.1rem' }} />
+            <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 22%, transparent 48%)' }} />
           </div>
         </div>
       </div>
-      <div aria-hidden style={{ position: 'absolute', left: '-4px', top: '14.5%', width: '4px', height: '3.5%', background: 'linear-gradient(180deg, #383050 0%, #1a1628 50%, #242038 100%)', borderRadius: '3px 0 0 3px' }} />
-      <div aria-hidden style={{ position: 'absolute', left: '-4px', top: '21%', width: '4px', height: '6.5%', background: 'linear-gradient(180deg, #383050 0%, #1a1628 50%, #242038 100%)', borderRadius: '3px 0 0 3px' }} />
-      <div aria-hidden style={{ position: 'absolute', left: '-4px', top: '30%', width: '4px', height: '6.5%', background: 'linear-gradient(180deg, #383050 0%, #1a1628 50%, #242038 100%)', borderRadius: '3px 0 0 3px' }} />
-      <div aria-hidden style={{ position: 'absolute', right: '-4px', top: '24%', width: '4px', height: '12%', background: 'linear-gradient(180deg, #383050 0%, #1a1628 50%, #242038 100%)', borderRadius: '0 3px 3px 0' }} />
+      <div aria-hidden style={{ position: 'absolute', left: '-4px', top: '14.5%', width: '4px', height: '3.5%', background: 'linear-gradient(180deg, #2e2c2a 0%, #1a1816 50%, #222020 100%)', borderRadius: '3px 0 0 3px' }} />
+      <div aria-hidden style={{ position: 'absolute', left: '-4px', top: '21%', width: '4px', height: '6.5%', background: 'linear-gradient(180deg, #2e2c2a 0%, #1a1816 50%, #222020 100%)', borderRadius: '3px 0 0 3px' }} />
+      <div aria-hidden style={{ position: 'absolute', left: '-4px', top: '30%', width: '4px', height: '6.5%', background: 'linear-gradient(180deg, #2e2c2a 0%, #1a1816 50%, #222020 100%)', borderRadius: '3px 0 0 3px' }} />
+      <div aria-hidden style={{ position: 'absolute', right: '-4px', top: '24%', width: '4px', height: '12%', background: 'linear-gradient(180deg, #2e2c2a 0%, #1a1816 50%, #222020 100%)', borderRadius: '0 3px 3px 0' }} />
     </motion.div>
   );
 }
@@ -171,26 +169,26 @@ function PhoneFrameStandalone({ src, alt, aspectRatio = '9 / 19.5' }: { src: str
       animate={{ y: [0, -11, 0] }}
       transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
     >
-      <div aria-hidden style={{ position: 'absolute', bottom: '-44px', left: '-15%', right: '-15%', height: '90px', background: 'var(--color-lavender)', opacity: 0.22, filter: 'blur(52px)', borderRadius: '50%', zIndex: -1 }} />
-      <div style={{ borderRadius: '1.5rem', padding: '4.5px', background: 'linear-gradient(148deg, #343048 0%, #1a1626 18%, #0e0c18 45%, #171328 70%, #2a2440 88%, #1e1a30 100%)', boxShadow: ['0 70px 130px rgba(0,0,0,0.70)', '0 36px 68px rgba(0,0,0,0.42)', 'inset 0 2px 0 rgba(255,255,255,0.18)', '0 0 28px 4px rgba(80,50,150,0.12)'].join(', ') }}>
-        <div style={{ borderRadius: '1.2rem', padding: '1.5px', background: '#0a0812' }}>
-          <div className="relative overflow-hidden flex flex-col" style={{ borderRadius: '1.1rem', background: '#050410' }}>
+      <div aria-hidden style={{ position: 'absolute', bottom: '-28px', left: '-10%', right: '-10%', height: '56px', background: 'rgba(180,170,160,0.12)', filter: 'blur(36px)', borderRadius: '50%', zIndex: -1 }} />
+      <div style={{ borderRadius: '1.5rem', padding: '4.5px', background: 'linear-gradient(148deg, #2c2a28 0%, #1a1816 18%, #0f0e0c 45%, #161412 70%, #222020 88%, #1c1a18 100%)', boxShadow: ['0 20px 48px rgba(0,0,0,0.36)', '0 6px 16px rgba(0,0,0,0.22)', 'inset 0 2px 0 rgba(255,255,255,0.12)'].join(', ') }}>
+        <div style={{ borderRadius: '1.2rem', padding: '1.5px', background: '#0c0b0a' }}>
+          <div className="relative overflow-hidden flex flex-col" style={{ borderRadius: '1.1rem', background: '#0a0908' }}>
             {/* 상태바 */}
-            <div aria-hidden style={{ height: '24px', flexShrink: 0, background: '#050410', position: 'relative', zIndex: 12 }}>
-              <div aria-hidden style={{ position: 'absolute', top: '5px', left: '50%', transform: 'translateX(-50%)', width: '22%', height: '12px', background: '#1a1a1a', borderRadius: '99px' }} />
+            <div aria-hidden style={{ height: '24px', flexShrink: 0, background: '#0a0908', position: 'relative', zIndex: 12 }}>
+              <div aria-hidden style={{ position: 'absolute', top: '5px', left: '50%', transform: 'translateX(-50%)', width: '22%', height: '12px', background: '#1a1a18', borderRadius: '99px' }} />
             </div>
             {/* 이미지 — 비율 그대로 */}
             <div className="relative" style={{ width: '100%', aspectRatio }}>
               <Image src={src} alt={alt} fill className="object-cover object-top" sizes="(max-width: 768px) 280px, 220px" priority />
             </div>
-            <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.09) 0%, transparent 48%)' }} />
+            <div aria-hidden style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 48%)' }} />
           </div>
         </div>
       </div>
-      <div aria-hidden style={{ position: 'absolute', left: '-5px', top: '14.5%', width: '5px', height: '3.5%', background: 'linear-gradient(180deg, #383050 0%, #1a1628 50%, #242038 100%)', borderRadius: '3px 0 0 3px' }} />
-      <div aria-hidden style={{ position: 'absolute', left: '-5px', top: '21%', width: '5px', height: '6.5%', background: 'linear-gradient(180deg, #383050 0%, #1a1628 50%, #242038 100%)', borderRadius: '3px 0 0 3px' }} />
-      <div aria-hidden style={{ position: 'absolute', left: '-5px', top: '30%', width: '5px', height: '6.5%', background: 'linear-gradient(180deg, #383050 0%, #1a1628 50%, #242038 100%)', borderRadius: '3px 0 0 3px' }} />
-      <div aria-hidden style={{ position: 'absolute', right: '-5px', top: '24%', width: '5px', height: '12%', background: 'linear-gradient(180deg, #383050 0%, #1a1628 50%, #242038 100%)', borderRadius: '0 3px 3px 0' }} />
+      <div aria-hidden style={{ position: 'absolute', left: '-5px', top: '14.5%', width: '5px', height: '3.5%', background: 'linear-gradient(180deg, #2e2c2a 0%, #1a1816 50%, #222020 100%)', borderRadius: '3px 0 0 3px' }} />
+      <div aria-hidden style={{ position: 'absolute', left: '-5px', top: '21%', width: '5px', height: '6.5%', background: 'linear-gradient(180deg, #2e2c2a 0%, #1a1816 50%, #222020 100%)', borderRadius: '3px 0 0 3px' }} />
+      <div aria-hidden style={{ position: 'absolute', left: '-5px', top: '30%', width: '5px', height: '6.5%', background: 'linear-gradient(180deg, #2e2c2a 0%, #1a1816 50%, #222020 100%)', borderRadius: '3px 0 0 3px' }} />
+      <div aria-hidden style={{ position: 'absolute', right: '-5px', top: '24%', width: '5px', height: '12%', background: 'linear-gradient(180deg, #2e2c2a 0%, #1a1816 50%, #222020 100%)', borderRadius: '0 3px 3px 0' }} />
     </motion.div>
   );
 }
@@ -255,30 +253,48 @@ function MockupGroup({ src, webSrc, alt, flip, phoneAspectRatio }: { src: string
 }
 
 /* ──────────────────────────────────────────────
-   단계 안내
+   단계 안내 — 타임라인 스타일
 ────────────────────────────────────────────── */
 function StepList({ steps }: { steps: { label: string; desc: string }[] }) {
   return (
-    <ol className="flex flex-col gap-5">
+    <ol className="relative flex flex-col">
+      {/* 연결선 (장식) */}
+      <div
+        aria-hidden
+        className="absolute left-[7px] top-3 bottom-3 w-px"
+        style={{ background: 'var(--color-card-border)' }}
+      />
       {steps.map(({ label, desc }, i) => (
         <motion.li
           key={label}
-          className="flex items-start gap-4"
-          initial={{ opacity: 0, x: -14 }}
+          className="relative flex items-start gap-4 pb-7 last:pb-0"
+          initial={{ opacity: 0, x: -10 }}
           whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: '-30px' }}
-          transition={{ duration: 0.5, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+          viewport={{ once: true, margin: '-20px' }}
+          transition={{ duration: 0.45, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
         >
-          <span
-            className="text-gradient-ilp font-bold shrink-0 leading-none mt-0.5 tabular-nums"
-            style={{ fontSize: 'clamp(1.35rem, 2.2vw, 1.85rem)' }}
+          {/* 원형 마커 — 장식용, 숫자 없음 */}
+          <div
             aria-hidden
-          >
-            {String(i + 1).padStart(2, '0')}
-          </span>
-          <div className="flex flex-col gap-0.5">
-            <span className="font-semibold text-sm leading-snug" style={{ color: 'var(--color-text-primary)' }}>{label}</span>
-            <span className="text-xs leading-relaxed text-secondary">{desc}</span>
+            className="relative z-10 shrink-0 mt-[5px] size-[15px] rounded-full"
+            style={{
+              background: 'var(--color-lavender-pale)',
+              border: '1.5px solid var(--color-lavender-border)',
+            }}
+          />
+
+          <div className="flex flex-col gap-1 min-w-0">
+            {/* 14px, text-primary: 13.86:1 ✅ */}
+            <span
+              className="font-medium text-sm leading-snug"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              {label}
+            </span>
+            {/* 14px, text-secondary: 6.71:1 ✅ */}
+            <span className="text-sm leading-relaxed text-secondary">
+              {desc}
+            </span>
           </div>
         </motion.li>
       ))}
@@ -302,38 +318,44 @@ function ShowcaseSection({ feature }: { feature: (typeof FEATURES)[number] }) {
       <MockupGroup src={image} webSrc={webImage} alt={imageAlt} flip={flip} phoneAspectRatio={phoneAspectRatio} />
 
       <motion.div
-        className="flex-1 flex flex-col gap-7 min-w-0"
+        className="flex-1 flex flex-col gap-8 min-w-0"
         initial={{ opacity: 0, y: 28 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-60px' }}
         transition={{ duration: 0.7, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
       >
+        {/* 태그 — 12px, text-secondary 6.71:1 ✅ */}
         <span
-          className="self-start text-[0.6rem] font-bold tracking-[0.12em] uppercase px-3 py-1 rounded-full"
-          style={{ background: 'var(--color-lavender-pale)', border: '1px solid var(--color-lavender-border)', color: 'var(--color-lavender)' }}
+          className="text-xs font-semibold tracking-[0.16em] uppercase text-secondary"
         >
           {tag}
         </span>
 
+        {/* 헤드라인 */}
         <h2
-          className="text-gradient-ilp font-bold leading-[1.15] tracking-tight"
-          style={{ fontSize: 'clamp(1rem, 2.1vw, 1.6rem)' }}
+          className="font-pretendard font-normal text-text-primary leading-[1.3] tracking-[-0.01em]"
+          style={{ fontSize: 'clamp(1.35rem, 2.6vw, 2rem)' }}
         >
-          {headline[0]} {headline[1]}
+          {headline[0]}<br className="hidden sm:block" /> {headline[1]}
         </h2>
 
+        {/* 스텝 */}
         <StepList steps={steps} />
 
-        <div className="flex flex-wrap gap-2" aria-label="사용 기술">
-          {badges.map((badge) => (
-            <span key={badge} className="footer-stack-badge">{badge}</span>
-          ))}
-        </div>
+        {/* 기술 스택 — 12px, text-secondary 6.71:1 ✅ */}
+        <p className="text-xs text-secondary" aria-label="사용 기술">
+          {badges.join(' · ')}
+        </p>
 
-        <Link href={href} className="action-btn self-start">
-          {cta}
-          <HiArrowRight className="size-3.5 shrink-0" aria-hidden />
-        </Link>
+        {/* CTA */}
+        {tag === 'AI Chat' ? (
+          <HomeAIChatInput />
+        ) : (
+          <Link href={href} className="action-btn self-start">
+            {cta}
+            <HiArrowRight className="size-3.5 shrink-0" aria-hidden />
+          </Link>
+        )}
       </motion.div>
     </div>
   );
@@ -349,28 +371,124 @@ export default function FeatureShowcase() {
       aria-label="기능 소개"
     >
       <motion.div
-        className="text-center py-14 md:py-20"
+        className="text-center py-16 md:py-24 flex flex-col items-center gap-5"
         initial={{ opacity: 0, y: 22 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="line-gradient-deco w-20 mx-auto mb-8" aria-hidden />
-        <p className="text-[0.68rem] tracking-[0.35em] mb-3 font-medium text-secondary uppercase">How it works</p>
-        <h2 className="text-gradient-ilp page-title-gradient">이렇게 사용하면 돼요</h2>
+        <p className="text-xs tracking-[0.18em] font-medium text-secondary uppercase">I Love Perfume</p>
+        <h2
+          className="font-pretendard font-normal tracking-[-0.01em] text-gradient-scent"
+          style={{ fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)', lineHeight: 1.3 }}
+        >
+          향수를 처음 시작하는 분들을 위한 AI 향수 가이드
+        </h2>
+        <div className="flex flex-col gap-1.5 text-sm leading-relaxed text-secondary text-center">
+          <p>향수를 스캔하면 제품 정보와 구매처를 바로 확인할 수 있어요.</p>
+          <p>사진으로 내 향수 컬렉션을 자동으로 기록할 수 있어요.</p>
+          <p>AI 어시스턴트에게 취향에 맞는 향수 추천을 받을 수 있어요.</p>
+        </div>
       </motion.div>
 
       <div>
-        {FEATURES.map((feature, i) => (
-          <div key={feature.href}>
-            <div className="py-12 md:py-18">
-              <ShowcaseSection feature={feature} />
+        {FEATURES.map((feature, i) => {
+          const isVision = i === 1;
+
+          return (
+            <div key={feature.href} id={isVision ? 'scan' : undefined}>
+              {isVision ? (
+                /* AI Vision — 설명(좌) + 목업·체험(우) */
+                <div className="py-16 md:py-24">
+                  <div className="flex flex-col lg:flex-row items-start gap-12 lg:gap-16 xl:gap-20">
+
+                    {/* 왼쪽: 기능 설명 — 스크롤 시 sticky */}
+                    <motion.div
+                      className="flex-1 flex flex-col justify-center gap-8 min-w-0 lg:sticky lg:top-24"
+                      initial={{ opacity: 0, x: -24 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true, margin: '-60px' }}
+                      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <span
+                        className="self-start text-[0.6rem] font-semibold tracking-[0.14em] uppercase px-3 py-1 rounded-full border border-black/20 dark:border-white/20 text-black/60 dark:text-white/60"
+                      >
+                        {feature.tag}
+                      </span>
+
+                      <h2
+                        className="font-pretendard font-normal text-text-primary leading-[1.3] tracking-[-0.01em]"
+                        style={{ fontSize: 'clamp(1.35rem, 2.6vw, 2rem)' }}
+                      >
+                        {feature.headline[0]}<br />{feature.headline[1]}
+                      </h2>
+
+                      <StepList steps={feature.steps} />
+
+                      <div className="flex flex-wrap gap-2" aria-label="사용 기술">
+                        {feature.badges.map((badge) => (
+                          <span key={badge} className="footer-stack-badge">{badge}</span>
+                        ))}
+                      </div>
+                    </motion.div>
+
+                    {/* 오른쪽: 목업 이미지 + 체험 UI */}
+                    <motion.div
+                      className="w-full lg:w-[52%] shrink-0 flex flex-col gap-8"
+                      initial={{ opacity: 0, x: 24 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true, margin: '-60px' }}
+                      transition={{ duration: 0.75, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      {/* 브라우저 + 폰 목업 — 나란히, 겹침 없이 */}
+                      <div className="relative">
+                        {/* 브라우저 프레임 — 오른쪽에 폰이 겹칠 공간 확보 */}
+                        <div style={{ paddingRight: '18%' }}>
+                          <BrowserFrame src={feature.webImage} alt={feature.imageAlt} />
+                        </div>
+                        {/* 폰 프레임 — 브라우저 오른쪽에 살짝 겹쳐서 올림 */}
+                        <div
+                          className="absolute bottom-0 right-0 z-10"
+                          style={{ width: 'clamp(110px, 26%, 160px)' }}
+                        >
+                          <PhoneFrameStandalone
+                            src={feature.image}
+                            alt={feature.imageAlt}
+                            aspectRatio={feature.phoneAspectRatio}
+                          />
+                        </div>
+                      </div>
+
+                      {/* 구분선 */}
+                      <div className="h-px bg-black/8 dark:bg-white/8" />
+
+                      {/* 체험 카드 */}
+                      <div
+                        className="rounded-[24px] p-6 md:p-8"
+                        style={{
+                          background: 'var(--color-card-bg)',
+                          border: '1px solid rgba(0,0,0,0.07)',
+                          boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+                        }}
+                      >
+                        <HomeImageUpload />
+                      </div>
+                    </motion.div>
+
+                  </div>
+                </div>
+              ) : (
+                <div className="py-12 md:py-18">
+                  <ShowcaseSection feature={feature} />
+                </div>
+              )}
+
+              {i < FEATURES.length - 1 && (
+                <div className="h-px w-16 mx-auto my-0 rounded-full opacity-30" style={{ background: 'var(--color-lavender-border)' }} aria-hidden />
+              )}
             </div>
-            {i < FEATURES.length - 1 && (
-              <div className="line-gradient-deco w-40 mx-auto" aria-hidden />
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

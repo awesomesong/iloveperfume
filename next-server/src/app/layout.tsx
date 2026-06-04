@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import localFont from 'next/font/local';
-import { Josefin_Sans } from 'next/font/google';
+import { Josefin_Sans, Noto_Serif_KR, IBM_Plex_Sans_KR, Nanum_Pen_Script } from 'next/font/google';
 import NextAuthProvider from "@/src/app/context/NextAuthProvider";
 import ToasterContext from "@/src/app/context/ToasterContext";
 import ToastFromUrl from "@/src/app/components/ToastFromUrl";
@@ -30,6 +30,30 @@ const josefinSans = Josefin_Sans({
   preload: false,
   display: 'swap',
   variable: '--font-josefin-sans',
+});
+
+const notoSerifKR = Noto_Serif_KR({
+  subsets: ['latin'],
+  weight: ['300', '400'],
+  preload: false,
+  display: 'swap',
+  variable: '--font-noto-serif-kr',
+});
+
+const ibmPlexSansKR = IBM_Plex_Sans_KR({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  preload: false,
+  display: 'swap',
+  variable: '--font-ibm-plex-sans-kr',
+});
+
+const nanumPenScript = Nanum_Pen_Script({
+  subsets: ['latin'],
+  weight: ['400'],
+  preload: false,
+  display: 'swap',
+  variable: '--font-nanum-pen-script',
 });
 
 export const metadata: Metadata = {
@@ -95,6 +119,9 @@ export default async function RootLayout({
         break-all
         ${nanumGothic.variable}
         ${josefinSans.variable}
+        ${notoSerifKR.variable}
+        ${ibmPlexSansKR.variable}
+        ${nanumPenScript.variable}
       `}>
         <NextAuthProvider>
           <RQProviders>

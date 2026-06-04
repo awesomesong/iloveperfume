@@ -20,22 +20,29 @@ export default function GuideBanner() {
             aria-modal="true"
             aria-label="I Love Perfume 이용 방법 안내"
         >
-            <div className="flex items-center gap-3 rounded-lg border border-default bg-[linear-gradient(115deg,rgba(166,125,92,0.12)_0%,rgba(92,74,122,0.18)_55%,rgba(176,125,130,0.12)_100%)] backdrop-blur-xl p-3 shadow-md">
+            <div
+                className="flex items-center gap-3 rounded-full p-2 pl-4 pr-2"
+                style={{
+                    background: 'var(--color-card-bg)',
+                    border: '1px solid var(--color-card-border)',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
+                }}
+            >
                 <Link
                     href="/guide"
-                    className="flex min-w-0 flex-1 items-start gap-2 text-xs text-secondary hover:opacity-90 transition-opacity min-[480px]:flex-nowrap"
+                    className="flex min-w-0 flex-1 items-center gap-2 text-xs text-secondary hover:opacity-70 transition-opacity"
                 >
-                    <HiOutlineBookOpen className="size-4 shrink-0 text-secondary/70" aria-hidden />
-                    <p className="min-w-0">I Love Perfume 이용 방법은 여기서 확인하세요.</p>
+                    <HiOutlineBookOpen className="size-3.5 shrink-0" aria-hidden />
+                    <p className="min-w-0 whitespace-nowrap">이용 방법 안내</p>
                 </Link>
                 <button
                     type="button"
                     onClick={handleClose}
-                    className="shrink-0 rounded-full p-1 text-secondary hover:bg-black/10 hover:text-fg transition-colors"
+                    className="shrink-0 rounded-full p-1.5 text-secondary hover:opacity-60 transition-opacity"
                     aria-label="닫기"
                 >
-                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>

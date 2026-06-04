@@ -657,7 +657,7 @@ const ProductFragrance = () => {
                         <motion.div
                           animate={{
                             boxShadow: isHovered
-                              ? '0 16px 40px var(--color-shadow-hover), 0 0 0 1px rgba(200,180,255,0.31)'
+                              ? '0 16px 40px var(--color-shadow-hover), 0 0 0 1px var(--color-lavender-border)'
                               : '0 2px 12px var(--color-shadow-soft)',
                             y: isHovered ? -5 : 0,
                           }}
