@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 // https://nextjs.org/docs/app/api-reference/config/next-config-js
+
+// NextAuth requires NEXTAUTH_URL at build time. Provide a fallback so static
+// prerendering doesn't fail when the env var isn't injected by the CI runner.
+process.env.NEXTAUTH_URL = process.env.NEXTAUTH_URL || 'https://www.iloveperfume.co.kr';
+
 const nextConfig = {
     onDemandEntries: {
         // Keep pages in memory longer during dev to reduce route-change recompiles.
