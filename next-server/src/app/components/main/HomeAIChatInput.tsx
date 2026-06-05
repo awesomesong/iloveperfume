@@ -154,7 +154,7 @@ export default function HomeAIChatInput() {
       >
         <div
           className="relative shrink-0 size-8 rounded-full flex items-center justify-center"
-          style={{ background: 'var(--color-lavender)' }}
+          style={{ background: 'var(--color-accent)' }}
         >
           <HiSparkles className="size-4 text-white" aria-hidden />
           <span
@@ -181,7 +181,7 @@ export default function HomeAIChatInput() {
         >
           <div
             className="shrink-0 size-6 rounded-full flex items-center justify-center"
-            style={{ background: 'var(--color-lavender)' }}
+            style={{ background: 'var(--color-accent)' }}
             aria-hidden
           >
             <HiSparkles className="size-3 text-white" />
@@ -189,8 +189,8 @@ export default function HomeAIChatInput() {
           <div
             className="rounded-2xl rounded-bl-sm px-3.5 py-2.5 text-sm leading-relaxed"
             style={{
-              background: 'var(--color-lavender-pale)',
-              border: '1px solid var(--color-lavender-border)',
+              background: 'var(--color-accent-pale)',
+              border: '1px solid var(--color-accent-border)',
               color: 'var(--color-text-primary)',
               maxWidth: 'calc(100% - 2rem)',
             }}
@@ -256,7 +256,7 @@ export default function HomeAIChatInput() {
           onClick={() => submit(value)}
           disabled={!value.trim() || loading}
           className="shrink-0 rounded-xl p-2 transition-opacity disabled:opacity-30"
-          style={{ background: 'var(--color-lavender)', color: '#fff' }}
+          style={{ background: 'var(--color-accent)', color: '#fff' }}
           aria-label="전송"
         >
           {loading ? (

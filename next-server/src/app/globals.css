@@ -54,11 +54,11 @@ blockquote{
   /* 라이트: 아이보리 + 인디고 액센트 */
   --color-ivory: #fffcfa;
   --color-ivory-soft: #f8f6f3;
-  --color-lavender: #3d3d8f;
-  --color-lavender-light: #5555aa;
-  --color-lavender-muted: #6868a8;
-  --color-lavender-pale: #eaeaf8;
-  --color-lavender-border: #c0c0e0;
+  --color-accent: #3d3d8f;
+  --color-accent-light: #5555aa;
+  --color-accent-muted: #6868a8;
+  --color-accent-pale: #eaeaf8;
+  --color-accent-border: #c0c0e0;
   --color-text-primary: #1a1a2e;
   --color-text-secondary: #52526e;
   --color-card-bg: #fffcfa;
@@ -108,48 +108,48 @@ blockquote{
 }
 
 .dark {
-  /* 배경: 뉴트럴 웜 다크 (보라 제거) */
-  --bg-page: #111110;
+  /* 배경: 뉴트럴 웜 다크 — 전체적으로 한 단계 밝게 */
+  --bg-page: #1c1c1a;
   --bg-page-reverse: #fffcfa;
-  --header-bg: rgba(17, 17, 16, 0.92);
-  --header-border: rgba(200, 195, 188, 0.1);
+  --header-bg: rgba(28, 28, 26, 0.92);
+  --header-border: rgba(200, 195, 188, 0.14);
   --ilp-gradient-start: #f5f0e8;
   --ilp-gradient-mid: #e8e0d5;
   --ilp-gradient-end: #f0ebe0;
-  /* 텍스트: 웜 화이트 계열 */
+  /* 텍스트: 웜 화이트 계열 — accent 계열 전반 밝기 향상 */
   --color-ivory: #fffcfa;
-  --color-ivory-soft: #1c1c1a;
-  --color-lavender: #a09890;
-  --color-lavender-light: #b8b0a8;
-  --color-lavender-muted: #888078;
-  --color-lavender-pale: #1e1e1c;
-  --color-lavender-border: rgba(200, 195, 188, 0.18);
-  --color-text-primary: #f0ece6;
-  --color-text-secondary: #b0a8a0;
-  --color-card-bg: #1a1a18;
-  --color-card-border: rgba(200, 195, 188, 0.12);
+  --color-ivory-soft: #252523;
+  --color-accent: #c8c0b6;
+  --color-accent-light: #d8d0c6;
+  --color-accent-muted: #b0a89a;
+  --color-accent-pale: #2a2a27;
+  --color-accent-border: rgba(200, 195, 188, 0.28);
+  --color-text-primary: #f2eee8;
+  --color-text-secondary: #c0b8ae;
+  --color-card-bg: #252523;
+  --color-card-border: rgba(200, 195, 188, 0.2);
   --guide-card-surface-bg: var(--color-ivory-soft);
-  --guide-card-surface-border: var(--color-lavender-border);
-  --color-accent-line: #a09890;
-  --color-shadow-soft: rgba(0, 0, 0, 0.35);
-  --color-shadow-hover: rgba(0, 0, 0, 0.25);
+  --guide-card-surface-border: var(--color-accent-border);
+  --color-accent-line: #b0a898;
+  --color-shadow-soft: rgba(0, 0, 0, 0.28);
+  --color-shadow-hover: rgba(0, 0, 0, 0.2);
   --color-glow: rgba(255, 255, 255, 0.5);
-  --footer-border: rgba(200, 195, 188, 0.12);
-  --footer-badge-bg: rgba(200, 195, 188, 0.06);
-  --footer-badge-border: rgba(200, 195, 188, 0.15);
-  --footer-line: linear-gradient(90deg, transparent 0%, rgba(200, 195, 188, 0.18) 35%, rgba(200, 195, 188, 0.15) 65%, transparent 100%);
+  --footer-border: rgba(200, 195, 188, 0.16);
+  --footer-badge-bg: rgba(200, 195, 188, 0.08);
+  --footer-badge-border: rgba(200, 195, 188, 0.2);
+  --footer-line: linear-gradient(90deg, transparent 0%, rgba(200, 195, 188, 0.22) 35%, rgba(200, 195, 188, 0.18) 65%, transparent 100%);
   /* CTA 그라데이션(다크): 웜 아이보리 */
   --gradient-add-btn: linear-gradient(135deg, rgba(255,252,248,0.75) 0%, rgba(240,235,225,0.82) 40%, rgba(255,250,240,0.88) 70%, rgba(255,248,235,0.8) 100%);
-  /* 공지 카드(다크): 웜 다크 뉴트럴 */
-  --notice-card-bg: linear-gradient(180deg, #222220 0%, #1e1e1c 50%, #1c1c1a 100%);
-  --notice-card-border: rgba(200, 195, 188, 0.2);
-  --notice-card-image-bg: linear-gradient(145deg, rgba(200,190,175,0.35) 0%, rgba(190,185,175,0.2) 40%, rgba(200,195,185,0.08) 70%, rgba(210,200,185,0.18) 100%), #1a1a18;
-  --notice-card-hover-border: rgba(200, 195, 188, 0.32);
-  --notice-card-shadow-hover: rgba(0, 0, 0, 0.3);
-  --notice-card-body-bg: rgba(26, 26, 24, 0.7);
-  --notice-card-divider: rgba(200, 195, 188, 0.15);
+  /* 공지 카드(다크): 웜 다크 뉴트럴 — 카드 bg 맞게 조정 */
+  --notice-card-bg: linear-gradient(180deg, #2e2e2b 0%, #2a2a27 50%, #272724 100%);
+  --notice-card-border: rgba(200, 195, 188, 0.24);
+  --notice-card-image-bg: linear-gradient(145deg, rgba(200,190,175,0.35) 0%, rgba(190,185,175,0.2) 40%, rgba(200,195,185,0.08) 70%, rgba(210,200,185,0.18) 100%), #252523;
+  --notice-card-hover-border: rgba(200, 195, 188, 0.38);
+  --notice-card-shadow-hover: rgba(0, 0, 0, 0.24);
+  --notice-card-body-bg: rgba(37, 37, 35, 0.7);
+  --notice-card-divider: rgba(200, 195, 188, 0.18);
   /* 사이드바 */
-  --color-sidebar-state-bg: rgba(200, 195, 188, 0.08);
+  --color-sidebar-state-bg: rgba(200, 195, 188, 0.1);
   /* 로딩 ball: 웜 뉴트럴 */
   --points-ball-1: #4a4540;
   --points-ball-2: #605a54;
@@ -227,7 +227,7 @@ h4 {
 }
 
 .dark ::placeholder {
-  color: #c8b4ff !important; /* var(--color-lavender) */
+  color: #c8b4ff !important; /* var(--color-accent) */
   opacity: 0.5;
 }
 
@@ -451,7 +451,7 @@ h6 {
   height: 1.75rem;
   border-radius: 9999px;
   overflow: hidden;
-  background: var(--color-lavender-pale);
+  background: var(--color-accent-pale);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -564,14 +564,14 @@ h6 {
 
 /* ProductFragrance: 라벤더·아이보리 테마 (라이트/다크 변수 사용) */
 .product-fragrance-label {
-  color: var(--color-lavender);
+  color: var(--color-accent);
 }
 .product-fragrance-title {
   color: var(--color-text-primary);
 }
 .product-fragrance-add-link {
   border-color: rgba(200, 180, 255, 0.31);
-  color: var(--color-lavender);
+  color: var(--color-accent);
 }
 .product-fragrance-add-link:hover {
   background: rgba(200, 180, 255, 0.06);
@@ -637,16 +637,16 @@ h6 {
   height: 0.875rem;
 }
 .product-fragrance-divider {
-  background: var(--color-lavender-border);
+  background: var(--color-accent-border);
 }
 .product-fragrance-pill-active {
-  background: var(--color-lavender-pale);
-  border-color: var(--color-lavender-light);
+  background: var(--color-accent-pale);
+  border-color: var(--color-accent-light);
   color: var(--color-text-primary);
 }
 .product-fragrance-pill {
-  border-color: var(--color-lavender-border);
-  color: var(--color-lavender-muted);
+  border-color: var(--color-accent-border);
+  color: var(--color-accent-muted);
 }
 /* 스티키일 때 필터 pills 1줄 클립 (펼치기/접기용) — 모든 사이즈 공통 */
 .product-fragrance-pills-sticky-clip {
@@ -927,13 +927,13 @@ h6 {
   50% { opacity: 0.6; }
 }
 .skeleton-bg {
-  background-color: var(--color-lavender-border);
+  background-color: var(--color-accent-border);
 }
 .dark .skeleton-bg {
-  background-color: var(--color-lavender-border);
+  background-color: var(--color-accent-border);
 }
 .skeleton-bg-muted {
-  background-color: var(--color-lavender-pale);
+  background-color: var(--color-accent-pale);
 }
 .dark .skeleton-bg-muted {
   background-color: rgba(200, 180, 255, 0.15);
@@ -962,25 +962,25 @@ h6 {
   border-color: var(--color-card-border);
 }
 .dark .skeleton-border {
-  border-color: var(--color-lavender-border);
+  border-color: var(--color-accent-border);
 }
 
 /*
-  가격 비교 스켈레톤 바 — var(--color-lavender) 기반.
+  가격 비교 스켈레톤 바 — var(--color-accent) 기반.
   라이트(#b094e0): 85% / 60% opacity
   다크  (#c8b4ff): 52% / 38% opacity — 어두운 배경에서 대비 확보
 */
 .skeleton-price-bar {
-  background-color: color-mix(in srgb, var(--color-lavender) 85%, transparent);
+  background-color: color-mix(in srgb, var(--color-accent) 85%, transparent);
 }
 .dark .skeleton-price-bar {
-  background-color: color-mix(in srgb, var(--color-lavender) 52%, transparent);
+  background-color: color-mix(in srgb, var(--color-accent) 52%, transparent);
 }
 .skeleton-price-bar-muted {
-  background-color: color-mix(in srgb, var(--color-lavender) 60%, transparent);
+  background-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
 }
 .dark .skeleton-price-bar-muted {
-  background-color: color-mix(in srgb, var(--color-lavender) 38%, transparent);
+  background-color: color-mix(in srgb, var(--color-accent) 38%, transparent);
 }
 
 /* 폼 입력 필드용 공통 스켈레톤 스타일 */
@@ -996,13 +996,13 @@ h6 {
   @apply w-full h-8 skeleton-bg-muted-70 border-b-2 skeleton-border;
 }
 .product-fragrance-card:hover {
-  box-shadow: 0 16px 40px var(--color-shadow-hover), 0 0 0 1px var(--color-lavender-border);
+  box-shadow: 0 16px 40px var(--color-shadow-hover), 0 0 0 1px var(--color-accent-border);
 }
 .product-fragrance-card-rest {
   box-shadow: 0 2px 12px var(--color-shadow-soft);
 }
 .product-fragrance-brand {
-  color: var(--color-lavender);
+  color: var(--color-accent);
 }
 .product-fragrance-name {
   color: var(--color-text-primary);
@@ -1109,7 +1109,7 @@ div[data-slot="input-wrapper"].textfield-input-boundary,
 .textfield-input-boundary,
 .textfield-textarea-wrapper,
 div[data-slot="input-wrapper"].textfield-textarea-wrapper {
-  box-shadow: 0 1px 0 0 #a89ec4 !important;
+  box-shadow: 0 1px 0 0 #8c8680 !important;
 }
 .dark div[data-slot="input-wrapper"].textfield-input-boundary,
 .dark .textfield-input-boundary,
@@ -1117,7 +1117,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 .dark div[data-slot="input-wrapper"].textfield-textarea-wrapper,
 [data-theme="dark"] .textfield-input-boundary,
 [data-theme="dark"] .textfield-textarea-wrapper {
-  box-shadow: 0 1px 0 0 #6b5b8a !important;
+  box-shadow: 0 1px 0 0 #7a7670 !important;
 }
 
 .effect-rightLeft {
@@ -1176,7 +1176,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   }
 
   .sm\:link-effect-underline:where(:hover, :focus-visible) {
-    border-bottom-color: var(--color-lavender);
+    border-bottom-color: var(--color-accent);
   }
 }
 
@@ -1251,12 +1251,12 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 
 .profile-info {
   @apply flex flex-col gap-1.5 w-full p-4 rounded-2xl border;
-  background-color: color-mix(in srgb, var(--color-lavender-pale), transparent 90%);
-  border-color: color-mix(in srgb, var(--color-lavender-border), transparent 80%);
+  background-color: color-mix(in srgb, var(--color-accent-pale), transparent 90%);
+  border-color: color-mix(in srgb, var(--color-accent-border), transparent 80%);
 }
 
 .dark .profile-info {
-  background-color: color-mix(in srgb, var(--color-lavender-pale), transparent 95%);
+  background-color: color-mix(in srgb, var(--color-accent-pale), transparent 95%);
 }
 
 .profile-info__row {
@@ -1265,7 +1265,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 
 .profile-info__label {
   @apply text-[11px] uppercase tracking-widest font-bold opacity-60 shrink-0;
-  color: var(--color-lavender-muted);
+  color: var(--color-accent-muted);
 }
 
 .profile-info__value {
@@ -1284,13 +1284,13 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 }
 
 .dark .avatar-block__box {
-  border-color: color-mix(in srgb, var(--color-lavender-pale), transparent 90%);
+  border-color: color-mix(in srgb, var(--color-accent-pale), transparent 90%);
 }
 
 
 .avatar-block__icon {
   @apply w-full h-full scale-[1.1];
-  color: var(--color-lavender-muted);
+  color: var(--color-accent-muted);
 }
 
 /* react-select dark mode */
@@ -1307,7 +1307,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 
   .ilp-select__menu {
     /* Always use ivory background to support the dark text requested by user */
-    @apply bg-[var(--color-ivory)] border-1 border-[var(--color-lavender-border)] rounded-xl shadow-2xl overflow-hidden mt-1;
+    @apply bg-[var(--color-ivory)] border-1 border-[var(--color-accent-border)] rounded-xl shadow-2xl overflow-hidden mt-1;
     z-index: 1000 !important;
   }
 
@@ -1354,12 +1354,12 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   }
 
   .ilp-select__placeholder {
-    @apply !text-[var(--color-lavender-muted)] !opacity-60;
+    @apply !text-[var(--color-accent-muted)] !opacity-60;
   }
 
   /* Multi-value container and labels */
   .ilp-select__multi-value {
-    @apply bg-[var(--color-lavender-pale)] rounded-md border-1 border-[var(--color-lavender-border)];
+    @apply bg-[var(--color-accent-pale)] rounded-md border-1 border-[var(--color-accent-border)];
   }
 
   .ilp-select__multi-value__label {
@@ -1368,7 +1368,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 
   /* Multi-value remove button and SVG */
   .ilp-select__multi-value__remove {
-    @apply !text-[var(--color-lavender)] hover:!bg-[var(--color-lavender-light)] hover:!text-[#2d2040] transition-colors;
+    @apply !text-[var(--color-accent)] hover:!bg-[var(--color-accent-light)] hover:!text-[#2d2040] transition-colors;
   }
 
   .ilp-select__multi-value__remove svg {
@@ -1470,12 +1470,12 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   }
 
   .bg-gradient-ilp {
-    background: var(--color-lavender);
+    background: var(--color-accent);
   }
 
   /* 아바타/아이콘 배경 — 솔리드 */
   .bg-gradient-ilp-avatar {
-    background: var(--color-lavender);
+    background: var(--color-accent);
   }
   .dark .bg-gradient-ilp-avatar {
     background: #5c4a7a;
@@ -1489,7 +1489,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   }
 
   .modal-description {
-    @apply text-xs sm:text-sm text-neutral-500 dark:text-lavender-muted leading-relaxed;
+    @apply text-xs sm:text-sm text-neutral-500 dark:text-accent-muted leading-relaxed;
   }
 
   .chat-item__title {
@@ -1543,7 +1543,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
     height: 1px;
     width: 100%;
     border-radius: 999px;
-    background: var(--color-lavender-border);
+    background: var(--color-accent-border);
     transform-origin: left center;
   }
 }
@@ -1559,7 +1559,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   padding: 0.25em;
   width: 3em;
   height: 3em;
-  color: var(--color-lavender);
+  color: var(--color-accent);
   background-color: transparent;
   font-size: 16px;
   overflow: hidden;
@@ -1856,7 +1856,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 .ilp-deco-line {
   width: clamp(60px, 12vw, 120px);
   height: 1px;
-  background: var(--color-lavender-border);
+  background: var(--color-accent-border);
 }
 
 /* 메인 타이틀 — 라이트: 진한 라벤더(아이보리 대비), 다크: 밝은 라벤더 */
@@ -1982,7 +1982,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   letter-spacing: 0.02em;
 }
 .footer-nav-link:hover {
-  color: var(--color-lavender);
+  color: var(--color-accent);
 }
 
 .footer-dev {
@@ -2001,7 +2001,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   transition: color 0.2s;
 }
 .footer-github:hover {
-  color: var(--color-lavender);
+  color: var(--color-accent);
 }
 
 .footer-stack {

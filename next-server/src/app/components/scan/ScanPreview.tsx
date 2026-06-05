@@ -34,7 +34,7 @@ export default function ScanPreview({ imageUrl, onRetake, onAnalyze }: Props) {
         className="flex flex-col gap-5 max-w-full"
         style={{ width: `calc(70vh * ${aspectRatio})` }}
       >
-        <p className="text-center text-sm md:text-[15px] font-medium text-text-primary">
+        <p className="text-center text-sm md:text-[15px] font-medium text-fg-primary">
           이 사진으로 분석할까요?
         </p>
 

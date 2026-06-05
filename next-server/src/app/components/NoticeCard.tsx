@@ -46,7 +46,7 @@ const NoticeCard = ({ notice }: { notice: Notice }) => {
       ) : (
         <div className="notice-card__image-wrap flex items-center justify-center">
           <span
-            className="text-[2.5rem] opacity-40 text-[var(--color-lavender-muted)]"
+            className="text-[2.5rem] opacity-40 text-[var(--color-accent-muted)]"
             aria-hidden
           >
             📋

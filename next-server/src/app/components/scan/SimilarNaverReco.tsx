@@ -73,7 +73,7 @@ export default function SimilarNaverReco({ scanId }: Props) {
         <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-stone-500 dark:text-stone-300">
           AI가 추천하는 비슷한 향수
         </h3>
-        <p className="text-xs text-text-secondary">
+        <p className="text-xs text-fg-secondary">
           {loading
             ? '올리브영 · 백화점 · 공식몰 확인 중...'
             : `${items.length}종 · ${summarizeStores(items)}`}
@@ -84,11 +84,11 @@ export default function SimilarNaverReco({ scanId }: Props) {
         {loading
           ? [0, 1].map((i) => (
               <div key={i} className="flex flex-col gap-2 animate-pulse">
-                <div className="aspect-square rounded-2xl bg-[var(--color-lavender-pale)]" />
+                <div className="aspect-square rounded-2xl bg-[var(--color-accent-pale)]" />
                 <div className="flex flex-col gap-1.5 px-0.5">
-                  <div className="h-2.5 w-2/5 rounded-full bg-[var(--color-lavender-pale)]" />
-                  <div className="h-3 w-4/5 rounded-full bg-[var(--color-lavender-pale)]" />
-                  <div className="h-2.5 w-3/5 rounded-full bg-[var(--color-lavender-pale)]" />
+                  <div className="h-2.5 w-2/5 rounded-full bg-[var(--color-accent-pale)]" />
+                  <div className="h-3 w-4/5 rounded-full bg-[var(--color-accent-pale)]" />
+                  <div className="h-2.5 w-3/5 rounded-full bg-[var(--color-accent-pale)]" />
                 </div>
               </div>
             ))
@@ -103,7 +103,7 @@ export default function SimilarNaverReco({ scanId }: Props) {
                   rel="noopener noreferrer"
                   className="group flex flex-col gap-2"
                 >
-                  <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--color-lavender-pale)] border border-[var(--color-card-border)] group-hover:border-lavender transition-colors">
+                  <div className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--color-accent-pale)] border border-[var(--color-card-border)] group-hover:border-accent transition-colors">
                     {imgSrc ? (
                       <Image
                         src={imgSrc}
@@ -114,38 +114,38 @@ export default function SimilarNaverReco({ scanId }: Props) {
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs text-text-secondary">no image</span>
+                        <span className="text-xs text-fg-secondary">no image</span>
                       </div>
                     )}
                   </div>
 
                   <div className="flex flex-col gap-1 px-0.5">
-                    <p className="text-[11px] text-text-secondary font-light truncate">
+                    <p className="text-[11px] text-fg-secondary font-light truncate">
                       {item.brand}
                     </p>
-                    <p className="text-[13px] font-medium text-text-primary truncate group-hover:text-lavender transition-colors leading-snug">
+                    <p className="text-[13px] font-medium text-fg-primary truncate group-hover:text-accent transition-colors leading-snug">
                       {item.name}
                     </p>
 
                     {/* 스토어 배지 + 몰 이름 */}
                     <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
                       {item.badge && (
-                        <span className="shrink-0 inline-flex items-center bg-[var(--color-lavender-pale)] text-text-secondary text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-none">
+                        <span className="shrink-0 inline-flex items-center bg-[var(--color-accent-pale)] text-fg-secondary text-[10px] font-medium px-1.5 py-0.5 rounded-full leading-none">
                           {BADGE_LABEL[item.badge]}
                         </span>
                       )}
-                      <span className="text-[11px] text-text-secondary truncate">
+                      <span className="text-[11px] text-fg-secondary truncate">
                         {item.mall}
                       </span>
                     </div>
 
                     {/* 가격 + 바로가기 */}
                     <div className="flex items-center gap-1 group/link">
-                      <span className="text-[12px] font-semibold text-text-primary group-hover/link:text-lavender transition-colors">
+                      <span className="text-[12px] font-semibold text-fg-primary group-hover/link:text-accent transition-colors">
                         ₩{item.price.toLocaleString()}
                       </span>
                       <HiOutlineArrowTopRightOnSquare
-                        className="size-3 text-text-secondary shrink-0 group-hover/link:text-lavender transition-colors"
+                        className="size-3 text-fg-secondary shrink-0 group-hover/link:text-accent transition-colors"
                         aria-hidden
                       />
                     </div>

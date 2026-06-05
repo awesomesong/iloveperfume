@@ -278,8 +278,8 @@ function StepList({ steps }: { steps: { label: string; desc: string }[] }) {
             aria-hidden
             className="relative z-10 shrink-0 mt-[5px] size-[15px] rounded-full"
             style={{
-              background: 'var(--color-lavender-pale)',
-              border: '1.5px solid var(--color-lavender-border)',
+              background: 'var(--color-accent-pale)',
+              border: '1.5px solid var(--color-accent-border)',
             }}
           />
 
@@ -333,7 +333,7 @@ function ShowcaseSection({ feature }: { feature: (typeof FEATURES)[number] }) {
 
         {/* 헤드라인 */}
         <h2
-          className="font-pretendard font-normal text-text-primary leading-[1.3] tracking-[-0.01em]"
+          className="font-pretendard font-normal text-fg-primary leading-[1.3] tracking-[-0.01em]"
           style={{ fontSize: 'clamp(1.35rem, 2.6vw, 2rem)' }}
         >
           {headline[0]}<br className="hidden sm:block" /> {headline[1]}
@@ -417,7 +417,7 @@ export default function FeatureShowcase() {
                       </span>
 
                       <h2
-                        className="font-pretendard font-normal text-text-primary leading-[1.3] tracking-[-0.01em]"
+                        className="font-pretendard font-normal text-fg-primary leading-[1.3] tracking-[-0.01em]"
                         style={{ fontSize: 'clamp(1.35rem, 2.6vw, 2rem)' }}
                       >
                         {feature.headline[0]}<br />{feature.headline[1]}
@@ -484,7 +484,7 @@ export default function FeatureShowcase() {
               )}
 
               {i < FEATURES.length - 1 && (
-                <div className="h-px w-16 mx-auto my-0 rounded-full opacity-30" style={{ background: 'var(--color-lavender-border)' }} aria-hidden />
+                <div className="h-px w-16 mx-auto my-0 rounded-full opacity-30" style={{ background: 'var(--color-accent-border)' }} aria-hidden />
               )}
             </div>
           );

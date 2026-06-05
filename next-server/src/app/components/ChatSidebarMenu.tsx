@@ -58,7 +58,7 @@ export default function ChatSidebarMenu({
     return (
       <div
         aria-hidden
-        className="min-w-8 w-8 h-8 rounded-full overflow-hidden bg-[var(--color-lavender-pale)]/50 backdrop-blur-sm border-1 border-[var(--color-lavender-border)] shadow-sm"
+        className="min-w-8 w-8 h-8 rounded-full overflow-hidden bg-[var(--color-accent-pale)]/50 backdrop-blur-sm border-1 border-[var(--color-accent-border)] shadow-sm"
       >
         <ShapesSkeleton width="100%" height="100%" radius="none" />
       </div>
@@ -71,7 +71,7 @@ export default function ChatSidebarMenu({
     <Dropdown
       classNames={{
         content:
-          "bg-[var(--color-card-bg)]/80 backdrop-blur-md border-1 border-[var(--color-lavender-border)] shadow-xl rounded-xl p-1",
+          "bg-[var(--color-card-bg)]/80 backdrop-blur-md border-1 border-[var(--color-accent-border)] shadow-xl rounded-xl p-1",
       }}
     >
       <DropdownTrigger>
@@ -90,7 +90,7 @@ export default function ChatSidebarMenu({
             "px-3",
             "py-2",
             "data-[hover=true]:text-[var(--color-text-primary)]",
-            "data-[hover=true]:bg-[var(--color-lavender-pale)]",
+            "data-[hover=true]:bg-[var(--color-accent-pale)]",
           ],
         }}
       >

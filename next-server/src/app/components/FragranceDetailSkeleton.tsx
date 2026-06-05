@@ -32,7 +32,7 @@ export default function FragranceDetailSkeleton({
           </div>
           {!isDetail && (
             <div className="flex flex-col gap-6 sm:flex-grow w-full sm:w-auto lg:w-full shrink-0 min-w-0">
-              <div className="flex justify-between items-end border-b border-[#ede8f5] dark:border-[#c8b4ff30] pb-2">
+              <div className="flex justify-between items-end border-b border-[#ede8f5] dark:border-[#d4b8b030] pb-2">
                 <div className="w-20 h-2 rounded-full skeleton-bg-muted" />
                 <div className="w-14 h-2 rounded-full skeleton-bg-muted" />
               </div>

@@ -20,7 +20,7 @@ export const submitMediumButtonClassName =
 
 /** ghostLavender 공통 핵심 스타일 (색상, 테두리, 트랜지션) */
 export const ghostLavenderBaseClassName =
-  "rounded-full border border-[#c0aed8] dark:border-[rgba(200,195,188,0.30)] bg-transparent text-[#2d2040] dark:text-[#e0dcf5] shadow-none transition-all duration-300 hover:bg-[var(--color-lavender-pale)] hover:border-[#6b4a90] dark:hover:bg-[rgba(200,195,188,0.08)] dark:hover:border-[rgba(200,195,188,0.50)]";
+  "rounded-full border border-[rgba(60,58,52,0.65)] dark:border-[rgba(176,168,160,0.60)] bg-transparent text-[var(--color-text-primary)] shadow-none transition-all duration-300 hover:bg-[var(--color-card-bg)] hover:border-[rgba(60,58,52,0.90)] dark:hover:bg-[rgba(200,195,188,0.06)] dark:hover:border-[rgba(200,195,188,0.45)]";
 
 /** 취소 및 소셜 로그인 버튼 등 표준 Ghost 스타일 */
 export const ghostButtonClassName =

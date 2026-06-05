@@ -176,7 +176,7 @@ export default function CameraCapture({ onCapture, onActiveChange, autoStart }: 
           playsInline
           muted
           onLoadedMetadata={handleVideoMetadata}
-          className="block bg-black rounded-2xl border border-lavender-border w-full"
+          className="block bg-black rounded-2xl border border-accent-border w-full"
           style={{ aspectRatio }}
         />
         {/* FormSubmitActions 패턴 — 주요(촬영) flex-1, 보조(취소) 자연 폭 */}

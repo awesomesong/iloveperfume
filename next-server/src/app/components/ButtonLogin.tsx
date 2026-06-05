@@ -13,7 +13,7 @@ const ButtonLogin = () => {
     return (
         <Link
             href={signInHref}
-            className="font-pretendard text-[14px] md:text-[15px] font-normal tracking-[0.02em] text-text-primary nav-hover focus:outline-none"
+            className="font-pretendard text-[14px] md:text-[15px] font-normal tracking-[0.02em] text-fg-primary nav-hover focus:outline-none"
         >
             login
         </Link>

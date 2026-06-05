@@ -62,7 +62,7 @@ const Modal: React.FC<ModalProps> = ({
                 <div
                     className={clsx(
                         "overflow-hidden relative bg-[var(--bg-page)]",
-                        "border-1 border-[var(--color-lavender-border)]",
+                        "border-1 border-[var(--color-accent-border)]",
                         "shadow-2xl rounded-2xl transition-all duration-300",
                     )}
                     onClick={(e) => e.stopPropagation()}
@@ -79,9 +79,9 @@ const Modal: React.FC<ModalProps> = ({
                             type="button"
                             className={clsx(
                                 "flex items-center justify-center p-1 sm:p-1.5 rounded-full transition-all duration-300",
-                                "bg-[var(--color-lavender-pale)]/50 backdrop-blur-sm text-[var(--color-text-primary)]",
-                                "hover:bg-[var(--color-lavender-light)]/80 hover:scale-110 active:scale-95",
-                                "border-1 border-[var(--color-lavender-border)] shadow-sm"
+                                "bg-[var(--color-accent-pale)]/50 backdrop-blur-sm text-[var(--color-text-primary)]",
+                                "hover:bg-[var(--color-accent-light)]/80 hover:scale-110 active:scale-95",
+                                "border-1 border-[var(--color-accent-border)] shadow-sm"
                             )}
                         >
                             <span className="sr-only">닫기</span>

@@ -300,17 +300,17 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                         onDrop={(e) => handleDrop(e, isDisabled)}
                         className={clsx(
                             "fragrance-img-size transition-all duration-300 group mx-auto sm:self-start",
-                            isDragging ? "bg-[#f1ecfe]/50 scale-[1.01]" : "bg-[#fffcfa] dark:bg-[#1a1425]",
+                            isDragging ? "bg-[#f5edf0]/50 scale-[1.01]" : "bg-[#fffcfa] dark:bg-[#1a1210]",
                             imageError && "ring-2 ring-red-400/60 dark:ring-red-400/50 rounded-[28px]",
                             previewImages.length === 0 && "!overflow-visible"
                         )}
                     >
                         {isUploading && (
                             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 rounded-[28px] bg-white/90 dark:bg-[#1a1c23]/90 backdrop-blur-sm">
-                                <div className="w-16 h-16 text-[#b094e0]">
+                                <div className="w-16 h-16 text-[#c09080]">
                                     <progress className="pure-material-progress-circular w-full h-full" />
                                 </div>
-                                <p className="text-sm font-medium text-[#5c4a7a] dark:text-[#c8b4ff] tracking-widest uppercase">Uploading</p>
+                                <p className="text-sm font-medium text-[#7a5040] dark:text-[#d4b8b0] tracking-widest uppercase">Uploading</p>
                             </div>
                         )}
 
@@ -330,19 +330,19 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                         ) : (
                             <button
                                 type="button"
-                                className="flex flex-col justify-center items-center gap-3 md:gap-6 w-full h-full border-2 border-dashed border-[#ede8f5] dark:border-[#c8b4ff40] rounded-[28px] bg-transparent text-[#b094e0] hover:bg-[#fafafc] dark:hover:bg-[#2d2040]/40 transition-colors duration-200 cursor-pointer"
+                                className="flex flex-col justify-center items-center gap-3 md:gap-6 w-full h-full border-2 border-dashed border-[#ede8f5] dark:border-[#d4b8b040] rounded-[28px] bg-transparent text-[#c09080] hover:bg-[#fafafc] dark:hover:bg-[#2d1e18]/40 transition-colors duration-200 cursor-pointer"
                                 onClick={() => {
                                     setImageError(null);
                                     fileInputRef.current?.click();
                                 }}
                                 disabled={isDisabled}
                             >
-                                <div className="p-3 md:p-6 rounded-full bg-[#f8f6ff] dark:bg-[#2d2040] text-[#b094e0] dark:text-[#c8b4ff]">
+                                <div className="p-3 md:p-6 rounded-full bg-[#f8f6ff] dark:bg-[#2d1e18] text-[#c09080] dark:text-[#d4b8b0]">
                                     <ImFilesEmpty className="text-3xl md:text-5xl opacity-80" />
                                 </div>
                                 <div className="text-center px-4">
-                                    <p className="text-sm md:text-base font-light tracking-wide mb-1 dark:text-[#c8b4ff]">향수 이미지 업로드</p>
-                                    <p className="text-[11px] opacity-70 dark:opacity-70 text-[#5c4a7a] dark:text-[#c8b4ff]">
+                                    <p className="text-sm md:text-base font-light tracking-wide mb-1 dark:text-[#d4b8b0]">향수 이미지 업로드</p>
+                                    <p className="text-[11px] opacity-70 dark:opacity-70 text-[#7a5040] dark:text-[#d4b8b0]">
                                         클릭하거나 이미지를 드래그하세요
                                         {!isEdit && <><br />첫 이미지는 AI가 자동으로 분석합니다</>}
                                     </p>
@@ -358,8 +358,8 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
 
                     {/* 640px~1023px: 업로드 오른쪽에 배치, 1024px+ 에서는 아래로 */}
                     <div className="flex flex-col gap-6 sm:flex-grow w-full sm:w-auto lg:w-full shrink-0 min-w-0">
-                        <div className="flex justify-between items-end border-b border-[#ede8f5] dark:border-[#c8b4ff30] pb-2">
-                            <p className="text-[0.7rem] uppercase tracking-[0.2em] text-[#b094e0] font-bold">등록된 이미지</p>
+                        <div className="flex justify-between items-end border-b border-[#ede8f5] dark:border-[#d4b8b030] pb-2">
+                            <p className="text-[0.7rem] uppercase tracking-[0.2em] text-[#c09080] font-bold">등록된 이미지</p>
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -376,7 +376,7 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                                     setImageError(null);
                                     fileInputRef.current?.click();
                                 }}
-                                className="text-[11px] uppercase tracking-widest text-[#5c4a7a] dark:text-[#c8b4ff] hover:text-[#b094e0] transition-colors font-medium"
+                                className="text-[11px] uppercase tracking-widest text-[#7a5040] dark:text-[#d4b8b0] hover:text-[#c09080] transition-colors font-medium"
                             >
                                 {isUploading ? "이미지 업로드 중" : "+ 이미지 추가"}
                             </button>
@@ -387,7 +387,7 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                                 <li
                                     key={img.src}
                                     className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer ${i === sliderIndex
-                                        ? "border-[#c8b4ff] shadow-md scale-[1.08] z-10"
+                                        ? "border-[#d4b8b0] shadow-md scale-[1.08] z-10"
                                         : "border-transparent opacity-50 hover:opacity-100 hover:scale-[1.03]"
                                         }`}
                                     onClick={() => selectImage(i)}
@@ -417,17 +417,17 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
 
                 <div className="fragrance-form-right gap-12">
                     {scanPrefilled && !isAnalyzing && (
-                        <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[#f1ecfe] dark:bg-[#2d2040]/60 border border-[#c8b4ff40]">
-                            <HiSparkles className="text-[#b094e0] w-4 h-4 shrink-0" />
-                            <p className="text-[0.75rem] tracking-[0.15em] uppercase text-[#5c4a7a] dark:text-[#c8b4ff] font-medium">
+                        <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[#f5edf0] dark:bg-[#2d1e18]/60 border border-[#d4b8b040]">
+                            <HiSparkles className="text-[#c09080] w-4 h-4 shrink-0" />
+                            <p className="text-[0.75rem] tracking-[0.15em] uppercase text-[#7a5040] dark:text-[#d4b8b0] font-medium">
                                 스캔 결과에서 자동 입력됐습니다.
                             </p>
                         </div>
                     )}
                     {isAnalyzing && (
-                        <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[#f1ecfe] dark:bg-[#2d2040]/60 border border-[#c8b4ff40]">
-                            <HiSparkles className="text-[#b094e0] w-4 h-4 shrink-0 animate-pulse" />
-                            <p className="text-[0.75rem] tracking-[0.15em] uppercase text-[#5c4a7a] dark:text-[#c8b4ff] font-medium">
+                        <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[#f5edf0] dark:bg-[#2d1e18]/60 border border-[#d4b8b040]">
+                            <HiSparkles className="text-[#c09080] w-4 h-4 shrink-0 animate-pulse" />
+                            <p className="text-[0.75rem] tracking-[0.15em] uppercase text-[#7a5040] dark:text-[#d4b8b0] font-medium">
                                 AI가 이미지를 분석하고 있습니다.
                             </p>
                         </div>

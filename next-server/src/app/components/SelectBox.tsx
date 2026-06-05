@@ -51,7 +51,7 @@ const SelectBox: React.FC<SelctProps> = ({
                         control: (state) => `
                                 !border-none !shadow-none textfield-input-boundary relative
                                 after:content-[''] after:absolute after:bottom-[-1px] after:left-0 
-                                after:w-full after:h-[2px] after:bg-[#b094e0] dark:after:bg-[#c8b4ff] 
+                                after:w-full after:h-[2px] after:bg-[#c09080] dark:after:bg-[#d4b8b0] 
                                 after:scale-x-0 after:origin-center after:transition-transform after:duration-300
                                 ${state.isFocused ? "after:scale-x-100" : ""}
                             `,
@@ -94,7 +94,7 @@ const SelectBox: React.FC<SelctProps> = ({
                             ...base,
                             backgroundColor: 'var(--color-ivory)',
                             borderRadius: '12px',
-                            border: '1px solid var(--color-lavender-border)',
+                            border: '1px solid var(--color-accent-border)',
                             boxShadow: '0 10px 25px rgba(45, 32, 64, 0.1)',
                             overflow: 'hidden',
                             zIndex: 1000,
@@ -102,21 +102,21 @@ const SelectBox: React.FC<SelctProps> = ({
                         option: (base, state) => ({
                             ...base,
                             backgroundColor: state.isFocused
-                                ? '#e8e0ff'
+                                ? '#f5edf0'
                                 : 'transparent',
-                            color: state.isFocused ? '#7c5eb0' : '#2d2040',
+                            color: state.isFocused ? '#8d5a68' : '#2d1e18',
                             padding: '10px 15px',
                             fontSize: '0.875rem',
                             cursor: 'pointer',
                             '&:active': {
-                                backgroundColor: 'var(--color-lavender-light)',
+                                backgroundColor: 'var(--color-accent-light)',
                             },
                         }),
                         multiValue: (base) => ({
                             ...base,
-                            backgroundColor: 'var(--color-lavender-pale)',
+                            backgroundColor: 'var(--color-accent-pale)',
                             borderRadius: '6px',
-                            border: '1px solid var(--color-lavender-border)',
+                            border: '1px solid var(--color-accent-border)',
                         }),
                         multiValueLabel: (base) => ({
                             ...base,
@@ -126,16 +126,16 @@ const SelectBox: React.FC<SelctProps> = ({
                         }),
                         multiValueRemove: (base) => ({
                             ...base,
-                            color: 'var(--color-lavender)', // Base color for the "X"
+                            color: 'var(--color-accent)', // Base color for the "X"
                             transition: 'all 0.2s ease',
                             '&:hover': {
-                                backgroundColor: 'var(--color-lavender-light)',
-                                color: '#2d2040', // Dark text on light background for clear visibility
+                                backgroundColor: 'var(--color-accent-light)',
+                                color: '#2d1e18', // Dark text on light background for clear visibility
                             },
                         }),
                         placeholder: (base) => ({
                             ...base,
-                            color: 'var(--color-lavender-muted)',
+                            color: 'var(--color-accent-muted)',
                             opacity: 0.6,
                             fontSize: '0.95rem',
                             fontWeight: '300', // TextField's font-light (300) matching

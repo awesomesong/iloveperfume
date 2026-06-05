@@ -84,7 +84,7 @@ export default function EditableItemRow({
                 onClick={onStartEdit}
                 title={String(id).startsWith("temp-") ? "서버에 저장 중입니다." : undefined}
                 disabled={String(id).startsWith("temp-")}
-                className={`${rowActionBase} bg-[#e8e4f0] text-[#5c4a7a] hover:bg-[#ddd8e8] dark:bg-[#9d8fb8] dark:text-[#1f1b29] dark:hover:bg-[#b5a8cc] disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`${rowActionBase} bg-[#e8e4f0] text-[#7a5040] hover:bg-[#ddd8e8] dark:bg-[#9d8fb8] dark:text-[#1f1b29] dark:hover:bg-[#b5a8cc] disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 수정
               </button>

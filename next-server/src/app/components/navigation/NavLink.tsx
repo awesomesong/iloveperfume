@@ -36,7 +36,7 @@ const NavLink: React.FC<NavLinkProps> = ({
         onFocus={onFocus}
         onBlur={onBlur}
         className={clsx(
-          'font-pretendard text-[14px] md:text-[15px] font-normal tracking-[0.04em] text-text-primary nav-hover'
+          'font-pretendard text-[14px] md:text-[15px] font-normal tracking-[0.04em] text-fg-primary nav-hover'
         )}
       >
         {label}

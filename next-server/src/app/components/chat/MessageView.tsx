@@ -528,7 +528,7 @@ const MessageView: React.FC<MessageBoxProps> = ({
           px-6
           py-2
           mb-4
-          bg-[var(--color-lavender-pale)]
+          bg-[var(--color-accent-pale)]
           text-[var(--color-text-primary)]
           text-sm
           rounded-full
@@ -541,7 +541,7 @@ const MessageView: React.FC<MessageBoxProps> = ({
     <>
       {showDateDivider && (
         <div className="flex justify-center items-center my-4">
-          <div className="px-4 py-1 bg-[var(--color-lavender-pale)] text-[var(--color-text-secondary)] rounded-full">
+          <div className="px-4 py-1 bg-[var(--color-accent-pale)] text-[var(--color-text-secondary)] rounded-full">
             {new Date(data.createdAt).toLocaleDateString("ko-KR", {
               year: "numeric",
               month: "long",
@@ -580,8 +580,8 @@ const MessageView: React.FC<MessageBoxProps> = ({
                 : isAIMessage
                   ? "bg-[#ede8f5] dark:bg-[var(--color-ivory-soft)]"
                   : isOwn
-                    ? "bg-[#b094e0] dark:bg-[#7c5eb0]"
-                    : "bg-[var(--color-lavender-pale)] dark:bg-[#4d4272] dark:text-[var(--color-text-primary)]",
+                    ? "bg-[#c09080] dark:bg-[#8d5a68]"
+                    : "bg-[var(--color-accent-pale)] dark:bg-[#2a1e1c] dark:text-[var(--color-text-primary)]",
               data.type === "image"
                 ? "max-[360px]:w-full rounded-md p-0 overflow-hidden"
                 : "py-2 px-3 rounded-2xl",

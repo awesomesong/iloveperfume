@@ -84,8 +84,8 @@ const ImageSlider = ({
 
   const isCompact = variant === 'compact';
   const chevronBtnClass = isCompact
-    ? 'p-1 rounded-full bg-[#1a1625]/90 dark:bg-[#f8f7ff]/95 text-white dark:text-[#2d2040] shadow-md hover:bg-[#1a1625] dark:hover:bg-white transition-all'
-    : 'p-1.5 rounded-full bg-[#1a1625]/90 dark:bg-[#f8f7ff]/95 text-white dark:text-[#2d2040] shadow-md hover:bg-[#1a1625] dark:hover:bg-white transition-all';
+    ? 'p-1 rounded-full bg-[#1a1210]/90 dark:bg-[#f8f6f3]/95 text-white dark:text-[#2d1e18] shadow-md hover:bg-[#1a1210] dark:hover:bg-white transition-all'
+    : 'p-1.5 rounded-full bg-[#1a1210]/90 dark:bg-[#f8f6f3]/95 text-white dark:text-[#2d1e18] shadow-md hover:bg-[#1a1210] dark:hover:bg-white transition-all';
   const chevronIconClass = isCompact ? 'w-4 h-4' : 'w-5 h-5';
 
   const wrapperStyle = useMemo(() => ({ aspectRatio }), [aspectRatio]);
@@ -221,7 +221,7 @@ const ImageSlider = ({
               onClick={() => onAnalyze(getImageSrc(images[safeIndex]))}
               disabled={analyzeDisabled}
               aria-label="AI 이미지 분석"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/90 dark:bg-black/50 text-[#5c4a7a] dark:text-[#c8b4ff] shadow-md text-[11px] uppercase tracking-widest font-medium hover:bg-[#f1ecfe] dark:hover:bg-[#2d2040] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/90 dark:bg-black/50 text-[#7a5040] dark:text-[#d4b8b0] shadow-md text-[11px] uppercase tracking-widest font-medium hover:bg-[#f5edf0] dark:hover:bg-[#2d1e18] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <HiSparkles className="w-3.5 h-3.5" />
               {isAnalyzing ? '분석 중...' : 'AI 분석'}

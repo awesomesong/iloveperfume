@@ -16,16 +16,16 @@ import { formInputLayout } from "@/src/app/components/formLayoutClasses";
 
 const sharedTextStyle = [
   "text-[var(--color-text-primary)]",
-  "placeholder:text-[var(--color-lavender-muted)] placeholder:opacity-60",
+  "placeholder:text-[var(--color-text-secondary)]",
   "focus:outline-none focus:ring-0 focus:shadow-none",
   "focus-visible:outline-2 focus-visible:outline-offset-1",
-  "focus-visible:outline-[var(--color-lavender)] dark:focus-visible:outline-[var(--color-lavender-light)]",
+  "focus-visible:outline-[var(--color-accent)] dark:focus-visible:outline-[var(--color-accent-light)]",
   "focus-visible:ring-0",
 ].join(" ");
 
 const sharedWrapperStyle = [
   "px-0 transition-all duration-300",
-  "after:bg-[#b094e0] dark:after:bg-[#c8b4ff]",
+  "after:bg-[var(--color-text-primary)] dark:after:bg-[var(--color-text-primary)]",
   "focus-within:!outline-none focus-within:ring-0",
 ].join(" ");
 
@@ -39,7 +39,7 @@ const sharedItemClassNames = {
 const boundaryClass = "textfield-input-boundary";
 const inputWrapper = `h-9 md:h-10 py-1 ${boundaryClass} ${sharedWrapperStyle}`;
 const textareaWrapper = `min-h-0 items-start textfield-textarea-wrapper ${boundaryClass} ${sharedWrapperStyle}`;
-const description = "text-[0.65rem] text-[#8e84b8] dark:text-[#9a8fbc] mt-1 italic tracking-wide";
+const description = "text-[0.65rem] text-secondary mt-1 italic tracking-wide";
 
 const fontLight = "text-[0.95rem] font-light";
 
@@ -161,7 +161,7 @@ const TextFieldInner = <TFieldValues extends FieldValues = FieldValues>(
   }, [controlledOnChange, controlledName]);
 
   const iconButtonClass =
-    "text-2xl text-default-400 pointer-events-none hover:text-[#b094e0] transition-colors";
+    "text-2xl text-default-400 pointer-events-none hover:text-[#c09080] transition-colors";
 
   // ─── End Content: text = X(지우기), password = 눈(표시/숨기기) ─────────────────
   const renderEndContent = (onClear?: () => void, showClear?: boolean) => {

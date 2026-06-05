@@ -32,6 +32,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
                     mt-1
                     text-center
                     text-2xl
+                    font-bold
                     tracking-tight
                 '>
                     <span className="text-gradient-ilp">{title}</span>

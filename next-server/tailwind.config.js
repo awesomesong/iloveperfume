@@ -23,15 +23,15 @@ module.exports = {
                 'xs': '320px', // min-width
             },
             colors: {
-                lavender: {
-                    DEFAULT: 'var(--color-lavender)',
-                    light: 'var(--color-lavender-light)',
-                    muted: 'var(--color-lavender-muted)',
-                    pale: 'var(--color-lavender-pale)',
-                    border: 'var(--color-lavender-border)',
+                accent: {
+                    DEFAULT: 'var(--color-accent)',
+                    light: 'var(--color-accent-light)',
+                    muted: 'var(--color-accent-muted)',
+                    pale: 'var(--color-accent-pale)',
+                    border: 'var(--color-accent-border)',
                 },
                 ivory: 'var(--color-ivory)',
-                text: {
+                fg: {
                     primary: 'var(--color-text-primary)',
                     secondary: 'var(--color-text-secondary)',
                 }

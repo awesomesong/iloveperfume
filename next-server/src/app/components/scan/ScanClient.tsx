@@ -145,19 +145,19 @@ export default function ScanClient() {
           onClick={() => setStage('camera')}
           className="group flex flex-col items-center justify-center gap-6 rounded-2xl px-8 py-14 cursor-pointer transition-all duration-300 hover:opacity-90 active:scale-[0.98]"
           style={{
-            background: 'var(--color-lavender-pale)',
-            border: '1px solid var(--color-lavender-border)',
+            background: 'var(--color-accent-pale)',
+            border: '1px solid var(--color-accent-border)',
             boxShadow: '0 2px 12px var(--color-shadow-soft)',
           }}
         >
           <div
             className="size-20 rounded-full flex items-center justify-center"
-            style={{ background: 'var(--color-card-bg)', border: '1px solid var(--color-lavender-border)' }}
+            style={{ background: 'var(--color-card-bg)', border: '1px solid var(--color-accent-border)' }}
           >
-            <HiOutlineCamera className="size-10" style={{ color: 'var(--color-lavender)' }} aria-hidden />
+            <HiOutlineCamera className="size-10" style={{ color: 'var(--color-accent)' }} aria-hidden />
           </div>
           <div className="text-center">
-            <p className="text-base font-bold tracking-tight text-text-primary">카메라로 스캔하기</p>
+            <p className="text-base font-bold tracking-tight text-fg-primary">카메라로 스캔하기</p>
             <p className="text-[13px] mt-2 leading-relaxed text-secondary">
               향수병에 카메라를 가까이 대면<br />AI가 바로 인식해드려요
             </p>
@@ -179,15 +179,15 @@ export default function ScanClient() {
           className={[
             'flex flex-col items-center justify-center gap-6 rounded-2xl border-2 border-dashed px-8 py-14 cursor-pointer transition-all duration-200',
             isDragging
-              ? 'border-lavender bg-[var(--color-lavender-pale)]'
-              : 'border-default hover:border-lavender/50 hover:bg-[var(--color-lavender-pale)]/40',
+              ? 'border-accent bg-[var(--color-accent-pale)]'
+              : 'border-default hover:border-accent/50 hover:bg-[var(--color-accent-pale)]/40',
           ].join(' ')}
         >
           <div
             className="size-20 rounded-full flex items-center justify-center"
-            style={{ background: 'var(--color-lavender-pale)', border: '1px solid var(--color-lavender-border)' }}
+            style={{ background: 'var(--color-accent-pale)', border: '1px solid var(--color-accent-border)' }}
           >
-            <HiOutlinePhoto className="size-10" style={{ color: 'var(--color-lavender)' }} aria-hidden />
+            <HiOutlinePhoto className="size-10" style={{ color: 'var(--color-accent)' }} aria-hidden />
           </div>
           <div className="text-center">
             <p className="text-base font-bold" style={{ color: 'var(--color-text-primary)' }}>

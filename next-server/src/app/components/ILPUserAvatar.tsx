@@ -9,7 +9,7 @@ type ILPUserAvatarProps = {
 const ILPUserAvatar = ({ className }: ILPUserAvatarProps) => {
   return (
     <PiUserCircleDuotone
-      className={clsx("w-full h-full text-text-primary opacity-80", className)}
+      className={clsx("w-full h-full text-fg-primary opacity-80", className)}
       aria-hidden
     />
   );

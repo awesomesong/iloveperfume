@@ -99,7 +99,7 @@ const AuthSocial: React.FC<AuthSocialProps> = ({
                         items-center
                     "
                 >
-                    <div className="w-full border-t text-neutral-400" />
+                    <div className="w-full border-t border-[var(--color-card-border)]" />
                 </div>
                 <div className="relative flex justify-center text-sm">
                     <span className="bg-default px-2">
@@ -111,7 +111,7 @@ const AuthSocial: React.FC<AuthSocialProps> = ({
             <div className="flex flex-col gap-6 mt-6">
                 <div>
                     <p className="text-sm mb-4 break-keep">
-                        로그인 없이도 체험할 수 있는 <strong className="text-purple-500">데모 계정</strong>입니다.
+                        로그인 없이도 체험할 수 있는 <strong className="text-accent">데모 계정</strong>입니다.
                         개인정보는 저장되지 않으며, 모든 기능을 자유롭게 살펴보실 수 있습니다.
                     </p>
                     <AuthSocialButton

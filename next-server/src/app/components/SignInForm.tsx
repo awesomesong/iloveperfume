@@ -101,9 +101,7 @@ const SignInForm = () => {
             disabled={isLoading}
             type="submit"
             fullWidth
-            color="primary"
-            variant="shadow"
-            className={submitButtonClassName}
+            variant="ilp"
           >
             로그인
           </Button>
@@ -130,10 +128,10 @@ const SignInForm = () => {
             : `/auth/register?callbackUrl=${encodeURIComponent(callbackUrl)}`
           }
           className={clsx(`
-            hover:underline
-            hover:underline-offset-4
+            underline
+            underline-offset-4
           `,
-            isLoading ? 'text-purple-500/50' : 'text-purple-500'
+            isLoading ? 'text-fg-secondary' : 'text-fg-primary'
           )}
         >
           계정등록

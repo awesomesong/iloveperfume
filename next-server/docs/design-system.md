@@ -13,8 +13,8 @@
 
 | 역할 | CSS 변수 | Tailwind |
 |------|----------|---------|
-| 본문 제목·강조 | `var(--color-text-primary)` | `text-text-primary` |
-| 보조·설명 | `var(--color-text-secondary)` | `text-secondary` (글로벌 클래스) |
+| 본문 제목·강조 | `var(--color-text-primary)` | `text-fg-primary` |
+| 보조·설명 | `var(--color-text-secondary)` | `text-fg-secondary` / `text-secondary` (글로벌 클래스) |
 
 **실제 값**
 
@@ -46,15 +46,15 @@
 
 ---
 
-### 1-3. 브랜드 포인트 (라벤더 계열)
+### 1-3. 브랜드 포인트 (액센트 계열)
 
 | 역할 | CSS 변수 | Tailwind |
 |------|----------|---------|
-| 메인 포인트 | `var(--color-lavender)` | `text-lavender` |
-| 밝은 포인트 | `var(--color-lavender-light)` | `text-lavender-light` |
-| 흐린 포인트 | `var(--color-lavender-muted)` | `text-lavender-muted` |
-| 연한 배경 | `var(--color-lavender-pale)` | — |
-| 보더 | `var(--color-lavender-border)` | — |
+| 메인 포인트 | `var(--color-accent)` | `text-accent` |
+| 밝은 포인트 | `var(--color-accent-light)` | `text-accent-light` |
+| 흐린 포인트 | `var(--color-accent-muted)` | `text-accent-muted` |
+| 연한 배경 | `var(--color-accent-pale)` | — |
+| 보더 | `var(--color-accent-border)` | — |
 
 ---
 
@@ -138,18 +138,21 @@ import Button, { FormSubmitActions } from "@/src/app/components/Button";
 
 | variant | 용도 | 스타일 |
 |---------|------|--------|
-| `"ilp"` | **주요 CTA** (제출·분석·등록) | 딥플럼→퍼플→더스티로즈 그라데이션, 흰 텍스트 |
-| `"ghostLavender"` | **보조 CTA** (취소·다시선택·뒤로) | 투명 배경, 딥플럼 보더·텍스트 |
+| `"ilp"` | **주요 CTA** (제출·분석·등록) | 다크 솔리드 배경, 흰 텍스트 |
+| `"ghostLavender"` | **보조 CTA** (취소·다시선택·뒤로) | 투명 배경, 뉴트럴 보더·텍스트 |
 
 **실제 색상 (Button.tsx)**
 
 ```
-ilp 그라데이션:  from-[#2d2040] via-[#6b4a90] to-[#8d5a68]
-ghost 텍스트:    라이트 #2d2040  /  다크 #e0dcf5
-ghost 보더:      라이트 #c0aed8  /  다크 rgba(200,195,188,0.30)
+ilp 배경:     bg-[#1a1825]  dark:bg-[#f0ece6]
+ilp 텍스트:   text-white    dark:text-[#1a1825]
+
+ghost 텍스트: var(--color-text-primary)  (라이트 #1a1a2e / 다크 #f0ece6)
+ghost 보더:   라이트 rgba(60,58,52,0.65)  /  다크 rgba(176,168,160,0.60)
+ghost hover 보더: 라이트 rgba(60,58,52,0.90)  /  다크 rgba(200,195,188,0.45)
 ```
 
-**WCAG 대비** — ilp 흰 텍스트: 전 구간 최소 5.5:1 ✅ / ghost 텍스트: 라이트 17.5:1 / 다크 14.3:1 ✅
+**WCAG 대비** — ilp 흰 텍스트 on `#1a1825`: **17.5:1** ✅ / ghost 텍스트 라이트: 17.5:1 / 다크: 14.3:1 ✅
 
 ### 3-2. size prop
 

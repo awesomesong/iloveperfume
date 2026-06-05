@@ -104,7 +104,7 @@ const SectionLabel = memo(function SectionLabel({ index, title }: { index: strin
       style={{ scrollMarginTop: 'var(--guide-scroll-offset)' }}
     >
       <p
-        className="text-xs font-semibold tracking-[0.18em] uppercase mb-3 text-[var(--color-lavender)]"
+        className="text-xs font-semibold tracking-[0.18em] uppercase mb-3 text-[var(--color-accent)]"
       >
         {index}
       </p>
@@ -322,7 +322,7 @@ function StepGuideSection({
                     className={clsx(
                       'w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold',
                       'text-[var(--color-ivory)] [background:var(--bg-gradient-ilp)]',
-                      'dark:text-[var(--color-lavender-light)] dark:[background:var(--color-lavender-pale)] dark:border dark:border-[var(--color-lavender-border)]',
+                      'dark:text-[var(--color-accent-light)] dark:[background:var(--color-accent-pale)] dark:border dark:border-[var(--color-accent-border)]',
                     )}
                   >
                     {step}
@@ -717,7 +717,7 @@ export default function GuideContent({
         <h1 className="font-josefin text-3xl font-light tracking-tight leading-[1.15] mb-2">
           <span className="text-gradient-ilp italic">I Love</span>
           <br />
-          <span className="text-gradient-memories">Perfume</span>
+          <span className="text-accent">Perfume</span>
         </h1>
 
         <p
@@ -727,7 +727,7 @@ export default function GuideContent({
         </p>
 
         <div
-          className="mt-8 h-px w-full max-w-xs [background:linear-gradient(90deg,var(--color-lavender-border)_0%,transparent_100%)]"
+          className="mt-8 h-px w-full max-w-xs [background:linear-gradient(90deg,var(--color-accent-border)_0%,transparent_100%)]"
         />
 
         <div
@@ -735,11 +735,11 @@ export default function GuideContent({
         >
           <span>강송희</span>
           <span
-            className="w-px h-3 bg-[var(--color-lavender-border)]"
+            className="w-px h-3 bg-[var(--color-accent-border)]"
           />
           <span>Frontend Developer</span>
           <span
-            className="w-px h-3 bg-[var(--color-lavender-border)]"
+            className="w-px h-3 bg-[var(--color-accent-border)]"
           />
           <span>포트폴리오</span>
         </div>
@@ -748,7 +748,7 @@ export default function GuideContent({
       {/* Tech Stack */}
       <div className={clsx('rounded-2xl p-6 mb-12', guideCardSurfaceClass)}>
         <p
-          className="text-sm font-semibold tracking-[0.16em] uppercase mb-4 text-[var(--color-lavender)]"
+          className="text-sm font-semibold tracking-[0.16em] uppercase mb-4 text-[var(--color-accent)]"
         >
           Tech Stack
         </p>
@@ -756,7 +756,7 @@ export default function GuideContent({
           {techStack.map(({ category, items }) => (
             <div key={category} className="flex gap-3 items-start">
               <span
-                className="inline-flex items-center min-h-[1.625rem] text-[11px] font-semibold uppercase tracking-wider w-24 shrink-0 text-[var(--color-lavender-muted)] dark:text-[var(--color-lavender-light)]"
+                className="inline-flex items-center min-h-[1.625rem] text-[11px] font-semibold uppercase tracking-wider w-24 shrink-0 text-[var(--color-accent-muted)] dark:text-[var(--color-accent-light)]"
               >
                 {category}
               </span>
@@ -764,7 +764,7 @@ export default function GuideContent({
                 {items.map((item) => (
                   <span
                     key={item}
-                    className="inline-flex items-center justify-center min-h-[1.625rem] text-[12px] px-2.5 py-1 rounded-full bg-[var(--color-lavender-pale)] text-[var(--color-text-primary)] border border-transparent dark:border-[var(--color-lavender-border)] dark:border-opacity-60"
+                    className="inline-flex items-center justify-center min-h-[1.625rem] text-[12px] px-2.5 py-1 rounded-full bg-[var(--color-accent-pale)] text-[var(--color-text-primary)] border border-transparent dark:border-[var(--color-accent-border)] dark:border-opacity-60"
                   >
                     {item}
                   </span>
@@ -818,7 +818,7 @@ export default function GuideContent({
                   >
                     <div className="flex items-start gap-3">
                       <span
-                        className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-base [background:linear-gradient(135deg,var(--color-lavender-pale)_0%,var(--color-ivory-soft)_100%)]"
+                        className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-base [background:linear-gradient(135deg,var(--color-accent-pale)_0%,var(--color-ivory-soft)_100%)]"
                       >
                         {icon}
                       </span>
@@ -875,14 +875,14 @@ export default function GuideContent({
                         className={clsx(
                           'w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold z-10 shrink-0',
                           'text-[var(--color-ivory)] [background:var(--bg-gradient-ilp)]',
-                          'dark:text-[var(--color-lavender-light)] dark:[background:var(--color-lavender-pale)] dark:border dark:border-[var(--color-lavender-border)]',
+                          'dark:text-[var(--color-accent-light)] dark:[background:var(--color-accent-pale)] dark:border dark:border-[var(--color-accent-border)]',
                         )}
                       >
                         {step}
                       </span>
                       {i < steps.length - 1 && (
                         <div
-                          className="w-px flex-1 my-1 [background:linear-gradient(180deg,var(--color-lavender-border)_0%,transparent_100%)] min-h-[32px]"
+                          className="w-px flex-1 my-1 [background:linear-gradient(180deg,var(--color-accent-border)_0%,transparent_100%)] min-h-[32px]"
                         />
                       )}
                     </div>
@@ -1114,7 +1114,7 @@ export default function GuideContent({
               className={clsx(
                 'transition-all duration-300 ease-in-out',
                 'lg:flex lg:flex-col lg:min-h-0 lg:p-6 w-full',
-                'rounded-2xl border border-[var(--color-lavender-border)]',
+                'rounded-2xl border border-[var(--color-accent-border)]',
                 isOnThisPageSticky
                   ? 'max-lg:rounded-none max-lg:border-0 max-lg:border-b max-lg:border-[var(--header-border)] max-lg:bg-[var(--header-bg)] max-lg:backdrop-blur-md max-lg:py-1.5 max-lg:px-4 max-lg:md:px-8 max-lg:max-w-[1440px] max-lg:mx-auto'
                   : 'max-lg:py-2 max-lg:px-3 max-lg:md:py-2.5 max-lg:md:px-4 [background:linear-gradient(135deg,rgba(176,148,224,0.06)_0%,transparent_100%)]',
@@ -1123,7 +1123,7 @@ export default function GuideContent({
               <p
                 className={clsx(
                   'transition-all duration-300 ease-in-out',
-                  'font-semibold uppercase text-[var(--color-lavender)] text-[11px] tracking-[0.08em] lg:shrink-0 lg:text-[12px] lg:tracking-[0.16em] lg:mb-4',
+                  'font-semibold uppercase text-[var(--color-accent)] text-[11px] tracking-[0.08em] lg:shrink-0 lg:text-[12px] lg:tracking-[0.16em] lg:mb-4',
                   isOnThisPageSticky ? 'max-lg:mb-1' : 'max-lg:mb-1.5',
                 )}
               >
@@ -1158,7 +1158,7 @@ export default function GuideContent({
                                   // 모바일: 사이드바 상태 배경(디자인 시스템) + 기본 텍스트
                                   "max-lg:bg-[var(--color-sidebar-state-bg)] max-lg:text-[var(--color-text-primary)] max-lg:font-medium",
                                   // 데스크톱: 진한 라벤더 + 볼드
-                                  "lg:text-[#7c5cc5] lg:font-bold",
+                                  "lg:text-[#8d5a68] lg:font-bold",
                                 ]
                               : [
                                   // 모바일: 매우 연한 배경 + 보조 텍스트
@@ -1171,7 +1171,7 @@ export default function GuideContent({
                           <span className={clsx(
                             "rounded-full shrink-0 lg:inline transition-all",
                             isActive
-                              ? "w-1.5 h-1.5 bg-[#7c5cc5]"
+                              ? "w-1.5 h-1.5 bg-[#8d5a68]"
                               : "w-1 h-1 bg-[var(--color-text-secondary)]"
                           )} />
                           <span className="max-lg:translate-y-px">{label}</span>

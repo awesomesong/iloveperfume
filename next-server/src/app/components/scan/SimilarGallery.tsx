@@ -50,7 +50,7 @@ export default function SimilarGallery({ scanId }: Props) {
         <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-stone-500 dark:text-stone-300">
           I Love Perfume에서 찾은 비슷한 향수
         </h3>
-        <p className="text-xs text-text-secondary">
+        <p className="text-xs text-fg-secondary">
           {loading ? '불러오는 중...' : `총 ${items.length}종`}
         </p>
       </div>
@@ -72,7 +72,7 @@ export default function SimilarGallery({ scanId }: Props) {
                 href={`/fragrance/${item.slug}`}
                 className="group flex flex-col gap-2"
               >
-                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--color-card-bg)] dark:bg-[var(--color-ivory-soft)] border border-[var(--color-card-border)] group-hover:border-lavender transition-colors">
+                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--color-card-bg)] dark:bg-[var(--color-ivory-soft)] border border-[var(--color-card-border)] group-hover:border-accent transition-colors">
                   {item.images[0] ? (
                     <Image
                       src={item.images[0]}
@@ -83,15 +83,15 @@ export default function SimilarGallery({ scanId }: Props) {
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs text-text-secondary">no image</span>
+                      <span className="text-xs text-fg-secondary">no image</span>
                     </div>
                   )}
                 </div>
                 <div className="flex flex-col gap-0.5 px-0.5">
-                  <p className="text-[11px] text-text-secondary font-light truncate">
+                  <p className="text-[11px] text-fg-secondary font-light truncate">
                     {item.brand}
                   </p>
-                  <p className="text-[13px] font-medium text-text-primary truncate group-hover:text-lavender transition-colors leading-snug">
+                  <p className="text-[13px] font-medium text-fg-primary truncate group-hover:text-accent transition-colors leading-snug">
                     {item.name}
                   </p>
                 </div>

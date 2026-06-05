@@ -75,12 +75,12 @@ export default function ScanResult({ data }: Props) {
       {/* 좌: 이미지 + 액션 버튼 — sticky로 스크롤 중에도 항상 보임 */}
       <div className="w-full max-w-md mx-auto lg:max-w-none lg:w-[400px] lg:mx-0 lg:shrink-0 lg:sticky lg:top-[calc(var(--header-height)+1.5rem)]">
         <div
-          className="relative rounded-2xl overflow-hidden bg-[var(--color-lavender-pale)]"
+          className="relative rounded-2xl overflow-hidden bg-[var(--color-accent-pale)]"
           style={imageWidth && imageHeight ? { aspectRatio: `${imageWidth}/${imageHeight}` } : { aspectRatio: '3/4' }}
         >
           {/* 로딩 중 스켈레톤 */}
           {!imgLoaded && (
-            <div className="absolute inset-0 animate-pulse bg-[var(--color-lavender-pale)]" />
+            <div className="absolute inset-0 animate-pulse bg-[var(--color-accent-pale)]" />
           )}
           <Image
             src={imageUrl}
@@ -129,9 +129,9 @@ export default function ScanResult({ data }: Props) {
         {/* 설명 섹션 — 로딩 / 내용 / 실패 세 상태 */}
         {isEnriching && !description ? (
           <div className="space-y-2 animate-pulse">
-            <div className="h-3 bg-[var(--color-lavender-pale)] rounded w-full" />
-            <div className="h-3 bg-[var(--color-lavender-pale)] rounded w-4/5" />
-            <div className="h-3 bg-[var(--color-lavender-pale)] rounded w-3/5" />
+            <div className="h-3 bg-[var(--color-accent-pale)] rounded w-full" />
+            <div className="h-3 bg-[var(--color-accent-pale)] rounded w-4/5" />
+            <div className="h-3 bg-[var(--color-accent-pale)] rounded w-3/5" />
           </div>
         ) : description ? (
           <p className="text-[13px] md:text-[14px] leading-[1.8] text-stone-600 dark:text-stone-300/90 font-light tracking-wide">
@@ -150,9 +150,9 @@ export default function ScanResult({ data }: Props) {
           </h3>
           {isEnriching && !notes ? (
             <div className="space-y-2 animate-pulse">
-              <div className="h-3 bg-[var(--color-lavender-pale)] rounded w-2/5" />
-              <div className="h-3 bg-[var(--color-lavender-pale)] rounded w-3/5" />
-              <div className="h-3 bg-[var(--color-lavender-pale)] rounded w-2/5" />
+              <div className="h-3 bg-[var(--color-accent-pale)] rounded w-2/5" />
+              <div className="h-3 bg-[var(--color-accent-pale)] rounded w-3/5" />
+              <div className="h-3 bg-[var(--color-accent-pale)] rounded w-2/5" />
             </div>
           ) : notes ? (
             <p className="text-[13px] md:text-[14px] leading-[1.7] text-stone-600 dark:text-stone-300 font-light whitespace-pre-wrap">
@@ -186,7 +186,7 @@ export default function ScanResult({ data }: Props) {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text-primary truncate group-hover:text-lavender transition-colors">
+                <p className="text-sm font-medium text-fg-primary truncate group-hover:text-accent transition-colors">
                   {matchedFragrance.brand} · {matchedFragrance.name}
                 </p>
                 <p className="text-xs text-stone-400 dark:text-stone-500 mt-1 flex items-center gap-1">

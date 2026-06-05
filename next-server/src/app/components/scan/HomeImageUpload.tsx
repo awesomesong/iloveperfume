@@ -316,7 +316,7 @@ export default function HomeImageUpload() {
             <HiOutlinePhoto className="size-4 text-black/40 dark:text-white/40" aria-hidden />
           </span>
           <span className="min-w-0">
-            <span className="block text-sm font-medium text-text-primary">
+            <span className="block text-sm font-medium text-fg-primary">
               {isDragging ? '여기에 놓아주세요' : '사진 파일로 분석하기'}
             </span>
             <span className="block text-xs text-secondary mt-0.5">
