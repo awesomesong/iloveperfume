@@ -9,6 +9,7 @@ export default withAuth({
 /** 로그인 필수 경로 — 여기만 수정하면 됨 (matcher에만 적용) */
 export const config = {
   matcher: [
+    "/chat-redirect",
     "/chatMember",
     "/chatMember/:path*",
     "/conversations",

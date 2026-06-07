@@ -25,6 +25,8 @@ const AI_GREETING = '안녕하세요! 향수에 대해 궁금한 점이 있으�
 export default function HomeAIChatInput() {
   const [value, setValue] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState('');
+  const [dotCount, setDotCount] = useState(0);
   const [shown, setShown] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -42,20 +44,19 @@ export default function HomeAIChatInput() {
     return () => observer.disconnect();
   }, []);
 
-  // 로그인 후 메인 페이지로 redirect된 경우 저장된 메시지 자동 전송
   useEffect(() => {
-    const pending = sessionStorage.getItem('ilp:pendingChatMessage');
-    if (!pending) return;
-    sessionStorage.removeItem('ilp:pendingChatMessage');
-    submit(pending);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!loading) { setDotCount(0); return; }
+    const id = setInterval(() => setDotCount((p) => (p + 1) % 4), 500);
+    return () => clearInterval(id);
+  }, [loading]);
 
   const submit = async (message: string) => {
     const trimmed = message.trim();
     if (!trimmed || loading) return;
 
     setLoading(true);
+    setPendingMessage(trimmed);
+    setValue('');
     try {
       const messageId = crypto.randomUUID();
       let convData: Awaited<ReturnType<typeof createConversationWithFirstMessage>>;
@@ -71,7 +72,7 @@ export default function HomeAIChatInput() {
         const msg = err instanceof Error ? err.message : '';
         if (msg.includes('401') || msg.includes('로그인')) {
           sessionStorage.setItem('ilp:pendingChatMessage', trimmed);
-          router.push(`/auth/signin?callbackUrl=${encodeURIComponent('/')}`);
+          router.push(`/auth/signin?callbackUrl=${encodeURIComponent('/chat-redirect')}`);
           return;
         }
         throw err;
@@ -124,6 +125,7 @@ export default function HomeAIChatInput() {
       alert('오류가 발생했어요. 다시 시도해주세요.');
     } finally {
       setLoading(false);
+      setPendingMessage('');
     }
   };
 
@@ -200,31 +202,74 @@ export default function HomeAIChatInput() {
         </div>
 
         {/* 추천 질문 칩 */}
-        <div
-          className="flex flex-wrap gap-2 pl-8"
-          style={{
-            opacity: shown ? 1 : 0,
-            transform: shown ? 'translateY(0)' : 'translateY(6px)',
-            transition: 'opacity 0.4s ease 0.28s, transform 0.4s ease 0.28s',
-          }}
-        >
-          {SUGGESTIONS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => submit(s)}
-              disabled={loading}
-              className="rounded-full px-3 py-1.5 text-xs transition-opacity hover:opacity-70 disabled:opacity-30 text-left"
-              style={{
-                background: 'var(--color-card-bg)',
-                border: '1px solid var(--color-card-border)',
-                color: 'var(--color-text-primary)',
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+        {!loading && (
+          <div
+            className="flex flex-wrap gap-2 pl-8"
+            style={{
+              opacity: shown ? 1 : 0,
+              transform: shown ? 'translateY(0)' : 'translateY(6px)',
+              transition: 'opacity 0.4s ease 0.28s, transform 0.4s ease 0.28s',
+            }}
+          >
+            {SUGGESTIONS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => submit(s)}
+                className="rounded-full px-3 py-1.5 text-xs transition-opacity hover:opacity-70 text-left"
+                style={{
+                  background: 'var(--color-card-bg)',
+                  border: '1px solid var(--color-card-border)',
+                  color: 'var(--color-text-primary)',
+                }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 로딩 중: 사용자 메시지 + AI 응답 대기 말풍선 */}
+        {loading && pendingMessage && (
+          <>
+            {/* 사용자 말풍선 */}
+            <div className="flex items-end justify-end">
+              <div
+                className="rounded-2xl rounded-br-sm px-3.5 py-2.5 text-sm leading-relaxed"
+                style={{
+                  background: 'var(--color-accent)',
+                  color: '#fff',
+                  maxWidth: 'calc(100% - 2rem)',
+                }}
+              >
+                {pendingMessage}
+              </div>
+            </div>
+
+            {/* AI 대기 말풍선 */}
+            <div className="flex items-end gap-2">
+              <div
+                className="shrink-0 size-6 rounded-full flex items-center justify-center"
+                style={{ background: 'var(--color-accent)' }}
+                aria-hidden
+              >
+                <HiSparkles className="size-3 text-white" />
+              </div>
+              <div
+                className="rounded-2xl rounded-bl-sm px-3.5 py-2.5"
+                style={{
+                  background: 'var(--color-accent-pale)',
+                  border: '1px solid var(--color-accent-border)',
+                }}
+              >
+                <div className="flex items-center gap-1">
+                  <HiSparkles className="size-3.5 text-amber-500 animate-pulse" aria-hidden />
+                  <span className="text-amber-500 font-medium text-sm">{'.'.repeat(dotCount)}</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* 입력창 */}
