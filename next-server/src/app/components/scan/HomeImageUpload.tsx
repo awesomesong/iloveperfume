@@ -224,7 +224,7 @@ export default function HomeImageUpload() {
               className="size-16 rounded-full flex items-center justify-center border border-white/10"
               style={{ background: 'rgba(255,255,255,0.04)' }}
             >
-              <HiOutlineCamera className="size-7 text-white/30" aria-hidden />
+              <HiOutlineCamera className="size-7 text-white/55" aria-hidden />
             </span>
             <p className="text-sm text-white/55 font-light tracking-wide">카메라 연결 중</p>
           </div>

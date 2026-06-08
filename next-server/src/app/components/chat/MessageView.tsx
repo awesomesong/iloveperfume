@@ -578,10 +578,10 @@ const MessageView: React.FC<MessageBoxProps> = ({
               isError
                 ? "bg-red-100 border-l-4 border-red-400"
                 : isAIMessage
-                  ? "bg-[#ede8f5] dark:bg-[var(--color-ivory-soft)]"
+                  ? "bg-[var(--chat-bubble-ai)]"
                   : isOwn
-                    ? "bg-[#c09080] dark:bg-[#8d5a68]"
-                    : "bg-[var(--color-accent-pale)] dark:bg-[#2a1e1c] dark:text-[var(--color-text-primary)]",
+                    ? "bg-[var(--chat-bubble-own)]"
+                    : "bg-[var(--chat-bubble-other)] border border-[var(--color-card-border)]",
               data.type === "image"
                 ? "max-[360px]:w-full rounded-md p-0 overflow-hidden"
                 : "py-2 px-3 rounded-2xl",
@@ -643,7 +643,7 @@ const MessageView: React.FC<MessageBoxProps> = ({
                   ? data.sender.name
                   : "(알 수 없음)"}
             </div>
-            <div className="text-xs text-[var(--color-text-secondary)] opacity-75">
+            <div className="text-xs text-[var(--color-text-secondary)]">
               {new Date(data.createdAt).toLocaleString("ko-KR", {
                 hour: "numeric",
                 minute: "numeric",

@@ -49,7 +49,7 @@ const ReactQuill = dynamic(
   {
     ssr: false,
     loading: () => (
-        <div className="flex flex-1 w-full rounded-md border border-gray-300" />
+        <div className="flex flex-1 w-full rounded-md border border-[var(--color-card-border)]" />
     )
   }
 );

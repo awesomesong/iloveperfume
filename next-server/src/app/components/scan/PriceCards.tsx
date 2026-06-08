@@ -218,7 +218,7 @@ export default function PriceCards({ scanId }: Props) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-baseline justify-between flex-wrap gap-2">
-        <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-stone-500 dark:text-stone-300">
+        <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-[var(--color-text-secondary)]">
           정품 최저가 비교
         </h3>
         <p className="text-xs text-fg-secondary">
@@ -281,7 +281,7 @@ export default function PriceCards({ scanId }: Props) {
                       다크모드의 bg-gradient-ilp는 밝은 파스텔(#fff5f8/#f0e8e4/#ffe8b4)이라
                       text-white면 글자가 묻힘 — 다크에선 어두운 글자로 대비 확보.
                     */
-                    <span className="inline-flex items-center bg-gradient-ilp text-white dark:text-stone-900 text-xs font-medium tracking-[0.04em] leading-none px-3 py-1.5 rounded-full">
+                    <span className="inline-flex items-center bg-gradient-ilp text-white dark:text-[var(--color-text-primary)] text-xs font-medium tracking-[0.04em] leading-none px-3 py-1.5 rounded-full">
                       최저가
                     </span>
                   )}

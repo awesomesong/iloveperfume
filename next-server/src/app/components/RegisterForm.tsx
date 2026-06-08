@@ -7,7 +7,7 @@ import clsx from "clsx";
 import Link from "next/link";
 import AuthForm from "./AuthForm";
 import TextField from "./TextField";
-import Button, { submitButtonClassName } from "./Button";
+import Button from "./Button";
 import AuthSocial from "./AuthSocail";
 import { registerUser } from "@/src/app/lib/register";
 import { withToastParams } from "../lib/withToastParams";

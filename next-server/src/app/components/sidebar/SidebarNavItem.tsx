@@ -47,8 +47,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
           text-sm
           leading-6
           font-semibold
-          text-neutral-900
-          dark:text-neutral-200
+          text-[var(--color-text-primary)]
           sidebar-item--state
           md:rounded-md
           md:py-3
@@ -57,7 +56,7 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
         data-selected={active}
       >
         <div className="relative inline-flex">
-          <Icon className="h-6 w-6 shrink-0" fill="url(#ilp-nav-gradient)" />
+          <Icon className="h-6 w-6 shrink-0 text-[var(--color-text-primary)]" />
           {label === '채팅' && (
             <ChatUnReadCount
               size="mobile-small"

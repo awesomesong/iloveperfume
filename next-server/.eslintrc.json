@@ -2,5 +2,30 @@
   "extends": [
     "next/core-web-vitals",
     "next/typescript"
-  ]
+  ],
+  "rules": {
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "JSXAttribute[name.name='className'] > Literal[value=/\\b(text|bg|border|ring)-(neutral|slate|stone|gray|zinc|orange|yellow|green|teal|blue|indigo|violet|purple|pink|rose)-\\d+/]",
+        "message": "[디자인토큰] 임의 Tailwind 색상 클래스 사용 금지. design-system.md의 CSS 변수(var(--color-...)) 또는 토큰 클래스를 사용하세요. (red-* 는 에러 상태에서만 허용)"
+      },
+      {
+        "selector": "JSXAttribute[name.name='className'] > Literal[value=/\\b(text|bg|border)\\-\\[#[0-9a-fA-F]{3,8}\\]/]",
+        "message": "[디자인토큰] className에 하드코딩 hex 색상 사용 금지. CSS 변수 var(--color-...) 를 사용하세요. 예: text-[var(--color-text-primary)]"
+      },
+      {
+        "selector": "JSXAttribute[name.name='color'][value.value=/^(primary|secondary|success|warning|danger|default)$/]",
+        "message": "[디자인토큰] HeroUI 기본 color prop 사용 금지. Button variant='ilp' 또는 variant='ghostLavender'를 사용하세요."
+      },
+      {
+        "selector": "JSXAttribute[name.name='className'] > Literal[value=/\\b(bg|text)-default-\\d+/]",
+        "message": "[디자인토큰] bg-default-100 등 HeroUI 기본 색상 클래스 사용 금지. var(--color-card-bg) 또는 bg-default 클래스를 사용하세요."
+      },
+      {
+        "selector": "JSXAttribute[name.name='className'] > Literal[value=/\\btext-(black|white)\\/[0-3][0-9]\\b/]",
+        "message": "[접근성] text-black/40 이하 또는 text-white/40 이하 저불투명 텍스트 사용 금지 (WCAG AA 미달). design-system.md 4섹션 참고."
+      }
+    ]
+  }
 }

@@ -98,6 +98,13 @@ blockquote{
   --points-ball-3: #8a7a9e;
   --points-ball-4: #a898b8;
   --points-ball-5: #d4c8e4;
+  /* 채팅 말풍선 — 라이트: own 인디고 틴트 / other 아이보리 */
+  --chat-bubble-own: var(--color-accent-pale);
+  --chat-bubble-ai: var(--color-card-bg);
+  --chat-bubble-other: var(--color-card-bg);
+  --chat-badge-group-text: #4a4238;
+  --chat-badge-group-bg: #f0ede8;
+  --chat-badge-group-border: #ddd6cc;
 }
 
 /* 가이드: lg 미만에서 sticky 헤더 + On this page 바 높이 (JS 미적용·폰트 로드 전 폴백 — GuideContent에서 실측으로 덮어씀) */
@@ -156,6 +163,13 @@ blockquote{
   --points-ball-3: #7a7268;
   --points-ball-4: #98908a;
   --points-ball-5: #c0b8b0;
+  /* 채팅 말풍선 — 다크: own 인디고 틴트 / other 뉴트럴 카드 */
+  --chat-bubble-own: #252540;
+  --chat-bubble-ai: var(--color-card-bg);
+  --chat-bubble-other: var(--color-card-bg);
+  --chat-badge-group-text: #e6e2da;
+  --chat-badge-group-bg: #3d3835;
+  --chat-badge-group-border: #5c5650;
 }
 
 :root .force-light-ilp-gradient,

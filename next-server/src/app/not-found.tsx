@@ -30,7 +30,7 @@ export default function NotFound() {
             />
           </div>
 
-          <p className="mt-6 text-sm sm:text-base text-neutral-500 dark:text-accent-muted font-light tracking-wide text-center">
+          <p className="mt-6 text-sm sm:text-base text-[var(--color-text-secondary)] font-light tracking-wide text-center">
             요청하신 페이지를 찾을 수 없어요
           </p>
 

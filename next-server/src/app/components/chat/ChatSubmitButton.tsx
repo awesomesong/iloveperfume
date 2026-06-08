@@ -55,7 +55,7 @@ const ChatSubmitButton = ({
         disabled:cursor-not-allowed
       "
     >
-      <HiPaperAirplane size={20} className="text-white dark:text-neutral-900" />
+      <HiPaperAirplane size={20} className="text-white dark:text-[var(--bg-page)]" />
     </button>
   );
 };

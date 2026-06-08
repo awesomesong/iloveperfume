@@ -20,14 +20,6 @@ const SidebarNav = () => {
 
   return (
     <>
-      <svg width="0" height="0" className="absolute" aria-hidden>
-        {/* AnimatedLogo(.text-gradient-ilp)와 동일 — 테마에 따라 라이트/다크 자동 전환 */}
-        <linearGradient id="ilp-nav-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="var(--ilp-gradient-start)" />
-          <stop offset="55%" stopColor="var(--ilp-gradient-mid)" />
-          <stop offset="100%" stopColor="var(--ilp-gradient-end)" />
-        </linearGradient>
-      </svg>
       <ProfileModal isOpen={isOpen} onCloseModal={handleCloseModal} />
       <div
         className="

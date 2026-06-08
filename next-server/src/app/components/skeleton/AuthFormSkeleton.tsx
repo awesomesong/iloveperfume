@@ -15,7 +15,7 @@ const AuthFormSkeleton = () => {
           <Skeleton className="w-full h-10 rounded-md" />
           <Skeleton className="w-full h-10 rounded-md" />
           <div className="relative py-2">
-            <div className="w-full border-t text-neutral-400" />
+            <div className="w-full border-t text-[var(--color-text-secondary)]" />
           </div>
           <div className="mt-6 space-y-4">
             <Skeleton className="w-full h-10 rounded-md" />

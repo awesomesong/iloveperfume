@@ -1,4 +1,4 @@
-import { Button } from '@heroui/react';
+import Button from './Button';
 
 type LargeButtonProps = {
   children: string;
@@ -9,12 +9,11 @@ type LargeButtonProps = {
 const LargeButton = ({ children, onClick, disabled }: LargeButtonProps) => {
   return (
     <Button
-      color="default"
-      variant="ghost"
+      variant="ghostLavender"
       radius="lg"
       className='min-w-10'
-      onPress={onClick}
-      isDisabled={disabled}
+      onClick={onClick}
+      disabled={disabled}
     >
       {children}
     </Button>

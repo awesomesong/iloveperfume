@@ -410,7 +410,7 @@ const Form = () => {
         onChange={handleFileChange}
       />
       <button type="button" onClick={handleUploadClick} className="shrink-0 pt-2">
-        <HiPhoto size={30} fill="url(#ilp-nav-gradient)" />
+        <HiPhoto size={30} className="text-[var(--color-text-primary)]" />
       </button>
       <form
         onSubmit={handleFormSubmit}

@@ -73,19 +73,19 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance }: P
 
               {fragrance.description && (
                 <div
-                  className="fragrance-info text-bottom text-[13px] md:text-[14px] leading-[1.8] text-stone-600 dark:text-stone-300/90 font-light tracking-wide"
+                  className="fragrance-info text-bottom text-[13px] md:text-[14px] leading-[1.8] text-[var(--color-text-secondary)] font-light tracking-wide"
                   dangerouslySetInnerHTML={{ __html: fragrance.description }}
                 />
               )}
 
               {fragrance.notes && (
                 <FragranceMotionWrapper delay={0}>
-                  <div className="pt-8 border-t border-stone-200/60 dark:border-stone-700/40">
-                    <h3 className="text-gradient-ilp text-sm font-bold tracking-[0.2em] uppercase text-stone-400 dark:text-stone-300 mb-4">
+                  <div className="pt-8 border-t border-[var(--color-card-border)]">
+                    <h3 className="text-gradient-ilp text-sm font-bold tracking-[0.2em] uppercase text-[var(--color-text-secondary)] mb-4">
                       노트 상세 정보
                     </h3>
                     <div
-                      className="text-[13px] md:text-[14px] leading-[1.7] text-stone-600 dark:text-stone-300 font-light whitespace-pre-wrap"
+                      className="text-[13px] md:text-[14px] leading-[1.7] text-[var(--color-text-secondary)] font-light whitespace-pre-wrap"
                       dangerouslySetInnerHTML={{
                         __html: fragrance.notes.replaceAll('\\n', '\n'),
                       }}

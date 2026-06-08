@@ -90,7 +90,7 @@ const DraftView: React.FC<DraftViewProps> = ({
                         href="/conversations"
                         className="lg:hidden block transition cursor-pointer hover:opacity-70"
                     >
-                        <HiChevronLeft size={32} fill="url(#ilp-nav-gradient)" />
+                        <HiChevronLeft size={32} className="text-[var(--color-text-primary)]" />
                     </Link>
                     <div className="shrink">
                         {isAI ? (

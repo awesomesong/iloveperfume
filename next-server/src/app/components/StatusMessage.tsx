@@ -25,7 +25,7 @@ export default function StatusMessage({
             className={`flex justify-center items-center ${minHeight} ${className}`.trim()}
             role="alert"
         >
-            <div className="text-stone-500 dark:text-stone-400 font-light tracking-wide text-sm">
+            <div className="text-[var(--color-text-secondary)] font-light tracking-wide text-sm">
                 {message}
             </div>
         </div>

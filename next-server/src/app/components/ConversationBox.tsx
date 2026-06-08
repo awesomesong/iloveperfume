@@ -94,7 +94,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
                   : data.name || otherUser.name}
               </span>
               {data.isGroup && (
-                <span className="ml-1.5 shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-semibold rounded-md leading-none text-[#4a4238] dark:text-[#e6e2da] bg-[#f0ede8] dark:bg-[#3d3835] border border-[#ddd6cc] dark:border-[#5c5650]">
+                <span className="ml-1.5 shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-semibold rounded-md leading-none text-[var(--chat-badge-group-text)] bg-[var(--chat-badge-group-bg)] border border-[var(--chat-badge-group-border)]">
                   {data.userIds?.length}
                 </span>
               )}

@@ -32,7 +32,7 @@ export default function FragranceDetailSkeleton({
           </div>
           {!isDetail && (
             <div className="flex flex-col gap-6 sm:flex-grow w-full sm:w-auto lg:w-full shrink-0 min-w-0">
-              <div className="flex justify-between items-end border-b border-[#ede8f5] dark:border-[#d4b8b030] pb-2">
+              <div className="flex justify-between items-end border-b border-[var(--color-card-border)] pb-2">
                 <div className="w-20 h-2 rounded-full skeleton-bg-muted" />
                 <div className="w-14 h-2 rounded-full skeleton-bg-muted" />
               </div>
@@ -64,7 +64,7 @@ export default function FragranceDetailSkeleton({
                   <div className="w-full h-3 rounded-full skeleton-bg-muted-80" />
                 </div>
               </div>
-              <div className="pt-8 border-t border-stone-200/60 dark:border-stone-700/40 space-y-4">
+              <div className="pt-8 border-t border-[var(--color-card-border)] space-y-4">
                 <div className="w-24 h-2 rounded-full skeleton-bg-muted" />
                 <div className="space-y-3">
                   <div className="w-full h-3 rounded-full skeleton-bg-muted-80" />

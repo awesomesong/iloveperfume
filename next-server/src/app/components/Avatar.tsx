@@ -55,7 +55,6 @@ const Avatar= ({user, isOwn, isAIChat} :AvatarProps) => {
             block
             absolute
             rounded-full
-            bg-green-500
             ring-1
             ring-white
             -top-0
@@ -63,6 +62,7 @@ const Avatar= ({user, isOwn, isAIChat} :AvatarProps) => {
             h-3
             w-3
           "
+          style={{ backgroundColor: '#22c55e' }}
         />
       ): null}
     </div>

@@ -72,7 +72,7 @@ const Header: React.FC<HeaderProps> = ({ conversation, currentUser }) => {
               cursor-pointer
               hover:opacity-70
           ">
-            <HiChevronLeft size={32} fill="url(#ilp-nav-gradient)" />
+            <HiChevronLeft size={32} className="text-[var(--color-text-primary)]" />
           </Link>
           <div className="shrink">
             {conversation?.isGroup && conversation?.userIds?.length > 2 ? (
@@ -103,7 +103,7 @@ const Header: React.FC<HeaderProps> = ({ conversation, currentUser }) => {
         >
           <HiEllipsisHorizontal
             size={32}
-            fill="url(#ilp-nav-gradient)"
+            className="text-[var(--color-text-primary)]"
           />
         </button>
       </div>

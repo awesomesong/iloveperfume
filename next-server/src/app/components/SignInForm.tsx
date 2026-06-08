@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { withToastParams } from "@/src/app/lib/withToastParams";
 import AuthForm from "@/src/app/components/AuthForm";
 import TextField from "@/src/app/components/TextField";
-import Button, { submitButtonClassName } from "@/src/app/components/Button";
+import Button from "@/src/app/components/Button";
 import AuthSocial from "@/src/app/components/AuthSocail";
 import Link from "next/link";
 import clsx from "clsx";

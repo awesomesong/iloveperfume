@@ -18,7 +18,7 @@ export default function FragranceHeroClient({ images, alt }: Props) {
 
   return (
     <div className="fragrance-detail-image-box group">
-      <div className="fragrance-img-size bg-stone-200/20 dark:bg-stone-800/20">
+      <div className="fragrance-img-size bg-[var(--color-card-bg)]">
         <ImageSlider
           images={images}
           currentIndex={sliderIndex}

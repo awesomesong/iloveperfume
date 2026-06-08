@@ -56,7 +56,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
             className="
               fixed
               inset-0
-              bg-neutral-800/75
+              bg-[var(--color-text-primary)]/75
               backdrop-blur-sm
             ">
             <div
@@ -113,7 +113,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
                         {data?.isGroup && (
                           <p>
                             {data.name}{" "}
-                            <span className="text-gray-500">
+                            <span className="text-[var(--color-text-secondary)]">
                               ( {users.length}명 )
                             </span>
                           </p>
@@ -124,10 +124,10 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
                         type="button"
                         className="
                           rounded-md
-                          hover:text-gray-500
+                          hover:text-[var(--color-text-secondary)]
                           focus:outline-none
                           focus:ring-2
-                          focus:ring-sky-500
+                          focus:ring-[var(--color-accent)]
                           focus:ring-offset-2
                         "
                       >
@@ -198,10 +198,8 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
                             h-10
                             bg-default-reverse
                             text-reverse
-                            group-hover:bg-neutral-400 
-                            group-hover:text-neutral-900
-                            group-hover:dark:bg-neutral-500 
-                            group-hover:dark:text-neutral-100
+                            group-hover:bg-[var(--color-accent-pale)]
+                            group-hover:text-[var(--color-text-primary)]
                             rounded-full
                             flex
                             items-center
@@ -213,7 +211,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({
                           className="
                             text-sm
                             font-light
-                            group-hover:text-neutral-400 
+                            group-hover:text-[var(--color-text-secondary)]
                           ">
                           대화방 나가기
                         </div>

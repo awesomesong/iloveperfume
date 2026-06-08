@@ -70,7 +70,7 @@ export default function SimilarNaverReco({ scanId }: Props) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-baseline justify-between flex-wrap gap-2">
-        <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-stone-500 dark:text-stone-300">
+        <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-[var(--color-text-secondary)]">
           AI가 추천하는 비슷한 향수
         </h3>
         <p className="text-xs text-fg-secondary">

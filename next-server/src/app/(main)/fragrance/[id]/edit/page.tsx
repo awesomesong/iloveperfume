@@ -30,7 +30,7 @@ const FragranceEditPage = ({ params }: ParamsProps) => {
         content = <FormFragrance id={id} initialData={data.fragrance} isEdit />;
     } else {
         return (
-            <div className="flex justify-center items-center min-h-screen text-stone-500 dark:text-stone-400">
+            <div className="flex justify-center items-center min-h-screen text-[var(--color-text-secondary)]">
                 향수를 찾을 수 없습니다.
             </div>
         );

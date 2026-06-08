@@ -575,7 +575,7 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
           onPointerDown={(e) => e.preventDefault()}
           title="맨 아래로 스크롤"
         >
-          <PiArrowFatDownFill size="14" className="text-white dark:text-neutral-900" />
+          <PiArrowFatDownFill size="14" className="text-white dark:text-[var(--bg-page)]" />
         </button>
       )}
       <div ref={bottomRef} />

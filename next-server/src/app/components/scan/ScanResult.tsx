@@ -134,18 +134,18 @@ export default function ScanResult({ data }: Props) {
             <div className="h-3 bg-[var(--color-accent-pale)] rounded w-3/5" />
           </div>
         ) : description ? (
-          <p className="text-[13px] md:text-[14px] leading-[1.8] text-stone-600 dark:text-stone-300/90 font-light tracking-wide">
+          <p className="text-[13px] md:text-[14px] leading-[1.8] text-[var(--color-text-secondary)] font-light tracking-wide">
             {description}
           </p>
         ) : enrichFailed ? (
-          <p className="text-[13px] md:text-[14px] text-stone-400 dark:text-stone-500 font-light">
+          <p className="text-[13px] md:text-[14px] text-[var(--color-text-secondary)] font-light">
             향수 설명 정보를 찾지 못했어요.
           </p>
         ) : null}
 
         {/* 노트 섹션 — 로딩 / 내용 / 실패 세 상태 */}
-        <div className="pt-8 border-t border-stone-200/60 dark:border-stone-700/40">
-          <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-stone-400 dark:text-stone-300 mb-4">
+        <div className="pt-8 border-t border-[var(--color-card-border)]">
+          <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-[var(--color-text-secondary)] mb-4">
             향 노트
           </h3>
           {isEnriching && !notes ? (
@@ -155,19 +155,19 @@ export default function ScanResult({ data }: Props) {
               <div className="h-3 bg-[var(--color-accent-pale)] rounded w-2/5" />
             </div>
           ) : notes ? (
-            <p className="text-[13px] md:text-[14px] leading-[1.7] text-stone-600 dark:text-stone-300 font-light whitespace-pre-wrap">
+            <p className="text-[13px] md:text-[14px] leading-[1.7] text-[var(--color-text-secondary)] font-light whitespace-pre-wrap">
               {notes}
             </p>
           ) : enrichFailed ? (
-            <p className="text-[13px] md:text-[14px] text-stone-400 dark:text-stone-500 font-light">
+            <p className="text-[13px] md:text-[14px] text-[var(--color-text-secondary)] font-light">
               노트 정보를 찾지 못했어요.
             </p>
           ) : null}
         </div>
 
         {matchedFragrance && (
-          <div className="pt-8 border-t border-stone-200/60 dark:border-stone-700/40">
-            <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-stone-400 dark:text-stone-300 mb-4">
+          <div className="pt-8 border-t border-[var(--color-card-border)]">
+            <h3 className="text-sm font-bold tracking-[0.2em] uppercase text-[var(--color-text-secondary)] mb-4">
               갤러리에 등록된 향수예요
             </h3>
             <Link
@@ -175,7 +175,7 @@ export default function ScanResult({ data }: Props) {
               className="flex items-center gap-4 group"
             >
               {matchedFragrance.images[0] && (
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-ivory shrink-0 border border-stone-200/60 dark:border-stone-700/40">
+                <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-ivory shrink-0 border border-[var(--color-card-border)]">
                   <Image
                     src={matchedFragrance.images[0]}
                     alt={matchedFragrance.name}
@@ -189,7 +189,7 @@ export default function ScanResult({ data }: Props) {
                 <p className="text-sm font-medium text-fg-primary truncate group-hover:text-accent transition-colors">
                   {matchedFragrance.brand} · {matchedFragrance.name}
                 </p>
-                <p className="text-xs text-stone-400 dark:text-stone-500 mt-1 flex items-center gap-1">
+                <p className="text-xs text-[var(--color-text-secondary)] mt-1 flex items-center gap-1">
                   상세 페이지로 이동
                   <HiOutlineArrowRight
                     className="size-3 transition-transform group-hover:translate-x-0.5"
@@ -201,15 +201,15 @@ export default function ScanResult({ data }: Props) {
           </div>
         )}
 
-        <div className="pt-8 border-t border-stone-200/60 dark:border-stone-700/40">
+        <div className="pt-8 border-t border-[var(--color-card-border)]">
           <PriceCards scanId={data.scanId} />
         </div>
 
-        <div className="pt-8 border-t border-stone-200/60 dark:border-stone-700/40">
+        <div className="pt-8 border-t border-[var(--color-card-border)]">
           <SimilarGallery scanId={data.scanId} />
         </div>
 
-        <div className="pt-8 border-t border-stone-200/60 dark:border-stone-700/40">
+        <div className="pt-8 border-t border-[var(--color-card-border)]">
           <SimilarNaverReco scanId={data.scanId} />
         </div>
 

@@ -68,6 +68,32 @@
 | 헤더 배경 | `var(--header-bg)` |
 | 안 읽은 배지 | `--unread-badge-bg` / `--unread-badge-text` |
 
+### 1-5. 채팅 도메인 전용
+
+| 역할 | CSS 변수 | 라이트 | 다크 |
+|------|----------|--------|------|
+| 내 메시지 말풍선 | `--chat-bubble-own` | `var(--color-accent-pale)` = `#eaeaf8` (인디고 틴트) | `#252540` (다크 인디고) |
+| AI 메시지 말풍선 | `--chat-bubble-ai` | `var(--color-card-bg)` = `#fffcfa` + 카드 보더 | `var(--color-card-bg)` + 카드 보더 |
+| 상대방 말풍선 | `--chat-bubble-other` | `var(--color-card-bg)` = `#fffcfa` + 카드 보더 | `var(--color-card-bg)` + 카드 보더 |
+
+> **구분 원칙**: 내 메시지(own)는 인디고 틴트로 강조, AI·상대방은 카드 배경(뉴트럴)으로 통일. 아바타 위치(좌/우)로 추가 구분.
+| 그룹 멤버 배지 텍스트 | `--chat-badge-group-text` | `#4a4238` | `#e6e2da` |
+| 그룹 멤버 배지 배경 | `--chat-badge-group-bg` | `#f0ede8` | `#3d3835` |
+| 그룹 멤버 배지 보더 | `--chat-badge-group-border` | `#ddd6cc` | `#5c5650` |
+
+**아이콘 색상 규칙 (사이드바·채팅 헤더·입력 폼)**
+
+```tsx
+// SVG fill 대신 반드시 className으로 색상 지정
+// text-[var(--color-text-primary)] — 라이트 #1a1a2e / 다크 #f0ece6 (자동 전환)
+<HiChevronLeft size={32} className="text-[var(--color-text-primary)]" />
+<HiPhoto size={30} className="text-[var(--color-text-primary)]" />
+
+// ❌ fill="url(#ilp-nav-gradient)" 사용 금지 — 그라데이션 제거됨
+```
+
+> 아이콘 색상은 메인 페이지 버튼·텍스트와 동일한 `var(--color-text-primary)` 사용 — 라이트/다크 자동 전환.
+
 ---
 
 ## 2. 텍스트·배경 색상 클래스 (솔리드 — 그라데이션 없음)
@@ -190,6 +216,64 @@ ghost hover 보더: 라이트 rgba(60,58,52,0.90)  /  다크 rgba(200,195,188,0.
 ---
 
 ## 4. 접근성 (WCAG AA 기준 — 4.5:1 이상)
+
+> **규칙: 새 배경색을 추가할 때마다 반드시 텍스트 대비율을 계산하고 아래 표에 기록.**  
+> 미검증 색상은 코드에 추가 금지.
+
+### 4-0. 검증 방법
+
+```js
+function getLuminance(hex) {
+  const r = parseInt(hex.slice(1,3),16)/255;
+  const g = parseInt(hex.slice(3,5),16)/255;
+  const b = parseInt(hex.slice(5,7),16)/255;
+  const lin = v => v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4);
+  return 0.2126*lin(r) + 0.7152*lin(g) + 0.0722*lin(b);
+}
+function contrast(hex1, hex2) {
+  const l1 = getLuminance(hex1), l2 = getLuminance(hex2);
+  const [light, dark] = l1 > l2 ? [l1,l2] : [l2,l1];
+  return ((light+0.05)/(dark+0.05)).toFixed(2);
+}
+// 기준: 일반 텍스트 ≥ 4.5:1 / 굵은 텍스트·아이콘 ≥ 3:1
+```
+
+### 4-1. 검증된 색상 대비 목록
+
+#### 기본 텍스트 (text-primary / text-secondary)
+
+| 배경 | 텍스트 | 대비율 | 기준 |
+|------|--------|--------|------|
+| 라이트 page `#f7f5f2` | primary `#1a1a2e` | 15:1 | ✅ AA |
+| 라이트 page `#f7f5f2` | secondary `#52526e` | 7:1 | ✅ AA |
+| 다크 page `#1c1c1a` | primary `#f0ece6` | 14:1 | ✅ AA |
+| 다크 page `#1c1c1a` | secondary `#b0a8a0` | 8.9:1 | ✅ AA |
+
+#### 버튼
+
+| 배경 | 텍스트 | 대비율 | 기준 |
+|------|--------|--------|------|
+| ilp 라이트 `#1a1825` | `white` | 17.5:1 | ✅ AA |
+| ilp 다크 `#f0ece6` | `#1a1825` | 14.8:1 | ✅ AA |
+
+#### 채팅 말풍선
+
+| 배경 | 텍스트 | 대비율 | 기준 |
+|------|--------|--------|------|
+| 라이트 own `#eaeaf8` | primary `#1a1a2e` | 14.31:1 | ✅ AA |
+| 라이트 other/ai `#fffcfa` | primary `#1a1a2e` | 16.70:1 | ✅ AA |
+| 다크 own `#252540` | primary `#f0ece6` | 12.59:1 | ✅ AA |
+| 다크 other/ai `#1a1a18` | primary `#f0ece6` | 14.81:1 | ✅ AA |
+
+#### 채팅 UI 아이콘·버튼
+
+| 배경 | 텍스트/아이콘 | 대비율 | 기준 |
+|------|--------------|--------|------|
+| 전송버튼 라이트 `#3d3d8f` | `white` | 9.28:1 | ✅ AA |
+| 전송버튼 다크 `#c8c0b6` | `#1c1c1a` | 9.49:1 | ✅ AA |
+| 그룹아이콘 다크 `#5c4a7a` | `white` | 7.73:1 | ✅ AA |
+
+---
 
 ### 다크 오버레이(카메라·미리보기 등) 위 텍스트 규칙
 
@@ -333,5 +417,8 @@ import PointsLoading from "@/src/app/components/PointsLoading";
 - [ ] ghostLavender 버튼을 어두운 오버레이 안에 절대 배치
 - [ ] `text-stone-*` `text-neutral-*` 등 임의 Tailwind 색 사용 (디자인 토큰 사용)
 - [ ] 페이지 대표 H2 제목에 `text-gradient-scent` 미적용
+- [ ] 채팅·사이드바 아이콘에 `fill="url(#ilp-nav-gradient)"` 사용 (`className="text-[var(--color-text-primary)]"` 사용)
+- [ ] 채팅 말풍선에 하드코딩 hex 사용 (`var(--chat-bubble-own/ai/other)` 사용)
+- [ ] 새 배경색 추가 시 WCAG 대비율 미검증 (4-0 검증 함수로 확인 후 4-1 표에 기록)
 
 하나라도 해당하면 수정.

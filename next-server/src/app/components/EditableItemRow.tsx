@@ -71,10 +71,10 @@ export default function EditableItemRow({
       </span>
       <div className="flex-1 min-w-0">
         <div className="inline-flex items-center flex-wrap">
-          <span className="break-all mr-2 text-sm text-stone-700 dark:text-stone-200">
+          <span className="break-all mr-2 text-sm text-[var(--color-text-primary)]">
             {authorName}
           </span>
-          <span className="text-stone-400 dark:text-stone-500 mr-2 text-xs">
+          <span className="text-[var(--color-text-secondary)] mr-2 text-xs">
             {dayjs(createdAt).fromNow()}
           </span>
           {canEdit && (
@@ -110,7 +110,7 @@ export default function EditableItemRow({
           )
         ) : (
           <pre
-            className="whitespace-pre-wrap text-[13px] md:text-[14px] leading-[1.7] text-stone-600 dark:text-stone-300"
+            className="whitespace-pre-wrap text-[13px] md:text-[14px] leading-[1.7] text-[var(--color-text-secondary)]"
             dangerouslySetInnerHTML={{ __html: contentHtml }}
           />
         )}
