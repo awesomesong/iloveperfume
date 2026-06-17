@@ -11,6 +11,7 @@
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint src --ext .ts,.tsx 2>/dev/null",
     "lint:css": "stylelint \"src/**/*.css\"",
     "lint:all": "ESLINT_USE_FLAT_CONFIG=false eslint src --ext .ts,.tsx 2>/dev/null && stylelint \"src/**/*.css\"",
+    "lint:purple": "grep -rn --include='*.tsx' --include='*.css' -E '#(0c0a14|1a1625|1a1825|1f1b29|2a2840|2d2040|3d3d8f|52526e|554466|5555aa|5c4a7a|5c5270|5c64a4|656598|6868a8|6b5b95|6b5c7d|7a80cc|7c5eb0|8a7a9e|9d8fb8|a898b8|a89ec4|b094e0|b5a8cc|c0c0e0|c8b4ff|d4c8e4|dcdcf0|ddd0f8|ddd0ff|ddd8e8|e8e0ff|e8e8f8|eaeaf8|ebe2ff|f5f2ff)' src || echo '보라계열 하드코딩 없음'",
     "postinstall": "prisma generate",
     "db:check": "prisma migrate status",
     "db:studio": "prisma studio",
