@@ -46,15 +46,16 @@ blockquote{
   --guide-scroll-offset: calc(var(--header-height) + 1.5rem);
   --header-bg: rgba(255, 252, 250, 0.88);
   --header-border: rgba(45, 32, 64, 0.08);
-  --ilp-gradient-start: #a67d5c;
-  --ilp-gradient-mid: #5c4a7a;
-  --ilp-gradient-end: #b07d82;
+  --ilp-gradient-start: #3d3d8f;
+  --ilp-gradient-mid: #4455b8;
+  --ilp-gradient-end: #5577d8;
   /* 공통 브랜드 그라데이션 */
   --bg-gradient-ilp: linear-gradient(115deg, var(--ilp-gradient-start) 0%, var(--ilp-gradient-mid) 55%, var(--ilp-gradient-end) 100%);
   /* 라이트: 아이보리 + 인디고 액센트 */
   --color-ivory: #fffcfa;
   --color-ivory-soft: #f8f6f3;
   --color-accent: #3d3d8f;
+  --color-accent-interactive: #3d3d8f;
   --color-accent-light: #5555aa;
   --color-accent-muted: #6868a8;
   --color-accent-pale: #eaeaf8;
@@ -67,6 +68,10 @@ blockquote{
   --guide-card-surface-bg: var(--color-card-bg);
   --guide-card-surface-border: var(--color-card-border);
   --color-accent-line: #b094e0;
+  --color-select-option-text: #2d2040;
+  /* 선택 메뉴는 항상 밝은 배경 — 모드 무관 고정값 */
+  --color-select-hover: #c8c8de;
+  --color-select-selected: #3d3d8f;
   --color-shadow-soft: rgba(0, 0, 0, 0.06);
   --color-shadow-hover: rgba(180, 150, 240, 0.18);
   --color-glow: #fffcfa;
@@ -90,16 +95,18 @@ blockquote{
   --notice-card-divider: rgba(200, 180, 255, 0.35);
   --notice-card-title-color: var(--color-text-primary);
   --notice-card-meta-color: var(--color-text-secondary);
-  /* 사이드바 hover/active 상태 (동일 색상) */
-  --color-sidebar-state-bg: #e0d7ed;
+  /* 사이드바 hover/active — accent-pale(연한 인디고, 좌측 바와 계열 통일) */
+  --color-sidebar-state-bg: var(--color-accent-pale);
   /* 로딩 ball: 왼쪽 진함 → 오른쪽 연함 (라이트) */
   --points-ball-1: #554466;
   --points-ball-2: #6b5c7d;
   --points-ball-3: #8a7a9e;
   --points-ball-4: #a898b8;
   --points-ball-5: #d4c8e4;
-  /* 채팅 말풍선 — 라이트: own 인디고 틴트 / other 아이보리 */
-  --chat-bubble-own: var(--color-accent-pale);
+  /* 채팅 말풍선 — 라이트: own 미디엄 인디고(page 3.33:1 ✅) / other 아이보리+border+shadow */
+  --chat-bubble-own: #7a80cc;
+  /* 드랍다운 메뉴 배경 — 라이트: 인디고 페일 / dark: 라이트 인디고(어두운 텍스트용, 13.7:1 ✅) */
+  --ilp-select-menu-bg: #eaeaf8;
   --chat-bubble-ai: var(--color-card-bg);
   --chat-bubble-other: var(--color-card-bg);
   --chat-badge-group-text: #4a4238;
@@ -115,69 +122,74 @@ blockquote{
 }
 
 .dark {
-  /* 배경: 뉴트럴 웜 다크 — 전체적으로 한 단계 밝게 */
-  --bg-page: #1c1c1a;
+  /* 배경: 뉴트럴 다크 */
+  --bg-page: #111110;
   --bg-page-reverse: #fffcfa;
-  --header-bg: rgba(28, 28, 26, 0.92);
-  --header-border: rgba(200, 195, 188, 0.14);
+  --header-bg: rgba(17, 17, 16, 0.92);
+  --header-border: rgba(200, 200, 200, 0.14);
   --ilp-gradient-start: #f5f0e8;
   --ilp-gradient-mid: #e8e0d5;
   --ilp-gradient-end: #f0ebe0;
-  /* 텍스트: 웜 화이트 계열 — accent 계열 전반 밝기 향상 */
+  /* 텍스트 */
   --color-ivory: #fffcfa;
-  --color-ivory-soft: #252523;
-  --color-accent: #c8c0b6;
-  --color-accent-light: #d8d0c6;
-  --color-accent-muted: #b0a89a;
-  --color-accent-pale: #2a2a27;
-  --color-accent-border: rgba(200, 195, 188, 0.28);
-  --color-text-primary: #f2eee8;
-  --color-text-secondary: #c0b8ae;
-  --color-card-bg: #252523;
-  --color-card-border: rgba(200, 195, 188, 0.2);
+  --color-ivory-soft: #1a1a18;
+  --color-accent: #7a80cc;
+  --color-accent-interactive: #7a80cc;
+  --color-accent-light: #9da4e0;
+  --color-accent-muted: #5c64a4;
+  --color-accent-pale: #222228;
+  --color-accent-border: rgba(122, 128, 204, 0.45);
+  --color-text-primary: #f0ece6;
+  --color-text-secondary: #b0a8a0;
+  --color-card-bg: #1a1a18;
+  --color-card-border: rgba(200, 200, 200, 0.2);
   --guide-card-surface-bg: var(--color-ivory-soft);
   --guide-card-surface-border: var(--color-accent-border);
-  --color-accent-line: #b0a898;
+  --color-accent-line: #5c64a4;
+  --color-select-option-text: #2d2040;
+  --color-avatar-dark-bg: #4455b8;
+  --color-hero-dark-bg: #0c0a14;
   --color-shadow-soft: rgba(0, 0, 0, 0.28);
   --color-shadow-hover: rgba(0, 0, 0, 0.2);
   --color-glow: rgba(255, 255, 255, 0.5);
-  --footer-border: rgba(200, 195, 188, 0.16);
-  --footer-badge-bg: rgba(200, 195, 188, 0.08);
-  --footer-badge-border: rgba(200, 195, 188, 0.2);
-  --footer-line: linear-gradient(90deg, transparent 0%, rgba(200, 195, 188, 0.22) 35%, rgba(200, 195, 188, 0.18) 65%, transparent 100%);
-  /* CTA 그라데이션(다크): 웜 아이보리 */
+  --footer-border: rgba(200, 200, 200, 0.16);
+  --footer-badge-bg: rgba(200, 200, 200, 0.08);
+  --footer-badge-border: rgba(200, 200, 200, 0.2);
+  --footer-line: linear-gradient(90deg, transparent 0%, rgba(200, 200, 200, 0.22) 35%, rgba(200, 200, 200, 0.18) 65%, transparent 100%);
+  /* CTA 그라데이션(다크): 아이보리 — 뉴트럴 bg와 대비용 유지 */
   --gradient-add-btn: linear-gradient(135deg, rgba(255,252,248,0.75) 0%, rgba(240,235,225,0.82) 40%, rgba(255,250,240,0.88) 70%, rgba(255,248,235,0.8) 100%);
-  /* 공지 카드(다크): 웜 다크 뉴트럴 — 카드 bg 맞게 조정 */
-  --notice-card-bg: linear-gradient(180deg, #2e2e2b 0%, #2a2a27 50%, #272724 100%);
-  --notice-card-border: rgba(200, 195, 188, 0.24);
-  --notice-card-image-bg: linear-gradient(145deg, rgba(200,190,175,0.35) 0%, rgba(190,185,175,0.2) 40%, rgba(200,195,185,0.08) 70%, rgba(210,200,185,0.18) 100%), #252523;
-  --notice-card-hover-border: rgba(200, 195, 188, 0.38);
+  /* 공지 카드(다크) */
+  --notice-card-bg: linear-gradient(180deg, #252524 0%, #202020 50%, #1c1c1c 100%);
+  --notice-card-border: var(--color-accent-border);
+  --notice-card-image-bg: linear-gradient(145deg, rgba(180,180,180,0.2) 0%, rgba(160,160,160,0.1) 40%, rgba(160,160,160,0.05) 70%, rgba(180,180,180,0.12) 100%), #1a1a18;
+  --notice-card-hover-border: rgba(122, 128, 204, 0.70);
   --notice-card-shadow-hover: rgba(0, 0, 0, 0.24);
-  --notice-card-body-bg: rgba(37, 37, 35, 0.7);
-  --notice-card-divider: rgba(200, 195, 188, 0.18);
-  /* 사이드바 */
-  --color-sidebar-state-bg: rgba(200, 195, 188, 0.1);
-  /* 로딩 ball: 웜 뉴트럴 */
-  --points-ball-1: #4a4540;
-  --points-ball-2: #605a54;
-  --points-ball-3: #7a7268;
-  --points-ball-4: #98908a;
-  --points-ball-5: #c0b8b0;
-  /* 채팅 말풍선 — 다크: own 인디고 틴트 / other 뉴트럴 카드 */
-  --chat-bubble-own: #252540;
+  --notice-card-body-bg: rgba(26, 26, 24, 0.7);
+  --notice-card-divider: rgba(200, 200, 200, 0.18);
+  /* 사이드바 hover/active — 인디고 틴트(text 12.51:1 ✅) */
+  --color-sidebar-state-bg: rgba(61, 61, 143, 0.30);
+  /* 로딩 ball: 뉴트럴 */
+  --points-ball-1: #383838;
+  --points-ball-2: #505050;
+  --points-ball-3: #686868;
+  --points-ball-4: #888888;
+  --points-ball-5: #b0b0b0;
+  /* 채팅 말풍선 — 다크: own 미디엄 인디고(page 3.10:1 ✅) / other 카드+border+shadow */
+  --chat-bubble-own: #5c64a4;
+  --ilp-select-menu-bg: #e8e8f8;
   --chat-bubble-ai: var(--color-card-bg);
   --chat-bubble-other: var(--color-card-bg);
-  --chat-badge-group-text: #e6e2da;
-  --chat-badge-group-bg: #3d3835;
-  --chat-badge-group-border: #5c5650;
+  --chat-badge-group-text: #e0e0e0;
+  --chat-badge-group-bg: #303030;
+  --chat-badge-group-border: #484848;
 }
 
 :root .force-light-ilp-gradient,
 .dark .force-light-ilp-gradient,
 [data-theme] .force-light-ilp-gradient {
-  --ilp-gradient-start: #a67d5c;
-  --ilp-gradient-mid: #5c4a7a;
-  --ilp-gradient-end: #b07d82;
+  --ilp-gradient-start: #3d3d8f;
+  --ilp-gradient-mid: #4455b8;
+  --ilp-gradient-end: #5577d8;
 }
 
 /* ILPUserAvatar: 다크모드에서만 밝은 그라데이션 (컴포넌트 내부 한 곳에서 처리) */
@@ -234,15 +246,15 @@ h4 {
   @apply font-semibold;
 }
 
-/* Global Placeholder Styling */
+/* Global Placeholder Styling — WCAG AA 준수 (라이트 7.37:1 / 다크 7.83:1) */
 ::placeholder {
-  color: #8a7a9e !important; /* Desaturated darker lavender */
-  opacity: 0.6;
+  color: var(--color-text-secondary) !important;
+  opacity: 1;
 }
 
 .dark ::placeholder {
-  color: #c8b4ff !important; /* var(--color-accent) */
-  opacity: 0.5;
+  color: var(--color-text-secondary) !important;
+  opacity: 1;
 }
 
 h5 {
@@ -458,6 +470,17 @@ h6 {
   flex-wrap: wrap;
 }
 
+/* 상세 페이지 전용: 메타 하단 구분선 (다크 모드에서 인디고 포인트) */
+.notice-detail__meta {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+.dark .notice-detail__meta {
+  border-bottom-color: var(--color-accent-border);
+}
+
 /* 공지 공통: 메타 영역 아바타 래퍼 (카드/상세 공용) */
 .notice-meta__avatar {
   flex-shrink: 0;
@@ -662,6 +685,18 @@ h6 {
   border-color: var(--color-accent-border);
   color: var(--color-accent-muted);
 }
+/* 다크모드: accent-muted(#5c64a4) 대비 3.49:1 미달 → accent-light(#9da4e0) 6.36:1 ✅ */
+/* 비활성: 아웃라인만 — accent-light(#9da4e0) 6.36:1 ✅ */
+.dark .product-fragrance-pill {
+  border-color: var(--color-accent-border);
+  color: var(--color-accent-light);
+}
+/* 활성: accent-light 솔리드 필 + 어두운 텍스트(#1a1a18) 7.95:1 ✅ */
+.dark .product-fragrance-pill-active {
+  background: var(--color-accent-light);
+  border-color: var(--color-accent-light);
+  color: #1a1a18;
+}
 /* 스티키일 때 필터 pills 1줄 클립 (펼치기/접기용) — 모든 사이즈 공통 */
 .product-fragrance-pills-sticky-clip {
   max-height: 2rem;
@@ -670,6 +705,10 @@ h6 {
 .product-fragrance-card {
   background: var(--color-card-bg);
   border: 1px solid var(--color-card-border);
+}
+.dark .product-fragrance-card,
+.dark .product-fragrance-skeleton-card {
+  border-color: var(--color-accent-border);
 }
 .product-fragrance-skeleton-card {
   background: var(--color-card-bg);
@@ -944,25 +983,26 @@ h6 {
   background-color: var(--color-accent-border);
 }
 .dark .skeleton-bg {
-  background-color: var(--color-accent-border);
+  /* rgba(140,140,220,0.65) on #1c1c1a => #656598, 대비 3.14:1 ✅ WCAG 1.4.11 */
+  background-color: rgba(140, 140, 220, 0.65);
 }
 .skeleton-bg-muted {
   background-color: var(--color-accent-pale);
 }
 .dark .skeleton-bg-muted {
-  background-color: rgba(200, 180, 255, 0.15);
+  background-color: rgba(140, 140, 220, 0.45);
 }
 .skeleton-bg-muted-80 {
   background-color: rgba(147, 132, 179, 0.2);
 }
 .dark .skeleton-bg-muted-80 {
-  background-color: rgba(200, 180, 255, 0.12);
+  background-color: rgba(140, 140, 220, 0.35);
 }
 .skeleton-bg-muted-70 {
   background-color: rgba(147, 132, 179, 0.15);
 }
 .dark .skeleton-bg-muted-70 {
-  background-color: rgba(200, 180, 255, 0.1);
+  background-color: rgba(140, 140, 220, 0.25);
 }
 .skeleton-divider-line {
   background: var(--color-accent-line);
@@ -995,6 +1035,20 @@ h6 {
 }
 .dark .skeleton-price-bar-muted {
   background-color: color-mix(in srgb, var(--color-accent) 38%, transparent);
+}
+/* ShapesSkeleton — 라이트/다크 모두 인디고. 솔리드 색상만 사용 (투명도 혼합 시 hairline border 아티팩트 발생) */
+.skeleton-shapes {
+  background-color: var(--color-accent-border); /* 라이트: #c0c0e0 인디고-라이트 */
+}
+.dark .skeleton-shapes {
+  background-color: var(--chat-bubble-own); /* 다크: #5c64a4 미디엄 인디고 */
+}
+/* 내 메시지(own) 말풍선 스켈레톤 — var(--chat-bubble-own) 기반 인디고 */
+.skeleton-bg-own {
+  background-color: color-mix(in srgb, var(--chat-bubble-own) 75%, transparent);
+}
+.dark .skeleton-bg-own {
+  background-color: color-mix(in srgb, var(--chat-bubble-own) 85%, transparent);
 }
 
 /* 폼 입력 필드용 공통 스켈레톤 스타일 */
@@ -1319,46 +1373,51 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
     @apply border-none shadow-none;
   }
 
+  /* 선택 메뉴는 라이트/다크 무관 항상 밝은 배경 → --ilp-select-menu-bg 고정 토큰 사용 */
   .ilp-select__menu {
-    /* Always use ivory background to support the dark text requested by user */
-    @apply bg-[var(--color-ivory)] border-1 border-[var(--color-accent-border)] rounded-xl shadow-2xl overflow-hidden mt-1;
+    @apply border-1 border-[var(--color-accent-border)] rounded-xl shadow-2xl overflow-hidden mt-1;
+    background-color: var(--ilp-select-menu-bg);
     z-index: 1000 !important;
   }
 
   .ilp-select__option {
     @apply px-4 py-3 text-sm cursor-pointer transition-all duration-200;
-    @apply !text-[#2d2040] bg-transparent;
+    color: var(--color-select-option-text);
+    background-color: transparent;
   }
 
+  /* hover: 메뉴 bg보다 어두운 동계열 라벤더 (대비 9.17:1 ✅) */
   .ilp-select__option--is-focused {
-    /* Use the same high-contrast light palette for hover in both modes */
-    @apply bg-[#e8e0ff] !text-[#7c5eb0];
+    background-color: var(--color-select-hover);
+    color: var(--color-select-option-text);
   }
 
+  /* selected: 항상 어두운 고정값 + 흰 텍스트 (대비 9.28:1 ✅) */
   .ilp-select__option--is-selected {
-    @apply bg-[#b094e0] !text-white;
+    background-color: var(--color-select-selected);
+    color: white;
   }
 
   .ilp-select__indicator {
-    @apply !cursor-pointer
+    @apply !cursor-pointer;
   }
 
-  .ilp-select__indicator:hover {
-    @apply !text-[#7c5eb0] dark:!text-[#ffffff];
-  }
-
+  /* 드롭다운/clear 아이콘: secondary → primary로 hover */
   .ilp-select__clear-indicator,
   .ilp-select__dropdown-indicator {
-    @apply cursor-pointer !text-[#b094e0] dark:!text-[#c8b4ff];
+    @apply cursor-pointer;
+    color: var(--color-text-secondary);
   }
 
   .ilp-select__clear-indicator:hover,
-  .ilp-select__dropdown-indicator:hover {
-    @apply !text-[#7c5eb0] dark:!text-[#a89ec4];
+  .ilp-select__dropdown-indicator:hover,
+  .ilp-select__indicator:hover {
+    color: var(--color-text-primary);
   }
 
   .ilp-select__indicator-separator {
-    @apply bg-[#b094e0] dark:bg-[#c8b4ff] opacity-40;
+    background-color: var(--color-text-secondary);
+    opacity: 0.3;
   }
 
   .ilp-select__input-container,
@@ -1368,10 +1427,10 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   }
 
   .ilp-select__placeholder {
-    @apply !text-[var(--color-accent-muted)] !opacity-60;
+    @apply !text-[var(--color-text-secondary)];
   }
 
-  /* Multi-value container and labels */
+  /* Multi-value 태그 */
   .ilp-select__multi-value {
     @apply bg-[var(--color-accent-pale)] rounded-md border-1 border-[var(--color-accent-border)];
   }
@@ -1380,30 +1439,17 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
     @apply !text-[var(--color-text-primary)];
   }
 
-  /* Multi-value remove button and SVG */
   .ilp-select__multi-value__remove {
-    @apply !text-[var(--color-accent)] hover:!bg-[var(--color-accent-light)] hover:!text-[#2d2040] transition-colors;
+    color: var(--color-text-secondary);
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  .ilp-select__multi-value__remove:hover {
+    background-color: var(--color-select-hover);
+    color: var(--color-select-option-text);
   }
 
   .ilp-select__multi-value__remove svg {
-    @apply fill-current;
-  }
-
-  /* Clear and dropdown indicator */
-  .ilp-select-container .ilp-select__clear-indicator,
-  .ilp-select-container .ilp-select__dropdown-indicator {
-    @apply text-[#b094e0] dark:text-[#c8b4ff];
-  }
-
-  .ilp-select-container .ilp-select__clear-indicator:hover,
-  .ilp-select-container .ilp-select__dropdown-indicator:hover {
-    @apply text-[#7c5eb0] dark:text-[#a89ec4];
-  }
-
-  .ilp-select-container .ilp-select__clear-indicator .css-tj5bde-Svg,
-  .ilp-select-container
-  .ilp-select__dropdown-indicator
-  .css-tj5bde-Svg {
     @apply fill-current;
   }
 
@@ -1432,7 +1478,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   }
 
   .text-gradient-memories {
-    color: #6b5b95;
+    color: var(--color-accent-muted);
     background: none;
     -webkit-text-fill-color: currentColor;
   }
@@ -1444,7 +1490,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   }
 
   .dark .text-gradient-memories {
-    color: #c8b4ff;
+    color: var(--color-accent-muted);
     background: none;
     -webkit-text-fill-color: currentColor;
   }
@@ -1461,7 +1507,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 
   /* 로고 전용 솔리드 색상 */
   .text-gradient-logo {
-    color: #2a2840;
+    color: var(--color-text-primary);
     background: none;
     -webkit-text-fill-color: currentColor;
   }
@@ -1473,7 +1519,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 
   /* 메인 섹션 제목 솔리드 색상 */
   .text-gradient-scent {
-    color: #2d2040;
+    color: var(--color-select-option-text);
     background: none;
     -webkit-text-fill-color: currentColor;
   }
@@ -1492,7 +1538,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
     background: var(--color-accent);
   }
   .dark .bg-gradient-ilp-avatar {
-    background: #5c4a7a;
+    background: var(--color-avatar-dark-bg);
   }
 
   .modal-title {
@@ -1530,9 +1576,12 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   .sidebar-item--state {
     @apply transition-colors;
   }
-  .sidebar-item--state:hover,
+  .sidebar-item--state:hover {
+    background-color: var(--color-sidebar-state-bg);
+  }
   .sidebar-item--state[data-selected="true"] {
     background-color: var(--color-sidebar-state-bg);
+    box-shadow: inset 4px 0 0 var(--color-accent);
   }
 
   /* 안 읽은 메시지 배지 — ConversationBox, ChatUnReadCount 공통 */
@@ -1749,7 +1798,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 }
 
 .dark .ilp-hero {
-  background: #0c0a14;
+  background: var(--color-hero-dark-bg);
 }
 
 /* 히어로 스켈레톤: 큰 네모 + 그라데이션 shimmer */
@@ -1903,7 +1952,7 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   font-weight: 400;
   font-size: clamp(0.7rem, 2dvh, 0.9rem);
   letter-spacing: 0.2em;
-  color: #5c5270;
+  color: var(--color-text-secondary);
   margin: 0;
   opacity: 1;
 }
