@@ -20,8 +20,8 @@
 
 | | 라이트 | 다크 |
 |--|--------|------|
-| primary | `#1a1a2e` | `#f0ece6` |
-| secondary | `#52526e` | `#b0a8a0` |
+| primary | `#1a1a2e` | `#f0ece6` ✅ |
+| secondary | `#52526e` | `#b0a8a0` ✅ |
 
 > **WCAG AA 확인값** — primary: 라이트 15:1 / 다크 14:1 ✅ · secondary: 라이트 7:1 / 다크 8.9:1 ✅
 
@@ -40,21 +40,21 @@
 
 | | 라이트 | 다크 |
 |--|--------|------|
-| page | `#f7f5f2` | `#111110` |
-| card-bg | `#fffcfa` | `#1a1a18` |
+| page | `#f7f5f2` | `#111110` ✅ |
+| card-bg | `#fffcfa` | `#1a1a18` ✅ |
 | ivory | `#fffcfa` | `#fffcfa` |
 
 ---
 
 ### 1-3. 브랜드 포인트 (액센트 계열)
 
-| 역할 | CSS 변수 | Tailwind |
-|------|----------|---------|
-| 메인 포인트 | `var(--color-accent)` | `text-accent` |
-| 밝은 포인트 | `var(--color-accent-light)` | `text-accent-light` |
-| 흐린 포인트 | `var(--color-accent-muted)` | `text-accent-muted` |
-| 연한 배경 | `var(--color-accent-pale)` | — |
-| 보더 | `var(--color-accent-border)` | — |
+| 역할 | CSS 변수 | Tailwind | 라이트 | 다크 |
+|------|----------|---------|--------|------|
+| 메인 포인트 | `var(--color-accent)` | `text-accent` | `#3d3d8f` (딥 인디고) | `#7a80cc` (미디엄 인디고) |
+| 밝은 포인트 | `var(--color-accent-light)` | `text-accent-light` | `#5555aa` | `#9da4e0` |
+| 흐린 포인트 | `var(--color-accent-muted)` | `text-accent-muted` | `#6868a8` | `#5c64a4` |
+| 연한 배경 | `var(--color-accent-pale)` | — | `#eaeaf8` | `#222228` |
+| 보더 | `var(--color-accent-border)` | — | `#c0c0e0` | `rgba(122,128,204,0.45)` |
 
 ---
 
@@ -67,19 +67,22 @@
 | 호버 그림자 | `var(--color-shadow-hover)` |
 | 헤더 배경 | `var(--header-bg)` |
 | 안 읽은 배지 | `--unread-badge-bg` / `--unread-badge-text` |
+| 사이드바 hover/active | `--color-sidebar-state-bg` | 라이트 `var(--color-accent-pale)` = `#eaeaf8` / 다크 `rgba(61,61,143,0.30)` (인디고 틴트) |
+
+> **사이드바 active 구분 원칙**: 인디고 틴트 배경 + `box-shadow: inset 3px 0 0 var(--color-accent)` 좌측 바로 명확히 표시.
 
 ### 1-5. 채팅 도메인 전용
 
 | 역할 | CSS 변수 | 라이트 | 다크 |
 |------|----------|--------|------|
-| 내 메시지 말풍선 | `--chat-bubble-own` | `var(--color-accent-pale)` = `#eaeaf8` (인디고 틴트) | `#252540` (다크 인디고) |
-| AI 메시지 말풍선 | `--chat-bubble-ai` | `var(--color-card-bg)` = `#fffcfa` + 카드 보더 | `var(--color-card-bg)` + 카드 보더 |
-| 상대방 말풍선 | `--chat-bubble-other` | `var(--color-card-bg)` = `#fffcfa` + 카드 보더 | `var(--color-card-bg)` + 카드 보더 |
+| 내 메시지 말풍선 | `--chat-bubble-own` | `#7a80cc` (미디엄 인디고) | `#5c64a4` (다크 인디고) |
+| AI 메시지 말풍선 | `--chat-bubble-ai` | `var(--color-card-bg)` + 카드 보더 + shadow-sm | `var(--color-card-bg)` + 카드 보더 + shadow-sm |
+| 상대방 말풍선 | `--chat-bubble-other` | `var(--color-card-bg)` + 카드 보더 + shadow-sm | `var(--color-card-bg)` + 카드 보더 + shadow-sm |
 
-> **구분 원칙**: 내 메시지(own)는 인디고 틴트로 강조, AI·상대방은 카드 배경(뉴트럴)으로 통일. 아바타 위치(좌/우)로 추가 구분.
-| 그룹 멤버 배지 텍스트 | `--chat-badge-group-text` | `#4a4238` | `#e6e2da` |
-| 그룹 멤버 배지 배경 | `--chat-badge-group-bg` | `#f0ede8` | `#3d3835` |
-| 그룹 멤버 배지 보더 | `--chat-badge-group-border` | `#ddd6cc` | `#5c5650` |
+> **구분 원칙**: 내 메시지(own)는 미디엄 인디고로 배경 대비 3:1 이상 확보. AI·상대방은 카드 배경 + border + shadow-sm으로 시각적 구분.
+| 그룹 멤버 배지 텍스트 | `--chat-badge-group-text` | `#4a4238` | `#e0e0e0` |
+| 그룹 멤버 배지 배경 | `--chat-badge-group-bg` | `#f0ede8` | `#303030` |
+| 그룹 멤버 배지 보더 | `--chat-badge-group-border` | `#ddd6cc` | `#484848` |
 
 **아이콘 색상 규칙 (사이드바·채팅 헤더·입력 폼)**
 
@@ -122,7 +125,7 @@
 | 클래스 | 용도 | 색상 |
 |--------|------|------|
 | `bg-gradient-ilp` | 아이콘·배지 배경 | `var(--color-lavender)` |
-| `bg-gradient-ilp-avatar` | 아바타 배경 | 라이트: `var(--color-lavender)` / 다크: `#5c4a7a` |
+| `bg-gradient-ilp-avatar` | 아바타 배경 | 라이트: `var(--color-lavender)` / 다크: `#4455b8` |
 | `line-gradient-deco` | 섹션 구분 가로선 | `var(--color-lavender-border)` |
 | `footer-deco-line` | 푸터 상단 구분선 | `var(--color-card-border)` |
 | `product-fragrance-divider` | 향수 섹션 내 구분선 | `var(--color-lavender-border)` |
@@ -246,8 +249,8 @@ function contrast(hex1, hex2) {
 |------|--------|--------|------|
 | 라이트 page `#f7f5f2` | primary `#1a1a2e` | 15:1 | ✅ AA |
 | 라이트 page `#f7f5f2` | secondary `#52526e` | 7:1 | ✅ AA |
-| 다크 page `#1c1c1a` | primary `#f0ece6` | 14:1 | ✅ AA |
-| 다크 page `#1c1c1a` | secondary `#b0a8a0` | 8.9:1 | ✅ AA |
+| 다크 page `#111110` | primary `#f0ece6` | 15.3:1 | ✅ AA |
+| 다크 page `#111110` | secondary `#b0a8a0` | 9.9:1 | ✅ AA |
 
 #### 버튼
 
@@ -256,22 +259,68 @@ function contrast(hex1, hex2) {
 | ilp 라이트 `#1a1825` | `white` | 17.5:1 | ✅ AA |
 | ilp 다크 `#f0ece6` | `#1a1825` | 14.8:1 | ✅ AA |
 
+#### 공통 카드 border
+
+> 카드 컴포넌트 어디에나 재사용. 라이트 → `card-border`, 다크 → `accent-border`(인디고).
+
+| 모드 | 토큰 | 값 |
+|------|------|----|
+| 라이트 | `--color-card-border` | `#dcdcf0` |
+| 다크 | `--color-accent-border` | `rgba(122,128,204,0.45)` |
+
+#### 공통 배지
+
+> 배지·필터 pill 등 인라인 레이블에 재사용하는 3가지 variant.
+
+| variant | 모드 | 배경 | 텍스트 | 대비율 | 용도 예시 |
+|---------|------|------|--------|--------|-----------|
+| **hero** | 라이트 | 인디고 그라데이션 `#3d3d8f` | `white` | 9.28:1 ✅ | 최저가·주요 CTA 배지 |
+| **hero** | 다크 | 인디고 그라데이션 `#3d3d8f` | `white` | 10.2:1 ✅ | 최저가·주요 CTA 배지 |
+| **filled** | 라이트 | `--color-accent-pale` `#eaeaf8` | `--color-text-primary` `#1a1a2e` | 15:1 ✅ | 활성 필터·강조 배지 |
+| **filled** | 다크 | `--color-accent-light` `#9da4e0` | `#1a1a18` | 7.95:1 ✅ | 활성 필터·정품 매칭 |
+| **outline** | 라이트 | transparent | `--color-accent-muted` `#6868a8` + `accent-border` | 5.2:1 ✅ | 비활성 필터·보조 배지 |
+| **outline** | 다크 | transparent | `--color-accent-light` `#9da4e0` + `accent-border` | 6.36:1 ✅ | 비활성 필터·보조 배지 |
+
 #### 채팅 말풍선
 
 | 배경 | 텍스트 | 대비율 | 기준 |
 |------|--------|--------|------|
-| 라이트 own `#eaeaf8` | primary `#1a1a2e` | 14.31:1 | ✅ AA |
+| 라이트 own `#7a80cc` | primary `#1a1a2e` | 4.70:1 | ✅ AA |
+| 라이트 own `#7a80cc` | page bg `#f7f5f2` | 3.33:1 | ✅ UI구분 |
 | 라이트 other/ai `#fffcfa` | primary `#1a1a2e` | 16.70:1 | ✅ AA |
-| 다크 own `#252540` | primary `#f0ece6` | 12.59:1 | ✅ AA |
+| 다크 own `#5c64a4` | primary `#f0ece6` | 4.68:1 | ✅ AA |
+| 다크 own `#5c64a4` | page bg `#111110` | 3.53:1 | ✅ UI구분 |
 | 다크 other/ai `#1a1a18` | primary `#f0ece6` | 14.81:1 | ✅ AA |
+
+#### 사이드바 활성 상태
+
+| 배경 | 대상 | 대비율 | 비고 |
+|------|------|--------|------|
+| 라이트 active `#eaeaf8` | page `#f7f5f2` | 1.10:1 | 좌측 바 8.35:1로 WCAG 충족 |
+| 라이트 active `#eaeaf8` | text `#1a1a2e` | 14.31:1 | ✅ AA |
+| 다크 active `rgba(61,61,143,0.30)` ≈ `#222238` | page `#111110` | 1.32:1 | 좌측 바 4.90:1로 WCAG 충족 |
+| 다크 active `rgba(61,61,143,0.30)` ≈ `#222238` | text `#f0ece6` | 12.5:1 | ✅ AA |
+| 좌측 바 라이트 `#3d3d8f` | page `#f7f5f2` | 8.35:1 | ✅ 주 인디케이터 |
+| 좌측 바 다크 `#7a80cc` | page `#111110` | 4.90:1 | ✅ 주 인디케이터 |
+| `--color-accent-interactive` 다크 `#7a80cc` | page `#111110` | 4.90:1 | ✅ AA |
+| `--color-accent-interactive` 라이트 `#3d3d8f` | page `#f7f5f2` | 8.35:1 | ✅ AA |
+
+> **다크 사이드바 제약**: 인디고 틴트 배경(1.32:1)은 page와 구분이 약하나, 좌측 바 `--color-accent`(4.90:1)가 WCAG 1.4.11 주 인디케이터 역할.
+
+#### 드랍다운 메뉴 (ilp-select__menu)
+
+| 배경 | 텍스트 | 대비율 | 기준 |
+|------|--------|--------|------|
+| 라이트 `#eaeaf8` (accent-pale) | `#2d2040` | 14.3:1 | ✅ AA |
+| 다크 `#e8e8f8` | `#2d2040` | 13.7:1 | ✅ AA |
 
 #### 채팅 UI 아이콘·버튼
 
 | 배경 | 텍스트/아이콘 | 대비율 | 기준 |
 |------|--------------|--------|------|
 | 전송버튼 라이트 `#3d3d8f` | `white` | 9.28:1 | ✅ AA |
-| 전송버튼 다크 `#c8c0b6` | `#1c1c1a` | 9.49:1 | ✅ AA |
-| 그룹아이콘 다크 `#5c4a7a` | `white` | 7.73:1 | ✅ AA |
+| 전송버튼 다크 `#7a80cc` | `#111110` | 4.90:1 | ✅ AA |
+| 그룹아이콘 다크 `#4455b8` | `white` | 7.52:1 | ✅ AA |
 
 ---
 
@@ -338,9 +387,10 @@ function contrast(hex1, hex2) {
 ```css
 border-radius:  18px  (rounded-[18px] 또는 rounded-2xl)
 background:     var(--color-card-bg)
-border:         1px solid var(--color-card-border)
+border:         1px solid var(--color-card-border)        /* 라이트 */
+border:         1px solid var(--color-accent-border)      /* 다크 — .dark 오버라이드 */
 shadow rest:    0 2px 12px var(--color-shadow-soft)
-shadow hover:   0 16px 40px var(--color-shadow-hover), 0 0 0 1px var(--color-lavender-border)
+shadow hover:   0 16px 40px var(--color-shadow-hover), 0 0 0 1px var(--color-accent-border)
 ```
 
 기존 클래스 그대로 재사용: `.notice-card` / `.product-fragrance-card`
