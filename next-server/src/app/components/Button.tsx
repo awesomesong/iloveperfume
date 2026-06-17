@@ -4,7 +4,7 @@ import { Button as Btn } from "@heroui/react";
 
 /** 제출용 그라데이션 버튼 공통 핵심 스타일 (배경 그라데이션, 텍스트 효과, 호버 애니메이션, 그림자 없음) */
 export const submitButtonBaseClassName =
-  "rounded-full bg-[#1a1825] dark:bg-[#f0ece6] text-white dark:text-[#1a1825] uppercase shadow-none hover:shadow-none hover:opacity-85 transition-all duration-300";
+  "rounded-full bg-[var(--color-accent)] dark:bg-[#4466cc] text-white uppercase shadow-none hover:shadow-none hover:opacity-85 transition-all duration-300";
 
 /** 공통 제출 버튼 스타일 (FormFragrance, RegisterForm, SignInForm 등에서 사용) */
 export const submitButtonClassName =

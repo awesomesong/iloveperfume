@@ -111,7 +111,7 @@ const SidebarNav = () => {
                 h-8
               "
             >
-              <ShapesSkeleton width="100%" height="100%" radius="lg" />
+              <ShapesSkeleton width="100%" height="100%" radius="full" />
             </div>
           )}
         </nav>

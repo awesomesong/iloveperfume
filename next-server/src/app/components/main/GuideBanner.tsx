@@ -15,7 +15,7 @@ export default function GuideBanner() {
 
     return (
         <div
-            className="absolute top-4 left-0 right-0 z-10 mx-auto px-4 min-[480px]:left-auto min-[480px]:right-4 min-[480px]:mx-0 min-[480px]:px-0"
+            className="absolute top-4 left-4 right-4 z-10 mx-auto min-[480px]:left-auto min-[480px]:right-4 min-[480px]:mx-0 min-[480px]:w-auto"
             role="dialog"
             aria-modal="true"
             aria-label="I Love Perfume 이용 방법 안내"
@@ -24,7 +24,7 @@ export default function GuideBanner() {
                 className="flex items-center gap-3 rounded-full p-2 pl-4 pr-2"
                 style={{
                     background: 'var(--color-card-bg)',
-                    border: '1px solid var(--color-card-border)',
+                    border: '1px solid var(--color-accent-border)',
                     boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
                 }}
             >

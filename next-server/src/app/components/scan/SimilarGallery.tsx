@@ -72,7 +72,7 @@ export default function SimilarGallery({ scanId }: Props) {
                 href={`/fragrance/${item.slug}`}
                 className="group flex flex-col gap-2"
               >
-                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--color-card-bg)] dark:bg-[var(--color-ivory-soft)] border border-[var(--color-card-border)] group-hover:border-accent transition-colors">
+                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--color-card-bg)] dark:bg-[var(--color-ivory-soft)] border border-[var(--color-card-border)] dark:border-accent-border group-hover:border-accent transition-colors">
                   {item.images[0] ? (
                     <Image
                       src={item.images[0]}

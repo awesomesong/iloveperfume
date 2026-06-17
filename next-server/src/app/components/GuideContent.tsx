@@ -312,10 +312,15 @@ function StepGuideSection({
     <section id={id} className="scroll-mt-[var(--guide-scroll-offset)]">
       <SectionLabel index={index} title={title} />
       <div className="guide-section-intro">{intro}</div>
-      <div className="space-y-12">
+      <div className="space-y-6 lg:space-y-12">
         {steps.map(
           ({ step, title: stepTitle, desc, webImg, mobileImg, twinMobilePreview }) => (
-            <div key={step}>
+            <div
+              key={step}
+              className={clsx(
+                'max-lg:rounded-2xl max-lg:border max-lg:border-[var(--color-accent-border)] max-lg:p-4 max-lg:[background:var(--guide-card-surface-bg)]',
+              )}
+            >
               <div className="flex gap-3">
                 <div className="shrink-0 pt-[2px]">
                   <span
@@ -1155,14 +1160,14 @@ export default function GuideContent({
                             // 활성 상태
                             isActive
                               ? [
-                                  // 모바일: 사이드바 상태 배경(디자인 시스템) + 기본 텍스트
-                                  "max-lg:bg-[var(--color-sidebar-state-bg)] max-lg:text-[var(--color-text-primary)] max-lg:font-medium",
-                                  // 데스크톱: 진한 라벤더 + 볼드
-                                  "lg:text-[#8d5a68] lg:font-bold",
+                                  // 모바일: ring 테두리 + accent 텍스트 (배경 버블은 다크모드에서 불가시)
+                                  "max-lg:ring-1 max-lg:ring-[var(--color-accent-interactive)] max-lg:text-[var(--color-accent-interactive)] max-lg:font-bold",
+                                  // 데스크톱: interactive accent 색상 + 볼드
+                                  "lg:text-[var(--color-accent-interactive)] lg:font-bold",
                                 ]
                               : [
-                                  // 모바일: 매우 연한 배경 + 보조 텍스트
-                                  "max-lg:bg-[var(--color-sidebar-state-bg)]/40 max-lg:text-[var(--color-text-secondary)]",
+                                  // 모바일: 보조 텍스트
+                                  "max-lg:text-[var(--color-text-secondary)]",
                                   // 데스크톱: 보조 텍스트
                                   "lg:text-[var(--color-text-secondary)]",
                                 ]
@@ -1171,7 +1176,7 @@ export default function GuideContent({
                           <span className={clsx(
                             "rounded-full shrink-0 lg:inline transition-all",
                             isActive
-                              ? "w-1.5 h-1.5 bg-[#8d5a68]"
+                              ? "w-1.5 h-1.5 bg-[var(--color-accent-interactive)]"
                               : "w-1 h-1 bg-[var(--color-text-secondary)]"
                           )} />
                           <span className="max-lg:translate-y-px">{label}</span>

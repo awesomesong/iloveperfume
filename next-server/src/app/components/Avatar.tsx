@@ -62,7 +62,7 @@ const Avatar= ({user, isOwn, isAIChat} :AvatarProps) => {
             h-3
             w-3
           "
-          style={{ backgroundColor: '#22c55e' }}
+          style={{ backgroundColor: 'var(--chat-bubble-own)' }}
         />
       ): null}
     </div>

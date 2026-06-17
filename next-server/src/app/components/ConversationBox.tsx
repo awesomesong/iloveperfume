@@ -116,7 +116,7 @@ const ConversationBox: React.FC<ConversationBoxProps> = ({
               className={clsx(
                 "chat-item__status truncate",
                 !selected && unReadMessageLength > 0
-                  ? "font-bold text-neutral-900 dark:text-slate-100"
+                  ? "font-bold text-[var(--color-text-primary)]"
                   : "font-medium",
               )}
             >

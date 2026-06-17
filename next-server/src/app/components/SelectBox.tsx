@@ -51,7 +51,7 @@ const SelectBox: React.FC<SelctProps> = ({
                         control: (state) => `
                                 !border-none !shadow-none textfield-input-boundary relative
                                 after:content-[''] after:absolute after:bottom-[-1px] after:left-0 
-                                after:w-full after:h-[2px] after:bg-[#c09080] dark:after:bg-[#d4b8b0] 
+                                after:w-full after:h-[2px] after:bg-[var(--color-accent)] dark:after:bg-[var(--color-accent-light)]
                                 after:scale-x-0 after:origin-center after:transition-transform after:duration-300
                                 ${state.isFocused ? "after:scale-x-100" : ""}
                             `,
@@ -92,19 +92,19 @@ const SelectBox: React.FC<SelctProps> = ({
                         }),
                         menu: (base) => ({
                             ...base,
-                            backgroundColor: 'var(--color-ivory)',
+                            backgroundColor: 'var(--color-card-bg)',
                             borderRadius: '12px',
                             border: '1px solid var(--color-accent-border)',
-                            boxShadow: '0 10px 25px rgba(45, 32, 64, 0.1)',
+                            boxShadow: '0 10px 25px var(--color-shadow-soft)',
                             overflow: 'hidden',
                             zIndex: 1000,
                         }),
                         option: (base, state) => ({
                             ...base,
                             backgroundColor: state.isFocused
-                                ? '#f5edf0'
-                                : 'transparent',
-                            color: state.isFocused ? '#8d5a68' : '#2d1e18',
+                                ? 'var(--color-accent-pale)'
+                                : 'var(--color-card-bg)',
+                            color: state.isFocused ? 'var(--color-accent)' : 'var(--color-text-primary)',
                             padding: '10px 15px',
                             fontSize: '0.875rem',
                             cursor: 'pointer',
@@ -130,7 +130,7 @@ const SelectBox: React.FC<SelctProps> = ({
                             transition: 'all 0.2s ease',
                             '&:hover': {
                                 backgroundColor: 'var(--color-accent-light)',
-                                color: '#2d1e18', // Dark text on light background for clear visibility
+                                color: 'var(--color-text-primary)',
                             },
                         }),
                         placeholder: (base) => ({

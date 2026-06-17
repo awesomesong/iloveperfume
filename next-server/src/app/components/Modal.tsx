@@ -46,6 +46,7 @@ const Modal: React.FC<ModalProps> = ({
             {/* Backdrop */}
             <div
                 className={clsx(
+                    // eslint-disable-next-line no-restricted-syntax
                     "fixed inset-0 bg-neutral-900/60 backdrop-blur-md transition-opacity duration-300",
                     isOpen ? "opacity-100" : "opacity-0"
                 )}

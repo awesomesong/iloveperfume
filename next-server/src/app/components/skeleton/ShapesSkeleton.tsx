@@ -18,7 +18,7 @@ const ShapesSkeleton = ({ width, height, radius }: ShapesSkeletonProps) => {
     const rounded = radius ? radiusClass[radius] : "rounded-lg";
     return (
         <div
-            className={`bg-[#e0d7ed] dark:bg-[#e2d9f3] animate-pulse ${rounded} overflow-hidden`}
+            className={`skeleton-shapes animate-pulse ${rounded} overflow-hidden`}
             style={{ width, height }}
         />
     );

@@ -300,7 +300,8 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                         onDrop={(e) => handleDrop(e, isDisabled)}
                         className={clsx(
                             "fragrance-img-size transition-all duration-300 group mx-auto sm:self-start",
-                            isDragging ? "bg-[#f5edf0]/50 scale-[1.01]" : "bg-[#fffcfa] dark:bg-[#1a1210]",
+                            // eslint-disable-next-line no-restricted-syntax
+                            isDragging ? "bg-[#f5edf0]/50 scale-[1.01]" : "bg-[var(--color-card-bg)]",
                             imageError && "ring-2 ring-red-400/60 dark:ring-red-400/50 rounded-[28px]",
                             previewImages.length === 0 && "!overflow-visible"
                         )}
@@ -386,10 +387,13 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                             {previewImages.map((img, i) => (
                                 <li
                                     key={img.src}
-                                    className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer ${i === sliderIndex
-                                        ? "border-[#d4b8b0] shadow-md scale-[1.08] z-10"
-                                        : "border-transparent opacity-50 hover:opacity-100 hover:scale-[1.03]"
-                                        }`}
+                                    className={clsx(
+                                        "group relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer",
+                                        i === sliderIndex
+                                            // eslint-disable-next-line no-restricted-syntax
+                                            ? "border-[#d4b8b0] shadow-md scale-[1.08] z-10"
+                                            : "border-transparent opacity-50 hover:opacity-100 hover:scale-[1.03]"
+                                    )}
                                     onClick={() => selectImage(i)}
                                 >
                                     <Image

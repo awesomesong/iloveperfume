@@ -172,7 +172,7 @@ const NoticeDetailPage = ({ params } : {
                         <h1 className="notice-detail__title">
                             <span className="text-gradient-ilp">{data?.notice?.title}</span>
                         </h1>
-                        <div className="notice-card__meta">
+                        <div className="notice-card__meta notice-detail__meta">
                           <span className="notice-meta__avatar">
                             {data?.notice?.author?.image ? (
                               <FallbackNextImage

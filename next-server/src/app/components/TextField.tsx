@@ -161,7 +161,7 @@ const TextFieldInner = <TFieldValues extends FieldValues = FieldValues>(
   }, [controlledOnChange, controlledName]);
 
   const iconButtonClass =
-    "text-2xl text-default-400 pointer-events-none hover:text-[#c09080] transition-colors";
+    "text-2xl text-[var(--color-text-secondary)] pointer-events-none hover:text-[var(--color-text-primary)] transition-colors";
 
   // ─── End Content: text = X(지우기), password = 눈(표시/숨기기) ─────────────────
   const renderEndContent = (onClear?: () => void, showClear?: boolean) => {

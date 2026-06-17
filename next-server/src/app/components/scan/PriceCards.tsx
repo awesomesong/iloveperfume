@@ -63,25 +63,23 @@ const BADGE_META: Record<
   */
   verified_catalog: {
     label: '정품 매칭',
-    // 라이트: 옅은 라벤더 filled (보조 outline과 구조 차이로 분리)
-    // 다크: 솔리드 밝은 라벤더 + 어두운 글자 — 명도 반전으로 보조(어두운 outline)와 한눈에 분리
-    bg: 'bg-accent-pale dark:bg-accent',
-    text: 'text-fg-primary dark:text-stone-900',
+    bg: 'bg-accent-pale dark:bg-transparent dark:ring-1 dark:ring-accent-light',
+    text: 'text-fg-primary dark:text-accent-light',
   },
   department: {
     label: '백화점·면세점',
-    bg: 'bg-ivory dark:bg-[var(--color-ivory-soft)] border border-accent-border',
-    text: 'text-fg-secondary',
+    bg: 'bg-ivory dark:bg-[var(--color-accent-pale)] border border-accent-border',
+    text: 'text-fg-secondary dark:text-accent-light',
   },
   official: {
     label: '공식몰',
-    bg: 'bg-ivory dark:bg-[var(--color-ivory-soft)] border border-accent-border',
-    text: 'text-fg-secondary',
+    bg: 'bg-ivory dark:bg-[var(--color-accent-pale)] border border-accent-border',
+    text: 'text-fg-secondary dark:text-accent-light',
   },
   beauty_store: {
     label: '뷰티 전문',
-    bg: 'bg-ivory dark:bg-[var(--color-ivory-soft)] border border-accent-border',
-    text: 'text-fg-secondary',
+    bg: 'bg-ivory dark:bg-[var(--color-accent-pale)] border border-accent-border',
+    text: 'text-fg-secondary dark:text-accent-light',
   },
 };
 
@@ -281,7 +279,7 @@ export default function PriceCards({ scanId }: Props) {
                       다크모드의 bg-gradient-ilp는 밝은 파스텔(#fff5f8/#f0e8e4/#ffe8b4)이라
                       text-white면 글자가 묻힘 — 다크에선 어두운 글자로 대비 확보.
                     */
-                    <span className="inline-flex items-center bg-gradient-ilp text-white dark:text-[var(--color-text-primary)] text-xs font-medium tracking-[0.04em] leading-none px-3 py-1.5 rounded-full">
+                    <span className="inline-flex items-center force-light-ilp-gradient bg-gradient-ilp text-white text-xs font-medium tracking-[0.04em] leading-none px-3 py-1.5 rounded-full">
                       최저가
                     </span>
                   )}

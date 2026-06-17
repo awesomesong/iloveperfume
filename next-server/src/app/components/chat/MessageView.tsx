@@ -578,10 +578,10 @@ const MessageView: React.FC<MessageBoxProps> = ({
               isError
                 ? "bg-red-100 border-l-4 border-red-400"
                 : isAIMessage
-                  ? "bg-[var(--chat-bubble-ai)]"
+                  ? "bg-[var(--chat-bubble-ai)] border border-[var(--color-card-border)] shadow-sm"
                   : isOwn
                     ? "bg-[var(--chat-bubble-own)]"
-                    : "bg-[var(--chat-bubble-other)] border border-[var(--color-card-border)]",
+                    : "bg-[var(--chat-bubble-other)] border border-[var(--color-card-border)] shadow-sm",
               data.type === "image"
                 ? "max-[360px]:w-full rounded-md p-0 overflow-hidden"
                 : "py-2 px-3 rounded-2xl",

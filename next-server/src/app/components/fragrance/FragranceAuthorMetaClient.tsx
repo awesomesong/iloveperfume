@@ -24,7 +24,7 @@ export default function FragranceAuthorMetaClient({
   return (
     <div
       className={clsx(
-        "flex w-full text-[13px] md:text-[14px] text-stone-500 dark:text-accent",
+        "flex w-full text-[13px] md:text-[14px] text-[var(--color-text-secondary)]",
         align === "center" ? "justify-center" : "justify-start",
         variant === "light" ? "force-light-ilp-gradient" : "",
         className

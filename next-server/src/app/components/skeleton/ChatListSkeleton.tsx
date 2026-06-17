@@ -45,10 +45,10 @@ const ChatListSkeleton = ({
           </div>
         </div>
         <div className={`${rowClass} mt-2 flex-row-reverse`}>
-          <div className={avatarClass} />
+          <div className="shrink-0 w-10 h-10 rounded-full skeleton-bg-own" />
           <div className={`${textColClass} items-end`}>
-            <div className={`${primary} h-6 rounded-xl skeleton-bg`} />
-            <div className={`${secondary} h-4 rounded-xl skeleton-bg-muted-80`} />
+            <div className={`${primary} h-6 rounded-xl skeleton-bg-own`} />
+            <div className={`${secondary} h-4 rounded-xl skeleton-bg-own`} />
           </div>
         </div>
       </Fragment>

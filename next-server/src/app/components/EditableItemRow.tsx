@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import clsx from "clsx";
 import dayjs from "@/src/app/utils/day";
 import FallbackNextImage from "./FallbackNextImage";
 import CircularProgress from "./CircularProgress";
@@ -84,7 +85,13 @@ export default function EditableItemRow({
                 onClick={onStartEdit}
                 title={String(id).startsWith("temp-") ? "서버에 저장 중입니다." : undefined}
                 disabled={String(id).startsWith("temp-")}
-                className={`${rowActionBase} bg-[#e8e4f0] text-[#7a5040] hover:bg-[#ddd8e8] dark:bg-[#9d8fb8] dark:text-[#1f1b29] dark:hover:bg-[#b5a8cc] disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={clsx(
+                  rowActionBase,
+                  "bg-[var(--color-accent-pale)] text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-border)] hover:text-[var(--color-text-primary)]",
+                  // eslint-disable-next-line no-restricted-syntax
+                  "dark:bg-[#9d8fb8] dark:text-[#1f1b29] dark:hover:bg-[#b5a8cc]",
+                  "disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
               >
                 수정
               </button>
@@ -93,7 +100,12 @@ export default function EditableItemRow({
                 onClick={handleDelete}
                 title={String(id).startsWith("temp-") ? "서버에 저장 중입니다." : undefined}
                 disabled={String(id).startsWith("temp-")}
-                className={`${rowActionBase} bg-stone-200 text-stone-600 hover:bg-stone-300 dark:bg-stone-400 dark:text-stone-900 dark:hover:bg-stone-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={clsx(
+                  rowActionBase,
+                  "bg-[var(--color-accent-pale)] text-[var(--color-text-secondary)]",
+                  "hover:bg-[var(--color-accent-border)] hover:text-[var(--color-text-primary)]",
+                  "disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
               >
                 삭제
               </button>
