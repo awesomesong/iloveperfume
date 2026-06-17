@@ -262,7 +262,7 @@ function StepList({ steps }: { steps: { label: string; desc: string }[] }) {
       <div
         aria-hidden
         className="absolute left-[7px] top-3 bottom-3 w-px"
-        style={{ background: 'var(--color-card-border)' }}
+        style={{ background: 'var(--color-accent-border)' }}
       />
       {steps.map(({ label, desc }, i) => (
         <motion.li
@@ -324,9 +324,9 @@ function ShowcaseSection({ feature }: { feature: (typeof FEATURES)[number] }) {
         viewport={{ once: true, margin: '-60px' }}
         transition={{ duration: 0.7, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
       >
-        {/* 태그 — 12px, text-secondary 6.71:1 ✅ */}
+        {/* 태그 — 12px, text-secondary 6.71:1 ✅ / 다크: text-accent(#7a80cc) 4.9:1 ✅ — 모바일은 섹션 헤더에서 표시하므로 숨김 */}
         <span
-          className="text-xs font-semibold tracking-[0.16em] uppercase text-secondary"
+          className="hidden lg:inline text-xs font-semibold tracking-[0.16em] uppercase text-secondary dark:text-accent"
         >
           {tag}
         </span>
@@ -371,7 +371,7 @@ export default function FeatureShowcase() {
       aria-label="기능 소개"
     >
       <motion.div
-        className="text-center py-16 md:py-24 flex flex-col items-center gap-5"
+        className="text-center pt-28 pb-16 min-[480px]:py-16 md:py-24 flex flex-col items-center gap-5"
         initial={{ opacity: 0, y: 22 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -379,27 +379,33 @@ export default function FeatureShowcase() {
       >
         <p className="text-xs tracking-[0.18em] font-medium text-secondary uppercase">I Love Perfume</p>
         <h2
-          className="font-pretendard font-normal tracking-[-0.01em] text-gradient-scent"
-          style={{ fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)', lineHeight: 1.3 }}
+          className="font-pretendard font-semibold tracking-[-0.02em] text-gradient-scent"
+          style={{ fontSize: 'clamp(1.45rem, 3vw, 2.1rem)', lineHeight: 1.25 }}
         >
           향수를 처음 시작하는 분들을 위한 AI 향수 가이드
         </h2>
-        <div className="flex flex-col gap-1.5 text-sm leading-relaxed text-secondary text-center">
+        <div className="flex flex-col gap-2.5 leading-relaxed text-secondary text-center" style={{ fontSize: 'clamp(0.875rem, 1.4vw, 1rem)' }}>
           <p>향수를 스캔하면 제품 정보와 구매처를 바로 확인할 수 있어요.</p>
           <p>사진으로 내 향수 컬렉션을 자동으로 기록할 수 있어요.</p>
           <p>AI 어시스턴트에게 취향에 맞는 향수 추천을 받을 수 있어요.</p>
         </div>
       </motion.div>
 
-      <div>
+      <div className="flex flex-col gap-0">
         {FEATURES.map((feature, i) => {
           const isVision = i === 1;
+          const sectionNum = String(i + 1).padStart(2, '0');
 
           return (
             <div key={feature.href} id={isVision ? 'scan' : undefined}>
               {isVision ? (
                 /* AI Vision — 설명(좌) + 목업·체험(우) */
-                <div className="py-16 md:py-24">
+                <div className="pt-5 pb-7 lg:py-24 lg:rounded-none rounded-2xl lg:border-0 border border-[var(--color-accent-border)] lg:bg-transparent bg-[var(--color-card-bg)] px-4 lg:px-0 mb-4 lg:mb-0">
+                  {/* 모바일 섹션 헤더 */}
+                  <div className="flex items-center gap-3 mb-6 lg:hidden">
+                    <span className="text-[10px] font-bold tracking-[0.16em] text-[var(--color-accent)] uppercase opacity-50">{sectionNum}</span>
+                    <span className="text-[10px] font-semibold tracking-[0.14em] uppercase px-2.5 py-1 rounded-full border border-[var(--color-accent-border)] text-[var(--color-text-secondary)]">{feature.tag}</span>
+                  </div>
                   <div className="flex flex-col lg:flex-row items-start gap-12 lg:gap-16 xl:gap-20">
 
                     {/* 왼쪽: 기능 설명 — 스크롤 시 sticky */}
@@ -411,7 +417,7 @@ export default function FeatureShowcase() {
                       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                     >
                       <span
-                        className="self-start text-[0.6rem] font-semibold tracking-[0.14em] uppercase px-3 py-1 rounded-full border border-black/20 dark:border-white/20 text-black/60 dark:text-white/60"
+                        className="hidden lg:inline self-start text-[0.6rem] font-semibold tracking-[0.14em] uppercase px-3 py-1 rounded-full border border-black/20 dark:border-white/20 text-black/60 dark:text-white/60"
                       >
                         {feature.tag}
                       </span>
@@ -478,13 +484,18 @@ export default function FeatureShowcase() {
                   </div>
                 </div>
               ) : (
-                <div className="py-12 md:py-18">
+                <div className="pt-5 pb-7 lg:py-12 lg:rounded-none rounded-2xl lg:border-0 border border-[var(--color-accent-border)] lg:bg-transparent bg-[var(--color-card-bg)] px-4 lg:px-0 mb-4 lg:mb-0">
+                  {/* 모바일 섹션 헤더 */}
+                  <div className="flex items-center gap-3 mb-6 lg:hidden">
+                    <span className="text-[10px] font-bold tracking-[0.16em] text-[var(--color-accent)] uppercase opacity-50">{sectionNum}</span>
+                    <span className="text-[10px] font-semibold tracking-[0.14em] uppercase px-2.5 py-1 rounded-full border border-[var(--color-accent-border)] text-[var(--color-text-secondary)]">{feature.tag}</span>
+                  </div>
                   <ShowcaseSection feature={feature} />
                 </div>
               )}
 
               {i < FEATURES.length - 1 && (
-                <div className="h-px w-16 mx-auto my-0 rounded-full opacity-30" style={{ background: 'var(--color-accent-border)' }} aria-hidden />
+                <div className="hidden lg:block h-px w-16 mx-auto my-0 rounded-full opacity-30" style={{ background: 'var(--color-accent-border)' }} aria-hidden />
               )}
             </div>
           );
