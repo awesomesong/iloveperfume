@@ -24,6 +24,11 @@ logs/
 
 # Claude Code
 .claude/
+.codex/
+
+# Local directories
+node_modules/
+아이러브퍼퓸/
 
 # OS
 .DS_Store
