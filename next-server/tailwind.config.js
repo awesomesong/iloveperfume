@@ -15,6 +15,7 @@ module.exports = {
                 'pretendard': ['"Pretendard Variable"', 'Pretendard', 'var(--font-ibm-plex-sans-kr)', 'sans-serif'],
                 'ibm-plex-sans-kr': ['var(--font-ibm-plex-sans-kr)', 'sans-serif'],
                 'nanum-pen-script': ['var(--font-nanum-pen-script)', 'cursive'],
+                'gowun-dodum': ['var(--font-gowun-dodum)', 'sans-serif'],
             },
             fontSize: {
                 xs: ['0.8125rem', { lineHeight: '1.125rem' }],

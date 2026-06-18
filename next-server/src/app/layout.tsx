@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import localFont from 'next/font/local';
-import { Josefin_Sans, Noto_Serif_KR, IBM_Plex_Sans_KR, Nanum_Pen_Script } from 'next/font/google';
+import { Josefin_Sans, Noto_Serif_KR, IBM_Plex_Sans_KR, Nanum_Pen_Script, Gowun_Dodum } from 'next/font/google';
 import NextAuthProvider from "@/src/app/context/NextAuthProvider";
 import ToasterContext from "@/src/app/context/ToasterContext";
 import ToastFromUrl from "@/src/app/components/ToastFromUrl";
@@ -54,6 +54,14 @@ const nanumPenScript = Nanum_Pen_Script({
   preload: false,
   display: 'swap',
   variable: '--font-nanum-pen-script',
+});
+
+const gowunDodum = Gowun_Dodum({
+  subsets: ['latin'],
+  weight: ['400'],
+  preload: false,
+  display: 'swap',
+  variable: '--font-gowun-dodum',
 });
 
 export const metadata: Metadata = {
@@ -122,6 +130,7 @@ export default async function RootLayout({
         ${notoSerifKR.variable}
         ${ibmPlexSansKR.variable}
         ${nanumPenScript.variable}
+        ${gowunDodum.variable}
       `}>
         <NextAuthProvider>
           <RQProviders>

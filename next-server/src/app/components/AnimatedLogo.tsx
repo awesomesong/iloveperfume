@@ -26,7 +26,8 @@ export default function AnimatedLogo() {
         {chars.map((char, i) => (
           <motion.span
             key={i}
-            className="font-pretendard text-[18px] font-medium tracking-[0.02em] text-fg-primary inline-block"
+            className="font-gowun-dodum text-[19px] tracking-[0.04em] inline-block"
+            style={{ color: 'var(--color-accent)' }}
             // initial 없음 → SSR/로딩 중 그대로 보임
             animate={play ? { y: [0, -7, 0] } : {}}
             transition={play ? {
