@@ -13,7 +13,7 @@ import HomeAIChatInput from '@/src/app/components/main/HomeAIChatInput';
 const FEATURES = [
   {
     tag: 'AI Chat',
-    headline: ['향수에 대해 궁금한 점을', 'AI에게 물어보세요'],
+    headline: '향수에 대해 궁금한 점을 AI에게 물어보세요',
     steps: [
       { label: 'AI 채팅방에 들어가요', desc: '향수 AI 어시스턴트와 1:1로 대화할 수 있어요' },
       { label: '궁금한 것을 편하게 물어보세요', desc: '"향수를 처음 사려는데 뭐가 좋을까요?" 친구한테 묻듯이 편하게 적어보세요' },
@@ -30,7 +30,7 @@ const FEATURES = [
   },
   {
     tag: 'AI Vision',
-    headline: ['카메라로 찍거나 사진을 올리면', '상품 정보와 구매 링크를 바로 알려드려요'],
+    headline: '카메라로 찍거나 사진을 올리면 상품 정보와 구매 링크를 바로 알려드려요',
     steps: [
       { label: '카메라로 찍거나 사진을 올려주세요', desc: '향수병에 적힌 브랜드나 제품명이 잘 보이게 찍어주세요' },
       { label: 'AI가 향수를 분석해요', desc: '향수병에 적힌 텍스트를 인식해서 어떤 제품인지 찾아드려요' },
@@ -47,7 +47,7 @@ const FEATURES = [
   },
   {
     tag: 'AI Auto-fill',
-    headline: ['향수 사진을 올리면 AI가 브랜드, 이름, 설명, 노트를 자동으로 분석해서', '직접 검색하지 않아도 바로 기록할 수 있어요'],
+    headline: '향수 사진을 올리면 AI가 브랜드, 이름, 설명, 노트를 자동으로 분석해서 직접 검색하지 않아도 바로 기록할 수 있어요',
     steps: [
       { label: '향수 사진을 올려주세요', desc: '첫 번째 이미지를 AI가 자동으로 분석해요' },
       { label: 'AI가 정보를 자동으로 채워줘요', desc: '브랜드, 이름, 설명, 노트까지 한 번에 입력돼요' },
@@ -336,7 +336,7 @@ function ShowcaseSection({ feature }: { feature: (typeof FEATURES)[number] }) {
           className="font-pretendard font-normal text-fg-primary leading-[1.3] tracking-[-0.01em]"
           style={{ fontSize: 'clamp(1.35rem, 2.6vw, 2rem)' }}
         >
-          {headline[0]}<br className="hidden sm:block" /> {headline[1]}
+          {headline}
         </h2>
 
         {/* 스텝 */}
@@ -384,10 +384,10 @@ export default function FeatureShowcase() {
         >
           향수를 처음 시작하는 분들을 위한 AI 향수 가이드
         </h2>
-        <div className="flex flex-col gap-2.5 leading-relaxed text-secondary text-center" style={{ fontSize: 'clamp(0.875rem, 1.4vw, 1rem)' }}>
-          <p>향수를 스캔하면 제품 정보와 구매처를 바로 확인할 수 있어요.</p>
-          <p>사진으로 내 향수 컬렉션을 자동으로 기록할 수 있어요.</p>
-          <p>AI 어시스턴트에게 취향에 맞는 향수 추천을 받을 수 있어요.</p>
+        <div className="flex flex-col gap-1 leading-relaxed text-secondary text-center" style={{ fontSize: 'clamp(0.875rem, 1.4vw, 1rem)' }}>
+          <p>AI 어시스턴트가 취향에 꼭 맞는 향수를 추천해드려요.</p>
+          <p>향수를 스캔하면 제품 정보와 구매처를 바로 알려드려요.</p>
+          <p>사진 한 장으로 향수 정보를 자동으로 등록할 수 있어요.</p>
         </div>
       </motion.div>
 
@@ -426,7 +426,7 @@ export default function FeatureShowcase() {
                         className="font-pretendard font-normal text-fg-primary leading-[1.3] tracking-[-0.01em]"
                         style={{ fontSize: 'clamp(1.35rem, 2.6vw, 2rem)' }}
                       >
-                        {feature.headline[0]}<br />{feature.headline[1]}
+                        {feature.headline}
                       </h2>
 
                       <StepList steps={feature.steps} />
