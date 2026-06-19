@@ -22,6 +22,7 @@
 | 기능 | 설명 |
 |------|------|
 | **향수 갤러리** | 브랜드·이름·이미지로 향수를 탐색하고 등록·관리할 수 있습니다 (커서 기반 무한 스크롤, slug SEO URL) |
+| **향수 스캔** | 카메라로 촬영하거나 사진을 업로드하면 AI가 향수를 식별하고 네이버 쇼핑에서 최저가 구매처를 안내합니다 (GPT-4o Vision 2-pass OCR, 신뢰 점수 기반 필터링) |
 | **AI 이미지 분석 자동 입력** | 향수 사진을 업로드하면 AI가 브랜드·향수명·설명·노트를 분석해 등록 폼을 자동으로 채워 줍니다 (GPT-4o Vision) |
 | **리뷰** | 향수 상세 페이지에서 리뷰를 작성·수정·삭제할 수 있으며, 무한 스크롤로 이어서 볼 수 있습니다 (커서 기반 Infinite Query, Socket.IO 실시간 반영) |
 | **실시간 채팅** | 1:1·그룹 채팅으로 다른 사용자와 실시간 대화할 수 있으며, 오프라인 시 메시지를 보관했다가 재접속 시 자동으로 전달합니다 (Socket.IO, 읽음 상태 동기화) |
@@ -43,7 +44,8 @@
 | **서버 상태** | TanStack Query 5 (커서 Infinite Query, Optimistic Update, 도메인별 캐시 분리) |
 | **클라이언트 상태** | Zustand (UI 전역 상태) + React Context (auth·socket·theme) |
 | **실시간** | Socket.IO 4 (분리 서버, O(1) 유저 조회, 오프라인 메시지 큐, WebSocket-only) |
-| **AI 스트리밍** | OpenAI GPT-4 SSE (채팅 어시스턴트), GPT-4o Vision (이미지 분석), 슬라이딩 윈도우 레이트 리미팅, 컨텍스트 관리 |
+| **AI 스트리밍** | OpenAI GPT-4 SSE (채팅 어시스턴트), GPT-4o Vision (이미지 분석·향수 스캔 OCR), 슬라이딩 윈도우 레이트 리미팅, 컨텍스트 관리 |
+| **향수 스캔 파이프라인** | Vision 2-pass OCR → 자체 갤러리 매칭 → 네이버 쇼핑 가격 검색 (신뢰 점수 0~100, 24h 캐시) |
 | **인증** | NextAuth v4 JWT (OAuth + Credentials), Prisma 어댑터 |
 | **DB 설계** | PostgreSQL + Prisma, 복합 인덱스 전략, 커서 페이지네이션 |
 | **보안** | bcryptjs, DOMPurify, 웹훅 Secret, CORS 화이트리스트 |
@@ -166,7 +168,38 @@ const io = new Server(httpServer, {
 
 **실시간 이벤트 목록**: `online:user`, `leave:user`, `get:onlineUsers`, `send:message`, `receive:message`, `receive:conversation`, `read:state`, `conversation:new`, `join:room`/`leave:room`, `fragrance:review:new|updated|deleted`, `notice:new|updated|deleted`, `notice:comment:new|updated|deleted`, `room.event`, `registered:user`
 
-### 4. GPT-4 SSE 스트리밍
+### 4. 향수 스캔 파이프라인
+
+**흐름**: 사진 업로드 → Vision OCR → 갤러리 매칭 → 가격 검색 (응답 지연 회피를 위해 분석·가격 엔드포인트 분리)
+
+```
+POST /api/scan/analyze
+  1. 레이트 리미팅 (분당 5회/IP, in-memory)
+  2. Cloudinary 업로드 (unsigned preset)
+  3. Vision 2-pass OCR (visionAnalyze.ts)
+     ├── 1차: detail="low" → brand / name / concentration / size 추출
+     └── 결손 시 2차: detail="high" 재시도 (비용 최적화)
+         gpt-4o 거부 시 gpt-4o-mini fallback
+  4. 자체 갤러리 매칭 (findMatch.ts)
+     brand alias(한/영) + 토큰 양방향 매칭 · 게이트: nameRaw ≥ 50, total ≥ 70
+  5. 24h 캐시 조회 → description/notes 재사용
+  6. ScanResult 저장 → scanId 반환
+
+GET /api/scan/prices/:scanId
+  1. 24h 캐시 hit → 즉시 반환
+  2. 한글 음역 (transliterate.ts, gpt-4o-mini) — 한글 mall title 매칭
+  3. 영문 쿼리 → 0건이면 한글 쿼리 → 병합
+  4. 필터 게이트: 샘플·디캔트·짝퉁·소분(1~15ml) 차단, 향수 카테고리 매칭
+  5. 신뢰 점수 0~100: 화이트리스트 mall +30 / 향수 카테고리 +20 / productType=2 +20 / 단가 +10~20
+  6. 정렬: 신뢰점수 ↓ → 가격 ↑ (신뢰점수 ≥20 Tier 0 → 최저가, 나머지 Tier 1 후순위)
+```
+
+**UI 상태 머신**: `idle → camera-starting → camera-active → previewing → analyzing → /scan/result/:scanId`
+- 카메라(MediaDevices API) / 파일 드래그·드롭 양방향 지원
+- 결과 페이지: 매칭된 자체 갤러리 향수 카드 + 가격 카드 (네이버 쇼핑) + 유사 향수 추천
+- 유사 향수 추천: `checkNaverAvailability.ts` — 후보 5개씩 배치 처리, 네이버 판매 여부 확인 (7일 캐시 → 만료 시 API 재조회)
+
+### 5. GPT-4 SSE 스트리밍
 
 ```typescript
 // /api/ai/stream/route.ts
@@ -191,7 +224,7 @@ const response = await fetch("https://api.openai.com/v1/chat/completions", {
 });
 ```
 
-### 5. 인증 구조 (NextAuth v4)
+### 6. 인증 구조 (NextAuth v4)
 
 ```
 인증 방식: JWT 전략 (24시간 세션)
@@ -204,7 +237,7 @@ Adapter: Prisma → User, Account, Session, VerificationToken 자동 관리
 Middleware: JWT 검증 → 미인증 시 /auth/signin + callbackUrl 리다이렉트
 ```
 
-### 6. DB 인덱스 전략 (Prisma)
+### 7. DB 인덱스 전략 (Prisma)
 
 ```prisma
 model Message {
@@ -238,6 +271,13 @@ model Fragrance {
 수신자: socket-server → send:message
       → 온라인: receive:message 즉시 전달
       → 오프라인: 큐 적재 → 재연결 시 일괄 전달
+
+[향수 스캔]
+사용자: 카메라 촬영 or 파일 업로드 → POST /api/scan/analyze
+  → Vision 2-pass OCR (brand·name 추출) → 자체 갤러리 매칭
+  → ScanResult DB 저장 → scanId 반환
+  → 클라이언트: /scan/result/:scanId 이동 + GET /api/scan/prices/:scanId 호출
+  → 네이버 쇼핑 검색 → 신뢰 점수·URL 검증 → 가격 카드 렌더링
 
 [GPT-4 AI 응답]
 POST /api/ai/stream
@@ -318,6 +358,7 @@ POST /api/ai/stream
 | `Message` | 텍스트·이미지, `isAIResponse`, 복합 인덱스 |
 | `ConversationRead` | 읽음 상태 (conversationId, userId) unique |
 | `Notice / Comment` | 공지·댓글·조회수 |
+| `ScanResult` | 스캔 결과 (brand·name·imageUrl·matchedSlug·prices JSON·tokensUsed), 24h 가격 캐시, brand+name 복합 인덱스 |
 
 ---
 
@@ -336,6 +377,7 @@ Scent-Memories/
 │           ├── (main)/              # 메인 레이아웃 Route Group
 │           │   ├── (home)/          # 홈 (Three.js 히어로 + 향수 목록)
 │           │   ├── fragrance/       # [id](slug 조회), create, edit
+│           │   ├── scan/            # 향수 스캔 (카메라·파일 업로드), result/[scanId]
 │           │   ├── notice/          # 목록·상세·작성·수정
 │           │   ├── guide/           # 소개·이용 안내
 │           │   └── profile/
@@ -345,6 +387,7 @@ Scent-Memories/
 │           ├── auth/                # signin, register 페이지
 │           ├── api/
 │           │   ├── ai/stream/       # GPT-4 SSE 스트리밍
+│           │   ├── scan/            # analyze (Vision OCR), prices/[scanId] (네이버 쇼핑), enrich
 │           │   ├── fragrance/       # 향수·리뷰·브랜드·이미지 분석
 │           │   ├── auth/[...nextauth]/  # NextAuth 핸들러
 │           │   ├── messages/        # 채팅 메시지 (트랜잭션)
@@ -354,6 +397,7 @@ Scent-Memories/
 │           ├── components/
 │           │   ├── main/            # ProductFragrance, ScentMemoriesHero
 │           │   ├── fragrance/       # FragranceDetail, FormFragrance 등
+│           │   ├── scan/            # HomeImageUpload, ScanClient, ScanResult, PriceCards, SimilarGallery 등
 │           │   ├── chat/
 │           │   ├── navigation/      # 헤더·네비게이션 컴포넌트
 │           │   └── sidebar/         # 사이드바 컴포넌트
