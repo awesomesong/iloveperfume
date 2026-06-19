@@ -23,7 +23,24 @@ function validateFile(file: File): string | null {
   return null;
 }
 
-export default function HomeImageUpload() {
+/* 뷰파인더 코너 마커 — 카메라 대기 상태임을 시각적으로 표현 */
+function ViewfinderCorners() {
+  return (
+    <>
+      <span aria-hidden className="absolute top-3.5 left-3.5 size-4 border-t border-l border-white/25 rounded-tl-sm" />
+      <span aria-hidden className="absolute top-3.5 right-3.5 size-4 border-t border-r border-white/25 rounded-tr-sm" />
+      <span aria-hidden className="absolute bottom-3.5 left-3.5 size-4 border-b border-l border-white/25 rounded-bl-sm" />
+      <span aria-hidden className="absolute bottom-3.5 right-3.5 size-4 border-b border-r border-white/25 rounded-br-sm" />
+    </>
+  );
+}
+
+interface Props {
+  /** 분석 성공 시 호출 — 미제공 시 /scan/result/${scanId}로 바로 이동 */
+  onSuccess?: (scanId: string) => void;
+}
+
+export default function HomeImageUpload({ onSuccess }: Props = {}) {
   const router = useRouter();
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -33,6 +50,7 @@ export default function HomeImageUpload() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [blob, setBlob] = useState<Blob | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [imageSource, setImageSource] = useState<'camera' | 'file'>('file');
 
   /* ── 카메라 ── */
   const startCamera = useCallback(async () => {
@@ -94,6 +112,7 @@ export default function HomeImageUpload() {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(URL.createObjectURL(b));
       setBlob(b);
+      setImageSource('camera');
       setStage('previewing');
     }, 'image/png', 0.95);
   };
@@ -107,6 +126,7 @@ export default function HomeImageUpload() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(URL.createObjectURL(file));
     setBlob(file);
+    setImageSource('file');
     setStage('previewing');
   }, [previewUrl]);
 
@@ -133,7 +153,11 @@ export default function HomeImageUpload() {
       const data = await res.json();
       if (!res.ok) { toast.error(data.message ?? '분석에 실패했어요.'); setStage('previewing'); return; }
       if (!data.isFragrance || !data.brand || !data.name) { toast.error(data.message ?? '향수를 인식하지 못했어요.'); setStage('previewing'); return; }
-      router.push(`/scan/result/${data.scanId}`);
+      if (onSuccess) {
+        onSuccess(data.scanId);
+      } else {
+        router.push(`/scan/result/${data.scanId}`);
+      }
     } catch {
       toast.error('네트워크 오류가 발생했어요.');
       setStage('previewing');
@@ -156,12 +180,14 @@ export default function HomeImageUpload() {
         onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }}
       />
 
-      {/* 4/3 고정 컨테이너 */}
+      {/* 뷰파인더 컨테이너 — 카메라 활성 시 컨트롤 바와 하나의 유닛으로 연결 */}
       <div
-        className="relative w-full overflow-hidden rounded-2xl"
+        className="relative w-full overflow-hidden"
         style={{
           aspectRatio: '4/3',
-          border: '1.5px solid rgba(255,255,255,0.14)',
+          border: '1px solid var(--color-accent-border)',
+          borderRadius: isCameraMode ? '1rem 1rem 0 0' : '1rem',
+          borderBottom: isCameraMode ? 'none' : undefined,
         }}
       >
 
@@ -181,32 +207,34 @@ export default function HomeImageUpload() {
           <button
             type="button"
             onClick={startCamera}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-6 group"
-            style={{ background: '#111110' }}
+            className="absolute inset-0 flex flex-col items-center justify-center group"
+            style={{ background: 'var(--color-accent-pale)' }}
           >
-            <span
-              className="absolute inset-0 block dark:hidden"
-              style={{ background: '#1c1c1e' }}
-              aria-hidden
-            />
-
-            <span className="relative flex flex-col items-center gap-5">
-              {/* 카메라 아이콘 링 */}
+            <span className="flex flex-col items-center gap-3 sm:gap-5">
+              {/* 아이콘 링 */}
               <span
-                className="size-16 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-105"
+                className="size-11 sm:size-14 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-[1.06]"
                 style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1.5px solid rgba(255,255,255,0.2)',
+                  background: 'var(--color-card-bg)',
+                  border: '1px solid var(--color-accent-border)',
+                  boxShadow: '0 4px 16px var(--color-shadow-soft)',
                 }}
               >
-                <HiOutlineCamera className="size-7 text-white/80" aria-hidden />
+                <HiOutlineCamera
+                  className="size-5 sm:size-6"
+                  style={{ color: 'var(--color-accent)' }}
+                  aria-hidden
+                />
               </span>
 
-              <span className="text-center px-6">
-                <span className="block text-base font-semibold text-white tracking-wide">
+              <span className="text-center px-4 sm:px-8">
+                <span
+                  className="block text-[15px] sm:text-[16px] font-medium tracking-tight"
+                  style={{ color: 'var(--color-text-primary)' }}
+                >
                   카메라로 스캔하기
                 </span>
-                <span className="block text-[13px] mt-2 text-white/45 leading-relaxed font-light">
+                <span className="block text-[13px] sm:text-[14px] mt-1.5 sm:mt-2 text-secondary leading-relaxed">
                   향수병을 카메라에 비추면<br />AI가 바로 인식해드려요
                 </span>
               </span>
@@ -220,19 +248,24 @@ export default function HomeImageUpload() {
             className="absolute inset-0 flex flex-col items-center justify-center gap-4"
             style={{ background: '#0a0a0a' }}
           >
+            <ViewfinderCorners />
             <span
-              className="size-16 rounded-full flex items-center justify-center border border-white/10"
-              style={{ background: 'rgba(255,255,255,0.04)' }}
+              className="size-12 rounded-full flex items-center justify-center animate-pulse motion-reduce:animate-none"
+              style={{
+                background: 'rgba(122,128,204,0.10)',
+                border: '1px solid rgba(122,128,204,0.25)',
+              }}
             >
-              <HiOutlineCamera className="size-7 text-white/55" aria-hidden />
+              <HiOutlineCamera className="size-5 text-white/60" aria-hidden />
             </span>
-            <p className="text-sm text-white/55 font-light tracking-wide">카메라 연결 중</p>
+            <p className="text-[14px] text-white/55 tracking-wide">카메라 연결 중...</p>
           </div>
         )}
 
         {/* ── 카메라 활성 ── */}
         {isCameraMode && (
           <>
+            <ViewfinderCorners />
             <video
               ref={videoRef}
               autoPlay
@@ -241,43 +274,57 @@ export default function HomeImageUpload() {
               className="absolute inset-0 w-full h-full"
               style={{ objectFit: 'contain', background: '#000' }}
             />
-            {stage === 'camera-active' && (
-              <div
-                className="absolute bottom-0 inset-x-0 flex items-center justify-between px-6 py-5"
-                style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)' }}
-              >
-                <button
-                  type="button"
-                  onClick={cancelCamera}
-                  className="size-10 rounded-full flex items-center justify-center border border-white/20 bg-white/10 backdrop-blur-sm"
-                  aria-label="카메라 닫기"
-                >
-                  <HiOutlineXMark className="size-4 text-white" aria-hidden />
-                </button>
-                {/* 셔터 */}
-                <button
-                  type="button"
-                  onClick={capturePhoto}
-                  className="size-16 rounded-full flex items-center justify-center transition-transform active:scale-95"
-                  style={{
-                    background: 'rgba(255,255,255,0.95)',
-                    boxShadow: '0 0 0 3px rgba(255,255,255,0.25), 0 0 0 6px rgba(255,255,255,0.1)',
-                  }}
-                  aria-label="촬영"
-                >
-                  <span className="size-11 rounded-full block bg-black/90" />
-                </button>
-                <span className="size-10" aria-hidden />
-              </div>
-            )}
           </>
         )}
       </div>
 
-      {/* 미리보기 컨트롤 — 이미지 박스 밖에서 카드 배경 위에 렌더 (접근성 확보) */}
+      {/* ── 카메라 컨트롤 바 — 뷰파인더와 이어지는 하단 바 ── */}
+      {stage === 'camera-active' && (
+        <div
+          className="flex items-center justify-between px-6 py-4"
+          style={{
+            background: '#0a0a0a',
+            border: '1px solid var(--color-accent-border)',
+            borderTop: 'none',
+            borderRadius: '0 0 1rem 1rem',
+          }}
+        >
+          {/* 닫기 */}
+          <button
+            type="button"
+            onClick={cancelCamera}
+            className="size-10 rounded-full flex items-center justify-center transition-opacity hover:opacity-70"
+            style={{
+              background: 'rgba(255,255,255,0.10)',
+              border: '1px solid rgba(255,255,255,0.18)',
+            }}
+            aria-label="카메라 닫기"
+          >
+            <HiOutlineXMark className="size-4 text-white" aria-hidden />
+          </button>
+
+          {/* 셔터 */}
+          <button
+            type="button"
+            onClick={capturePhoto}
+            className="size-14 rounded-full flex items-center justify-center transition-transform active:scale-95"
+            style={{
+              background: 'rgba(255,255,255,0.92)',
+              boxShadow: '0 0 0 3px rgba(255,255,255,0.20), 0 0 0 6px rgba(255,255,255,0.07)',
+            }}
+            aria-label="촬영"
+          >
+            <span className="size-10 rounded-full block" style={{ background: '#0a0a0a' }} />
+          </button>
+
+          <span className="size-10" aria-hidden />
+        </div>
+      )}
+
+      {/* ── 미리보기 컨트롤 — 이미지 박스 밖, 카드 배경 위 (접근성 확보) ── */}
       {stage === 'previewing' ? (
         <div className="mt-3 flex flex-col gap-2.5">
-          <p className="text-[11px] text-center text-secondary">
+          <p className="text-[12px] text-center text-secondary">
             향수병이 선명하게 보일수록 더 정확하게 인식할 수 있어요.
           </p>
           <div className="flex gap-2">
@@ -287,12 +334,12 @@ export default function HomeImageUpload() {
             </Button>
             <Button variant="ghostLavender" onClick={reset}>
               <HiOutlineArrowPath className="size-4 shrink-0" aria-hidden />
-              다시 선택
+              {imageSource === 'camera' ? '다시 찍기' : '다시 선택'}
             </Button>
           </div>
         </div>
       ) : (
-        /* 파일 업로드 — 보조 */
+        /* ── 파일 업로드 — 보조 옵션 ── */
         <div
           role="button"
           tabIndex={0}
@@ -305,21 +352,24 @@ export default function HomeImageUpload() {
             if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragging(false);
           }}
           className={[
-            'mt-3 flex items-center gap-3 rounded-xl px-4 py-3 cursor-pointer transition-colors duration-150',
-            'border border-black/8 dark:border-white/8',
+            'mt-2.5 flex items-center gap-3 rounded-xl px-3.5 py-3 cursor-pointer transition-colors duration-150',
             isDragging
-              ? 'bg-black/5 dark:bg-white/5'
-              : 'hover:bg-black/4 dark:hover:bg-white/4',
+              ? 'bg-[var(--color-accent-pale)]'
+              : 'hover:bg-[var(--color-accent-pale)]/60',
           ].join(' ')}
+          style={{ border: '1px solid var(--color-accent-border)' }}
         >
-          <span className="size-8 rounded-lg flex items-center justify-center shrink-0 bg-black/6 dark:bg-white/6">
-            <HiOutlinePhoto className="size-4 text-black/40 dark:text-white/40" aria-hidden />
+          <span
+            className="size-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: 'var(--color-accent-pale)' }}
+          >
+            <HiOutlinePhoto className="size-4 text-secondary" aria-hidden />
           </span>
           <span className="min-w-0">
-            <span className="block text-sm font-medium text-fg-primary">
+            <span className="block text-[14px] sm:text-[15px] font-medium text-fg-primary">
               {isDragging ? '여기에 놓아주세요' : '사진 파일로 분석하기'}
             </span>
-            <span className="block text-xs text-secondary mt-0.5">
+            <span className="block text-[12px] sm:text-[13px] text-secondary mt-0.5">
               드래그하거나 클릭 · JPG · PNG · WEBP
             </span>
           </span>

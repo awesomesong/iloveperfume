@@ -470,11 +470,11 @@ export default function FeatureShowcase() {
 
                       {/* 체험 카드 */}
                       <div
-                        className="rounded-[24px] p-6 md:p-8"
+                        className="rounded-[20px] sm:rounded-[24px] p-3 sm:p-5 md:p-8"
                         style={{
                           background: 'var(--color-card-bg)',
-                          border: '1px solid rgba(0,0,0,0.07)',
-                          boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+                          border: '1px solid var(--color-card-border)',
+                          boxShadow: '0 2px 16px var(--color-shadow-soft)',
                         }}
                       >
                         <HomeImageUpload />

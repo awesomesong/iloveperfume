@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import ScanClient from '@/src/app/components/scan/ScanClient';
 
 export const metadata: Metadata = {
-  title: '향수 스캔',
+  title: '향수 사진 스캔',
   description:
     '카메라로 향수 사진을 찍으면 AI가 어떤 향수인지 식별하고 최저가 구매 사이트로 안내해드립니다.',
   openGraph: {
@@ -15,9 +15,14 @@ export const metadata: Metadata = {
 export default function ScanPage() {
   return (
     <div className="px-4 pt-8 pb-4 md:p-8 max-w-[1440px] w-full mx-auto">
-      <h2 className="text-top text-center">
-        <span className="text-gradient-ilp">향수 스캔</span>
-      </h2>
+      <div className="text-center">
+        <h2 className="text-top">
+          <span className="text-gradient-ilp">향수 사진을 촬영하거나 업로드해 주세요</span>
+        </h2>
+        <p className="text-secondary mt-2 text-sm md:text-base">
+          AI가 향수를 인식하여 상품 정보와 구매처를 안내해 드립니다.
+        </p>
+      </div>
       <ScanClient />
     </div>
   );
