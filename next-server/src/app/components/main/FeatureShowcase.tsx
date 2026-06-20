@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { HiArrowRight } from 'react-icons/hi2';
+import { HiArrowRight, HiLockClosed } from 'react-icons/hi2';
 import HomeImageUpload from '@/src/app/components/scan/HomeImageUpload';
 import HomeAIChatInput from '@/src/app/components/main/HomeAIChatInput';
 
@@ -438,14 +438,20 @@ function ShowcaseSection({ feature, priority = false }: SectionProps) {
         </p>
 
         {/* CTA */}
-        {showChatInput ? (
-          <HomeAIChatInput />
-        ) : (
-          <Link href={href} className="action-btn self-start">
-            {cta}
-            <HiArrowRight className="size-3.5 shrink-0" aria-hidden />
-          </Link>
-        )}
+        <div className="flex flex-col gap-3">
+          {showChatInput ? (
+            <HomeAIChatInput />
+          ) : (
+            <Link href={href} className="action-btn self-start">
+              {cta}
+              <HiArrowRight className="size-3.5 shrink-0" aria-hidden />
+            </Link>
+          )}
+          <p className="flex items-baseline gap-1 text-xs text-secondary">
+            <HiLockClosed className="size-3 shrink-0" aria-hidden />
+            로그인 후 이용할 수 있어요
+          </p>
+        </div>
       </motion.div>
     </div>
   );
