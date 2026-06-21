@@ -433,9 +433,11 @@ function ShowcaseSection({ feature, priority = false }: SectionProps) {
         <StepList steps={steps} />
 
         {/* 기술 스택 — 12px, text-secondary 6.71:1 ✅ */}
-        <p className="text-xs text-secondary" aria-label="사용 기술">
-          {badges.join(' · ')}
-        </p>
+        <div className="flex flex-wrap gap-2" aria-label="사용 기술">
+          {badges.map((badge) => (
+            <span key={badge} className="footer-stack-badge">{badge}</span>
+          ))}
+        </div>
 
         {/* CTA */}
         <div className="flex flex-col gap-3">
