@@ -418,7 +418,7 @@ function ShowcaseSection({ feature, priority = false }: SectionProps) {
         transition={{ duration: 0.7, delay: 0.18, ease: EASE_OUT }}
       >
         {/* 태그 — 모바일은 섹션 헤더에서 표시하므로 숨김 */}
-        <span className="hidden lg:inline text-xs font-semibold tracking-[0.16em] uppercase text-secondary dark:text-accent">
+        <span className="hidden lg:inline text-xs font-semibold tracking-[0.16em] uppercase text-secondary">
           {tag}
         </span>
 
