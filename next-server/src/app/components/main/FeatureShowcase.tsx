@@ -423,12 +423,12 @@ function ShowcaseSection({ feature, priority = false }: SectionProps) {
         </span>
 
         {/* 헤드라인 */}
-        <h2
+        <h3
           className="font-pretendard font-normal text-fg-primary leading-[1.3] tracking-[-0.01em]"
           style={{ fontSize: 'clamp(1.35rem, 2.6vw, 2rem)' }}
         >
           {headline}
-        </h2>
+        </h3>
 
         <StepList steps={steps} />
 
@@ -477,12 +477,12 @@ function VisionSection({ feature, priority = false }: SectionProps) {
           {feature.tag}
         </span>
 
-        <h2
+        <h3
           className="font-pretendard font-normal text-fg-primary leading-[1.3] tracking-[-0.01em]"
           style={{ fontSize: 'clamp(1.35rem, 2.6vw, 2rem)' }}
         >
           {feature.headline}
-        </h2>
+        </h3>
 
         <StepList steps={feature.steps} />
 
