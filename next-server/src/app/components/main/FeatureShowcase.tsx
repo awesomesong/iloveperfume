@@ -328,7 +328,7 @@ interface StepListProps {
 
 function StepList({ steps }: StepListProps) {
   return (
-    <ol className="relative flex flex-col">
+    <div role="list" className="relative flex flex-col">
       {/* 연결선 (장식) */}
       <div
         aria-hidden
@@ -336,7 +336,8 @@ function StepList({ steps }: StepListProps) {
         style={{ background: 'var(--color-accent-border)' }}
       />
       {steps.map(({ label, desc }, i) => (
-        <motion.li
+        <motion.div
+          role="listitem"
           key={label}
           className="relative flex items-start gap-4 pb-7 last:pb-0"
           initial={{ opacity: 0, x: -10 }}
@@ -367,9 +368,9 @@ function StepList({ steps }: StepListProps) {
               {desc}
             </span>
           </div>
-        </motion.li>
+        </motion.div>
       ))}
-    </ol>
+    </div>
   );
 }
 
