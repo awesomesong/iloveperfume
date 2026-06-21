@@ -473,7 +473,7 @@ function VisionSection({ feature, priority = false }: SectionProps) {
         viewport={{ once: true, margin: '-60px' }}
         transition={{ duration: 0.7, ease: EASE_OUT }}
       >
-        <span className="hidden lg:inline self-start text-[0.6rem] font-semibold tracking-[0.14em] uppercase px-3 py-1 rounded-full border border-black/20 dark:border-white/20 text-black/60 dark:text-white/60">
+        <span className="hidden lg:inline self-start text-[0.6rem] font-semibold tracking-[0.14em] uppercase px-3 py-1 rounded-full border border-[var(--color-card-border)] text-secondary">
           {feature.tag}
         </span>
 
@@ -521,7 +521,7 @@ function VisionSection({ feature, priority = false }: SectionProps) {
         </div>
 
         {/* 구분선 */}
-        <div className="h-px bg-black/8 dark:bg-white/8" />
+        <div className="footer-deco-line" />
 
         {/* 체험 카드 */}
         <div
