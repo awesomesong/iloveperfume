@@ -232,9 +232,9 @@ function PhoneFrame({ src, alt, aspectRatio = '9 / 19.5', variant = 'default', p
           </div>
         </div>
       </div>
-      {SIDE_BUMPS.map(({ side, top, height, borderRadius }, i) => (
+      {SIDE_BUMPS.map(({ side, top, height, borderRadius }) => (
         <div
-          key={i}
+          key={`${side}-${top}`}
           aria-hidden
           style={{
             position: 'absolute',
