@@ -23,22 +23,11 @@ export const getSocket = (): Socket => {
     timeout: 10_000,
   });
 
-  // 파이어폭스 대응: 연결 실패 시 소켓 재생성
+  // 파이어폭스 대응: 연결 실패 시 소켓 재생성 (재연결은 socket.io가 계속 시도함)
   socket.io.on("reconnect_failed", () => {
     if (globalThis.__socket__) {
       globalThis.__socket__.close();
       delete globalThis.__socket__;
-    }
-  });
-
-  // 너무 오래 연결 안되면 소켓 재생성 + 페이지 새로고침
-  socket.io.on("reconnect_attempt", (attempt) => {
-    if (attempt > 10) {
-      socket.close();
-      delete globalThis.__socket__;
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
     }
   });
 
