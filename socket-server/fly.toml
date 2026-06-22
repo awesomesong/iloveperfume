@@ -6,7 +6,7 @@ primary_region = 'nrt'
 
 [env]
   PORT = "3001"
-  CLIENT_ORIGIN = "https://www.devsonghee.com,https://devsonghee.com,http://localhost:3001"
+  CLIENT_ORIGIN = "https://www.iloveperfume.co.kr,https://iloveperfume.co.kr,https://www.devsonghee.com,https://devsonghee.com,http://localhost:3001"
 
 [http_service]
   internal_port = 3001
