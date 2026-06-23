@@ -395,7 +395,7 @@ iloveperfume/
 │           │   ├── notice/          # 공지사항 API
 │           │   └── register/        # 회원가입 API
 │           ├── components/
-│           │   ├── main/            # ProductFragrance, ScentMemoriesHero
+│           │   ├── main/            # ProductFragrance, FeatureShowcase
 │           │   ├── fragrance/       # FragranceDetail, FormFragrance 등
 │           │   ├── scan/            # HomeImageUpload, ScanClient, ScanResult, PriceCards, SimilarGallery 등
 │           │   ├── chat/
