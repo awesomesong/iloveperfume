@@ -77,10 +77,14 @@ function FragranceCardWrapper({
       initial={{ opacity: 0, y: 48 }}
       animate={shouldReveal ? { opacity: 1, y: 0 } : { opacity: 0, y: 48 }}
       exit={{ opacity: 0, y: -6 }}
-      transition={{ ...FRAGRANCE_MOTION_TRANSITION, delay }}
+      transition={{
+        opacity: { duration: FRAGRANCE_MOTION_TRANSITION.duration, ease: FRAGRANCE_MOTION_TRANSITION.ease, delay },
+        y: { duration: FRAGRANCE_MOTION_TRANSITION.duration, ease: FRAGRANCE_MOTION_TRANSITION.ease, delay },
+        layout: { duration: 0.48, ease: 'easeOut' },
+      }}
       onHoverStart={onHoverStart}
       onHoverEnd={onHoverEnd}
-      className="will-change-[transform,opacity]"
+      className="will-change-transform"
     >
       {children}
     </motion.div>
