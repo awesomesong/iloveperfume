@@ -4,6 +4,7 @@ const defaultTheme = require("tailwindcss/defaultTheme");
 module.exports = {
     content: [
         "./src/**/*.{js,ts,jsx,tsx}",
+        "./scripts/**/*.{js,ts}",
         "./node_modules/@heroui/theme/dist/components/(button|card|input|skeleton|popover|dropdown|menu|tooltip).js",
     ],
     theme: {
