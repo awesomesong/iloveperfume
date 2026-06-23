@@ -396,27 +396,6 @@ io.on("connection", (socket) => {
     // 빈 이메일이면 등록/브로드캐스트를 수행하지 않음
     if (!email) return;
 
-    // online 진입 시에도 한번 더 정리 (네트워크 스파이크/지연 대비)
-    try {
-      const activeSocketIds = new Set([...io.sockets.sockets.keys()]);
-      for (const [socketId, user] of onlineUsersMap.entries()) {
-        if (!activeSocketIds.has(socketId)) {
-          onlineUsersMap.delete(socketId);
-          // ✅ 역인덱스도 같이 정리
-          if (user.userId) {
-            const socketSet = userIdToSocketsMap.get(user.userId);
-            if (socketSet) {
-              socketSet.delete(socketId);
-              if (socketSet.size === 0) {
-                userIdToSocketsMap.delete(user.userId);
-              }
-            }
-          }
-        }
-      }
-    } catch {}
-
-
     // ✅ 해당 유저가 이미 온라인인지 체크 (O(1))
     const alreadyOnline = userIdToSocketsMap.has(uid) && userIdToSocketsMap.get(uid).size > 0;
     

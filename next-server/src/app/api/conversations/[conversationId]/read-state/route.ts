@@ -40,20 +40,29 @@ export async function PATCH(
       });
     }
 
-    // ✅ 서버 결정 워터마크: 실제 최신 메시지 기준으로 보정
-    const latest = await prisma.message.findFirst({
-      where: { conversationId },
-      orderBy: { createdAt: "desc" },
-      select: { id: true, createdAt: true },
-    });
+    // ✅ 서버 결정 워터마크용 최신 메시지 + senderId 조회용 마지막 메시지를 병렬로 조회
+    // (둘 다 conv에서 얻은 값만 필요하고 서로 의존하지 않음)
+    const [latest, lastMessage] = await Promise.all([
+      prisma.message.findFirst({
+        where: { conversationId },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, createdAt: true },
+      }),
+      conv.lastMessageId
+        ? prisma.message.findUnique({
+            where: { id: conv.lastMessageId },
+            select: { createdAt: true, senderId: true },
+          })
+        : Promise.resolve(null),
+    ]);
 
     if (latest) {
       await prisma.conversationRead.upsert({
-        where: { 
-          conversationId_userId: { 
-            conversationId, 
-            userId: user.id 
-          } 
+        where: {
+          conversationId_userId: {
+            conversationId,
+            userId: user.id
+          }
         },
         create: {
           conversationId,
@@ -68,44 +77,37 @@ export async function PATCH(
       });
     }
 
-    // 2) 마지막 메시지 정보 조회 (senderId 포함, includeSeenUsers 처리용)
+    // 2) 마지막 메시지 정보 (senderId 포함, includeSeenUsers 처리용)
     let messageSenderId: string | null = null;
     let seenUsersForLastMessage: Array<{ id: string; name: string | null; email: string | null; image: string | null }> = [];
-    
-    if (conv.lastMessageId) {
-      const lastMessage = await prisma.message.findUnique({
-        where: { id: conv.lastMessageId },
-        select: { createdAt: true, senderId: true },
-      });
-      
-      if (lastMessage) {
-        messageSenderId = lastMessage.senderId;
-        
-        // ✅ includeSeenUsers=true라면 읽은 사용자 조회
-        if (includeSeenUsers) {
-          const lastMessageId = conv.lastMessageId;
-          const lastMessageAt = lastMessage.createdAt;
 
-          // 발신자 제외 (발신자는 읽음 표시에서 제외)
-          const exclude = new Set<string>([lastMessage.senderId]);
-          
-          const readStates = await prisma.conversationRead.findMany({
-            where: {
-              conversationId,
-              userId: { notIn: [...exclude] },
-              OR: [
-                { lastSeenMsgId: lastMessageId },                         // ID 기반
-                { lastSeenAt: { gte: lastMessageAt } },                   // 시간 기반 fallback
-              ],
-            },
-            include: { 
-              user: { 
-                select: { id: true, name: true, email: true, image: true } 
-              } 
-            },
-          });
-          seenUsersForLastMessage = readStates.map(read => read.user);
-        }
+    if (lastMessage) {
+      messageSenderId = lastMessage.senderId;
+
+      // ✅ includeSeenUsers=true라면 읽은 사용자 조회
+      if (includeSeenUsers && conv.lastMessageId) {
+        const lastMessageId = conv.lastMessageId;
+        const lastMessageAt = lastMessage.createdAt;
+
+        // 발신자 제외 (발신자는 읽음 표시에서 제외)
+        const exclude = new Set<string>([lastMessage.senderId]);
+
+        const readStates = await prisma.conversationRead.findMany({
+          where: {
+            conversationId,
+            userId: { notIn: [...exclude] },
+            OR: [
+              { lastSeenMsgId: lastMessageId },                         // ID 기반
+              { lastSeenAt: { gte: lastMessageAt } },                   // 시간 기반 fallback
+            ],
+          },
+          include: {
+            user: {
+              select: { id: true, name: true, email: true, image: true }
+            }
+          },
+        });
+        seenUsersForLastMessage = readStates.map(read => read.user);
       }
     }
 
