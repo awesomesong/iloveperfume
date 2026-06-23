@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     template: "%s | I Love Perfume",
   },
   description:
-    "I Love Perfume는 향수를 수집하고 기록하는 프론트엔드 포트폴리오 사이트입니다. Next.js 15, React 19, Socket.io, OpenAI Vision 등을 활용하여 향수 갤러리, AI 이미지 분석, 실시간 채팅, 3D 인터랙션 기능을 구현하였습니다.",
+    "I Love Perfume는 향수를 수집하고 기록하는 프론트엔드 포트폴리오 사이트입니다. Next.js 15, React 19, Socket.io, OpenAI Vision 등을 활용하여 향수 갤러리, AI 이미지 분석, 실시간 채팅을 구현하였습니다.",
   keywords: [
     "I Love Perfume",
     "강송희",
@@ -87,7 +87,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "I Love Perfume | 강송희 프론트엔드 포트폴리오",
     description:
-      "I Love Perfume는 향수를 수집하고 기록하는 공간입니다. Next.js와 다양한 기술을 사용하여 갤러리, 채팅, 3D 기능 등을 구현한 포트폴리오입니다.",
+      "I Love Perfume는 향수를 수집하고 기록하는 공간입니다. Next.js와 다양한 기술을 사용하여 갤러리, 채팅 등을 구현한 포트폴리오입니다.",
     siteName: "I Love Perfume",
     images: [
       {
