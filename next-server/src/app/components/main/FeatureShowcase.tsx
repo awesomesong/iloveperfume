@@ -37,11 +37,12 @@ const FEATURES = [
     badges: ['GPT-4o', 'Streaming', 'Socket.io'],
     cta: '채팅 시작하기',
     href: '/conversations/new?aiAgentType=assistant',
-    image: '/image/notice/chat/conversation_ai/chat_ai_mobile04.png',
+    image: '/image/notice/chat/conversation_ai/chat_ai_mobile03.png',
     webImage: '/image/notice/chat/conversation_ai/chat_ai_web04.png',
     imageAlt: 'AI 향수 추천 채팅 화면',
     flip: false,
-    phoneAspectRatio: '780 / 1227',
+    phoneAspectRatio: '840 / 1154',
+    webAspectRatio: '1024 / 687',
     layout: 'default' as const,
   },
   {
@@ -56,11 +57,12 @@ const FEATURES = [
     badges: ['GPT-4o Vision', '2-pass 분석', 'Cloudinary'],
     cta: '지금 스캔하기',
     href: '/scan',
-    image: '/showcase/scan.png',
-    webImage: '/showcase/scan_web.png',
+    image: '/image/notice/scan/scan_mobile02.png',
+    webImage: '/image/notice/scan/scan_web02.png',
     imageAlt: '향수 스캔 화면',
     flip: true,
-    phoneAspectRatio: '9 / 19.5',
+    phoneAspectRatio: '1000 / 1834',
+    webAspectRatio: '1024 / 1039',
     layout: 'vision' as const,
   },
   {
@@ -75,11 +77,12 @@ const FEATURES = [
     badges: ['GPT-4o Vision', 'Auto-fill', 'Prisma ORM'],
     cta: '향수 등록하기',
     href: '/fragrance/create',
-    image: '/showcase/create.png',
-    webImage: '/image/notice/fragrance/fragrance_create_web01.png',
+    image: '/image/notice/fragrance/fragrance_create_mobile02.png',
+    webImage: '/image/notice/fragrance/fragrance_create_web02.png',
     imageAlt: '향수 자동 등록 화면',
     flip: false,
-    phoneAspectRatio: '9 / 19.5',
+    phoneAspectRatio: '750 / 2339',
+    webAspectRatio: '1024 / 973',
     layout: 'default' as const,
   },
 ] as const;
@@ -94,10 +97,11 @@ const BROWSER_DOTS = ['#ff5f57', '#febc2e', '#28c840'] as const;
 interface BrowserFrameProps {
   src: string;
   alt: string;
+  aspectRatio?: string;
   priority?: boolean;
 }
 
-function BrowserFrame({ src, alt, priority = false }: BrowserFrameProps) {
+function BrowserFrame({ src, alt, aspectRatio = '16 / 10', priority = false }: BrowserFrameProps) {
   return (
     <div
       style={{
@@ -134,16 +138,15 @@ function BrowserFrame({ src, alt, priority = false }: BrowserFrameProps) {
           </div>
         </div>
         {/* 화면 */}
-        <div className="relative overflow-hidden" style={{ aspectRatio: '16 / 10', background: '#0a0908' }}>
+        <div className="relative overflow-hidden" style={{ aspectRatio, background: '#0a0908' }}>
           <Image
             src={src}
             alt={alt}
             fill
             className="object-cover object-top"
-            sizes="(max-width: 1024px) 0px, (max-width: 1280px) 380px, 460px"
+            sizes="(max-width: 1280px) 380px, 460px"
             priority={priority}
           />
-          <div aria-hidden className="absolute bottom-0 left-0 right-0 pointer-events-none z-[5]" style={{ height: '30%', background: 'linear-gradient(to bottom, transparent, rgba(10,9,8,0.85))' }} />
           <div aria-hidden className="absolute inset-0 pointer-events-none z-[6]" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 25%, transparent 50%)' }} />
         </div>
       </div>
@@ -260,13 +263,14 @@ interface MockupGroupProps {
   alt: string;
   flip: boolean;
   phoneAspectRatio?: string;
+  webAspectRatio?: string;
   priority?: boolean;
 }
 
-function MockupGroup({ src, webSrc, alt, flip, phoneAspectRatio, priority = false }: MockupGroupProps) {
+function MockupGroup({ src, webSrc, alt, flip, phoneAspectRatio, webAspectRatio, priority = false }: MockupGroupProps) {
   return (
     <>
-      {/* 모바일: 폰만 */}
+      {/* 모바일: 폰만 — 모바일 LCP 후보 */}
       <div className="flex justify-center lg:hidden">
         <motion.div
           initial={{ opacity: 0, y: 48 }}
@@ -291,16 +295,16 @@ function MockupGroup({ src, webSrc, alt, flip, phoneAspectRatio, priority = fals
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.85, ease: EASE_OUT }}
         >
-          {/* 브라우저 프레임 */}
+          {/* 브라우저 프레임 — PC LCP 후보 */}
           <motion.div
             animate={{ y: [0, -6, 0] }}
             transition={{ duration: 6.4, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
             style={{ paddingBottom: '60px' }}
           >
-            <BrowserFrame src={webSrc} alt={alt} priority={priority} />
+            <BrowserFrame src={webSrc} alt={alt} aspectRatio={webAspectRatio} priority={priority} />
           </motion.div>
 
-          {/* 폰 프레임 */}
+          {/* 폰 프레임 — 보조 오버레이 이미지, LCP 후보 아니므로 priority 미부여 */}
           <div
             className="absolute bottom-0 z-10"
             style={{
@@ -308,7 +312,7 @@ function MockupGroup({ src, webSrc, alt, flip, phoneAspectRatio, priority = fals
               transform: flip ? 'translateX(-10%)' : 'translateX(10%)',
             }}
           >
-            <PhoneFrame src={src} alt={alt} aspectRatio={phoneAspectRatio} priority={priority} />
+            <PhoneFrame src={src} alt={alt} aspectRatio={phoneAspectRatio} />
           </div>
 
           {/* 배경 glow */}
@@ -400,7 +404,7 @@ interface SectionProps {
 }
 
 function ShowcaseSection({ feature, priority = false }: SectionProps) {
-  const { tag, headline, steps, badges, cta, href, image, webImage, imageAlt, flip, phoneAspectRatio, showChatInput } = feature;
+  const { tag, headline, steps, badges, cta, href, image, webImage, imageAlt, flip, phoneAspectRatio, webAspectRatio, showChatInput } = feature;
 
   return (
     <div
@@ -409,7 +413,7 @@ function ShowcaseSection({ feature, priority = false }: SectionProps) {
         flip ? 'lg:flex-row-reverse' : 'lg:flex-row',
       )}
     >
-      <MockupGroup src={image} webSrc={webImage} alt={imageAlt} flip={flip} phoneAspectRatio={phoneAspectRatio} priority={priority} />
+      <MockupGroup src={image} webSrc={webImage} alt={imageAlt} flip={flip} phoneAspectRatio={phoneAspectRatio} webAspectRatio={webAspectRatio} priority={priority} />
 
       <motion.div
         className="flex-1 flex flex-col gap-8 min-w-0"
@@ -502,10 +506,23 @@ function VisionSection({ feature, priority = false }: SectionProps) {
         viewport={{ once: true, margin: '-60px' }}
         transition={{ duration: 0.75, delay: 0.1, ease: EASE_OUT }}
       >
-        {/* 브라우저 + 폰 목업 — 나란히, 겹침 없이 */}
-        <div className="relative">
+        {/* 모바일: 폰만 */}
+        <div className="flex justify-center lg:hidden">
+          <div style={{ width: 'clamp(220px, 55vw, 280px)' }}>
+            <PhoneFrame
+              src={feature.image}
+              alt={feature.imageAlt}
+              aspectRatio={feature.phoneAspectRatio}
+              variant="standalone"
+              priority={priority}
+            />
+          </div>
+        </div>
+
+        {/* PC: 브라우저 + 폰 목업 — 나란히, 겹침 없이 */}
+        <div className="relative hidden lg:block">
           <div style={{ paddingRight: '18%' }}>
-            <BrowserFrame src={feature.webImage} alt={feature.imageAlt} priority={priority} />
+            <BrowserFrame src={feature.webImage} alt={feature.imageAlt} aspectRatio={feature.webAspectRatio} priority={priority} />
           </div>
           <div
             className="absolute bottom-0 right-0 z-10"
@@ -516,7 +533,6 @@ function VisionSection({ feature, priority = false }: SectionProps) {
               alt={feature.imageAlt}
               aspectRatio={feature.phoneAspectRatio}
               variant="standalone"
-              priority={priority}
             />
           </div>
         </div>
