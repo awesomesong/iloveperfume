@@ -57,11 +57,6 @@ const features = [
     desc: 'GPT-4o 기반으로 AI에게 향수 추천이나 궁금한 점을 물어볼 수 있습니다. 답변은 타이핑되는 것처럼 실시간 스트리밍(SSE)으로 출력되어 기다림 없이 자연스럽게 대화할 수 있습니다.',
   },
   {
-    icon: '✨',
-    title: '3D 배경',
-    desc: '메인 화면에 Three.js 기반 인터랙티브 3D 은하수 배경을 구현했습니다. 스크롤 하면 은하수 속으로 빨려 들어가는 듯한 부드러운 확대 효과를 경험할 수 있습니다.',
-  },
-  {
     icon: '🌙',
     title: '다크 모드 및 반응형',
     desc: '라이트/다크 모드를 지원하고, 데스크탑·태블릿·모바일 환경에 최적화된 반응형 웹 레이아웃을 구현했습니다.',
@@ -95,7 +90,7 @@ const techStack = [
     ],
   },
   { category: 'Media', items: ['Cloudinary'] },
-  { category: '3D · Animation', items: ['Three.js', 'Framer Motion'] },
+  { category: 'Animation', items: ['Framer Motion'] },
   {
     category: 'Editor · UI',
     items: ['React Quill', 'react-select', 'DOMPurify', 'react-hot-toast'],

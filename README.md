@@ -30,7 +30,6 @@
 | **공지사항** | 이미지와 텍스트 스타일이 포함된 공지를 작성·수정·삭제할 수 있으며, 댓글을 남길 수 있습니다 (Quill 에디터, Cloudinary CDN, DOMPurify XSS 방지) |
 | **이용 안내(가이드)** | 서비스·기능 소개와 로그인·갤러리·채팅 등 단계별 스크린샷으로 이용 방법을 안내합니다 |
 | **인증** | Google·카카오 소셜 로그인과 이메일/비밀번호 로그인을 지원하며, 데모 계정으로 바로 체험할 수 있습니다 (NextAuth v4 JWT 24h, bcryptjs 해싱) |
-| **3D 히어로 섹션** | 메인 화면에 인터랙티브 3D 은하수 배경이 표시되며, 스크롤 시 확대 효과가 적용됩니다 (Three.js WebGL 커스텀 셰이더) |
 | **테마·반응형** | 다크/라이트 모드를 지원하며, 데스크탑·태블릿·모바일 환경에 최적화된 반응형 레이아웃을 제공합니다 (Tailwind CSS, Framer Motion 전환 애니메이션) |
 
 ---
@@ -50,7 +49,6 @@
 | **DB 설계** | PostgreSQL + Prisma, 복합 인덱스 전략, 커서 페이지네이션 |
 | **보안** | bcryptjs, DOMPurify, 웹훅 Secret, CORS 화이트리스트 |
 | **미디어** | Cloudinary CDN, Next/Image 최적화 |
-| **3D** | Three.js WebGL 커스텀 셰이더 (히어로 섹션) |
 | **배포** | Vercel (Next.js) + Fly.io Docker (Socket.IO) 분리 배포 |
 
 ---
@@ -318,7 +316,6 @@ POST /api/ai/stream
 | | DOMPurify | 3.3.3 | 사용자 입력 HTML 새니타이징, XSS 방지 |
 | **미디어** | next-cloudinary | 6.6.2 | 이미지 업로드·CDN |
 | **에디터** | react-quill-new | 3.4.6 | WYSIWYG 에디터(공지·게시글) |
-| **3D** | Three.js | 0.183.0 | 히어로 섹션 은하수 배경(WebGL·커스텀 셰이더, 다크/라이트 테마 대응) |
 | **기타** | react-icons | 5.0.1 | 아이콘 라이브러리 |
 | | dayjs | 1.11.13 | 날짜 포맷 |
 | | react-intersection-observer | 9.13.1 | 뷰포트 감지, Infinite Query 트리거 |
@@ -375,7 +372,7 @@ iloveperfume/
 │       └── app/                     # App Router — 라우트·컴포넌트·유틸 전부 이 하위
 │           ├── layout.tsx, globals.css
 │           ├── (main)/              # 메인 레이아웃 Route Group
-│           │   ├── (home)/          # 홈 (Three.js 히어로 + 향수 목록)
+│           │   ├── (home)/          # 홈 (기능 이용 안내 + 향수 목록)
 │           │   ├── fragrance/       # [id](slug 조회), create, edit
 │           │   ├── scan/            # 향수 스캔 (카메라·파일 업로드), result/[scanId]
 │           │   ├── notice/          # 목록·상세·작성·수정
