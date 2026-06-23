@@ -216,7 +216,7 @@ const chatMemberGuideSteps: FragranceGuideStep[] = [
   {
     step: '01',
     title: '멤버 목록 확인',
-    desc: '서비스에 가입된 모든 멤버를 확인할 수 있습니다. 온라인 상태인 멤버는 프로필 아이콘 우측 상단에 초록색 점으로 표시됩니다. 채팅 멤버 목록의 우측 상단에 ⋮ 버튼을 누르면 단체 채팅, AI 채팅, 다크/라이트 모드 변경 메뉴가 나타납니다.',
+    desc: '서비스에 가입된 모든 멤버를 확인할 수 있습니다. 온라인 상태인 멤버는 프로필 아이콘 우측 상단에 보라색 점으로 표시됩니다. 채팅 멤버 목록의 우측 상단에 ⋮ 버튼을 누르면 단체 채팅, AI 채팅, 다크/라이트 모드 변경 메뉴가 나타납니다.',
     webImg: { src: '/image/notice/chat/member/chat_member_web01.png', alt: '채팅 멤버 목록 — 데스크탑' },
     mobileImg: { src: '/image/notice/chat/member/chat_member_mobile01.png', alt: '채팅 멤버 목록 — 모바일' },
   },
@@ -382,7 +382,7 @@ const chatDetailSteps: FragranceGuideStep[] = [
   {
     step: '02',
     title: '채팅방 서랍 — 참여 멤버 & 대화방 나가기',
-    desc: '··· 버튼을 누르면 오른쪽에서 채팅방 서랍이 열립니다. 서랍 상단에는 대화방 이름과 총참여 인원수가 표시되고, 그 아래에는 참여 멤버의 프로필 사진·이름·이메일이 나열됩니다. 본인 계정에는 "나" 배지가, 현재 온라인 상태인 멤버는 프로필 아이콘 우측 상단에 초록색 점이 표시됩니다. 서랍 하단의 "대화방 나가기" 버튼을 클릭하면 해당 대화방에서 나갈 수 있습니다.',
+    desc: '··· 버튼을 누르면 오른쪽에서 채팅방 서랍이 열립니다. 서랍 상단에는 대화방 이름과 총참여 인원수가 표시되고, 그 아래에는 참여 멤버의 프로필 사진·이름·이메일이 나열됩니다. 본인 계정에는 "나" 배지가, 현재 온라인 상태인 멤버는 프로필 아이콘 우측 상단에 보라색 점이 표시됩니다. 서랍 하단의 "대화방 나가기" 버튼을 클릭하면 해당 대화방에서 나갈 수 있습니다.',
     webImg: { src: '/image/notice/chat/conversation_detail/chat_conversation_detail_web02.png', alt: '채팅방 서랍 — 참여 멤버 & 대화방 나가기 — 데스크탑' },
     mobileImg: { src: '/image/notice/chat/conversation_detail/chat_conversation_detail_mobile02.png', alt: '채팅방 서랍 — 참여 멤버 & 대화방 나가기 — 모바일' },
   },
