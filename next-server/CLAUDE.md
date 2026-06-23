@@ -1,4 +1,4 @@
-# Scent Memories — next-server
+# iloveperfume — next-server
 
 Next.js 15 (App Router) · React 19 · TS · Prisma · NextAuth · Cloudinary · Socket.io. Dev: `npm run dev` (포트 3001).
 

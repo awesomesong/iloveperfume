@@ -365,7 +365,7 @@ POST /api/ai/stream
 ## 프로젝트 구조
 
 ```
-Scent-Memories/
+iloveperfume/
 ├── next-server/
 │   ├── prisma/
 │   │   ├── schema.prisma
