@@ -23,10 +23,10 @@ export async function apiFetch<T = unknown>(
 
   if (!res.ok) {
     throw new Error(
-      errorMessagesByStatus?.[res.status] ??
-        data?.message ??
-        data?.error ??
-        defaultErrorMessage ??
+      errorMessagesByStatus?.[res.status] ||
+        data?.message ||
+        data?.error ||
+        defaultErrorMessage ||
         "요청 처리 중 오류가 발생했습니다.",
     );
   }
