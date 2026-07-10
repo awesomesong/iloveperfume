@@ -1,3 +1,6 @@
+import { apiFetch } from "@/src/app/utils/apiFetch";
+import { UpdateCommentResponse } from "@/src/app/types/comments";
+
 type Props = {
     noticeId: string;
     commentId: string;
@@ -5,13 +8,9 @@ type Props = {
 }
 
 export const updateNoticesComments = async ({ noticeId, commentId, text }: Props) => {
-    const res = await fetch(`/api/notice/comments/${noticeId}/${commentId}`, {
+    return apiFetch<UpdateCommentResponse>(`/api/notice/comments/${noticeId}/${commentId}`, {
         method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ text }),
+        defaultErrorMessage: "댓글 수정에 실패했습니다.",
     });
-
-    return res.json();
 }

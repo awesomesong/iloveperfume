@@ -1,18 +1,17 @@
+import { apiFetch } from "@/src/app/utils/apiFetch";
+import { CreateCommentResponse } from "@/src/app/types/comments";
+
 type Props = {
     noticeId: string;
     comment: string;
 }
 
 export const createNoticesComments = async ({noticeId, comment}: Props) => {
-    const res = await fetch(`/api/notice/comments/${noticeId}`, {
+    return apiFetch<CreateCommentResponse>(`/api/notice/comments/${noticeId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
             text: comment,
         }),
+        defaultErrorMessage: "댓글 등록에 실패했습니다.",
     });
-
-    return res.json();
 }

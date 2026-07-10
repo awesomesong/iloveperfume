@@ -1,15 +1,9 @@
+import { apiFetch } from "@/src/app/utils/apiFetch";
+import { DeleteReviewResponse } from "@/src/app/types/reviews";
+
 export const deleteFragranceReview = async (id: string) => {
-  const res = await fetch(`/api/fragrance/reviews/${id}`, {
+  return apiFetch<DeleteReviewResponse>(`/api/fragrance/reviews/${id}`, {
     method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    defaultErrorMessage: "리뷰 삭제에 실패했습니다.",
   });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(
-      (data && (data.message || data.error)) || "리뷰 삭제에 실패했습니다."
-    );
-  }
-  return data;
 };
