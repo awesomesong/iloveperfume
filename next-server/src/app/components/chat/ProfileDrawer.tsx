@@ -1,5 +1,5 @@
 "use client";
-import { Conversation, User } from "@prisma/client";
+import { Conversation } from "@prisma/client";
 import { useCallback, useMemo, useState } from "react";
 import { IoIosExit } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
@@ -13,7 +13,7 @@ interface ProfileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   data: Conversation & {
-    users: User[];
+    users: IUserList[];
   };
   otherUser: IUserList & IUserListOptions;
 }

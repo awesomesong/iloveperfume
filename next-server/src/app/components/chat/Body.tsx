@@ -20,6 +20,7 @@ import { useSession } from "next-auth/react";
 import getMessages from "@/src/app/lib/getMessages";
 import { readState } from "@/src/app/lib/readState";
 import ChatListSkeleton from "@/src/app/components/skeleton/ChatListSkeleton";
+import StatusMessage from "@/src/app/components/StatusMessage";
 import { PiArrowFatDownFill } from "react-icons/pi";
 import CircularProgress from "@/src/app/components/CircularProgress";
 import { useSocket } from "../../context/socketContext";
@@ -74,11 +75,11 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
 
   // ✅ 대화방 변경 시 초기 스크롤 플래그 리셋
   // ✅ 메시지 데이터 불러오기 (무한 스크롤 적용)
-  const { data, status, fetchNextPage, hasNextPage, isFetchingNextPage, dataUpdatedAt } = useInfiniteQuery({
+  const { data, status, error, fetchNextPage, hasNextPage, isFetchingNextPage, dataUpdatedAt } = useInfiniteQuery({
     queryKey: messagesKey(conversationId),
     queryFn: ({ pageParam = null }) =>
       getMessages({ conversationId, pageParam }),
-    initialPageParam: null, // 최신 메시지부터 로드
+    initialPageParam: null as string | null, // 최신 메시지부터 로드
     getNextPageParam: (lastPage) => lastPage?.nextCursor ?? undefined,
     enabled: true,
     staleTime: 30_000,
@@ -549,7 +550,9 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
   return (
     <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
       {isFetchingNextPage && <CircularProgress aria-label="메시지 로딩중" />}
-      {status === "success" ? messageListElements : (
+      {status === "error" ? (
+        <StatusMessage error={error ?? undefined} fallbackMessage="메시지를 불러오지 못했습니다." />
+      ) : status === "success" ? messageListElements : (
         <ChatListSkeleton
           variant="message"
           widths={{ primary: "w-80 md:w-[500px] max-[480px]:w-60 max-[320px]:w-36", secondary: "w-[100px] xs:w-40" }}

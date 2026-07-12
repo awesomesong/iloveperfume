@@ -29,6 +29,7 @@ const Conversation = ({ params }: { params : Promise<IParams> }) => {
     const {
         data,
         status,
+        error,
     } = useQuery({
         queryKey: conversationKey(conversationId),
         queryFn: () => getConversationById(conversationId),
@@ -71,29 +72,29 @@ const Conversation = ({ params }: { params : Promise<IParams> }) => {
         )
     }
 
-    if(status === 'success' && !data?.conversation) {
+    if (status === 'error') {
         return (
             <div className="grow h-full">
                 <div className="flex flex-col w-full h-full">
-                    <EmptyState message={data?.message} isError />
+                    <EmptyState message={error instanceof Error ? error.message : "대화방을 불러오지 못했습니다."} isError />
                 </div>
             </div>
         )
     }
-    
-    const isForm = data?.conversation?.userIds.length > 1;
+
+    const isForm = (data?.conversation?.userIds?.length ?? 0) > 1;
     const isAIChat = data?.conversation?.isAIChat;
 
     return (
         <div className="flex flex-col w-full">
             {status === 'success' && (
                 <div className="flex flex-col flex-1 overflow-hidden relative">
-                    <Header conversation={data?.conversation} currentUser={session?.user}/>
+                    <Header conversation={data.conversation} currentUser={session?.user}/>
                     <Body scrollRef={scrollRef} bottomRef={bottomRef} isAIChat={!!isAIChat} />
                     {isAIChat ? (
                         <AIChatForm
                             conversationId={conversationId}
-                            aiAgentType={data?.conversation?.aiAgentType}
+                            aiAgentType={(data.conversation.aiAgentType ?? undefined) as "assistant" | undefined}
                         />
                     ) : isForm ? (
                         <Form />

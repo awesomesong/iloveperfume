@@ -7,7 +7,7 @@ export async function GET() {
   const user = await getCurrentUser();
 
   if (!user?.email)
-    return new NextResponse("로그인이 되지 않았습니다.", { status: 401 });
+    return NextResponse.json({ message: "로그인이 되지 않았습니다." }, { status: 401 });
 
   try {
     // ✅ 스냅샷 시점 먼저 고정 (모든 쿼리가 이 시점 이전 데이터만 조회)
@@ -220,8 +220,9 @@ export async function GET() {
     );
   } catch (e) {
     console.error('[GET /api/conversations] error:', e);
-    return new NextResponse("대화방을 불러오는 중 오류가 발생하였습니다.", {
-      status: 500,
-    });
+    return NextResponse.json(
+      { message: "대화방을 불러오는 중 오류가 발생하였습니다." },
+      { status: 500 },
+    );
   }
 }

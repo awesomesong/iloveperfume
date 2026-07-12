@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import type { User } from "@prisma/client";
 import type { FullConversationType, RoomEventPayload } from "../types/conversation";
 import type { IUserList } from "../types/common";
 import { useSocket } from "../context/socketContext";
@@ -83,7 +82,7 @@ const FALLBACK_USER: FallbackUser = {
 
 // ---- hook ----
 const useOtherUser = (
-  conversation: FullConversationType | { users: User[] } | null | undefined,
+  conversation: FullConversationType | { users: IUserList[] } | null | undefined,
   currentUser?: IUserList | null
 ) => {
   const { data: session, status } = useSession();

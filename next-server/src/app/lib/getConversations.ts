@@ -1,21 +1,10 @@
-import toast from "react-hot-toast";
+import { apiFetch } from "@/src/app/utils/apiFetch";
+import type { ConversationListResponse } from "@/src/app/types/conversation";
 
 const getConversations = async () => {
-
-  const res = await fetch(`/api/conversations`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
+  return apiFetch<ConversationListResponse>(`/api/conversations`, {
+    defaultErrorMessage: "대화방을 불러오는 중 오류가 발생하였습니다.",
   });
-
-  const { conversations, message } = await res.json();
-
-  if (!res.ok) {
-    toast.error(message);
-  }
-
-  return { conversations, message };
 };
 
 export default getConversations;
