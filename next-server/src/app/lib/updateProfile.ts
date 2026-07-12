@@ -1,3 +1,5 @@
+import { apiFetch } from "@/src/app/utils/apiFetch";
+
 export interface UpdateProfileRequest {
   image: string;
 }
@@ -9,18 +11,9 @@ export interface UpdateProfileResponse {
 }
 
 export const updateProfile = async (data: UpdateProfileRequest): Promise<UpdateProfileResponse> => {
-  const response = await fetch(`/api/settings`, {
+  return apiFetch<UpdateProfileResponse>(`/api/settings`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(data),
+    defaultErrorMessage: "프로필 수정 중 오류가 발생했습니다.",
   });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const result = await response.json();
-  return result;
 };
