@@ -1,16 +1,15 @@
-export const deleteImage = async (url: string) => {
-  try {
-    const res = await fetch('/api/cloudinary', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
-    });
+import { apiFetch } from "@/src/app/utils/apiFetch";
 
-    const { data } = await res.json();
-    
-    return data.result === 'ok';
-  } catch (error) {
-    console.error('Error deleting image:', error);
-    return false;
-  }
+type DeleteImageResponse = {
+  data: { result: string };
+};
+
+export const deleteImage = async (url: string): Promise<boolean> => {
+  const { data } = await apiFetch<DeleteImageResponse>('/api/cloudinary', {
+    method: 'DELETE',
+    body: JSON.stringify({ url }),
+    defaultErrorMessage: "이미지 삭제 중 오류가 발생했습니다.",
+  });
+
+  return data.result === 'ok';
 };
