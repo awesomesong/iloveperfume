@@ -32,16 +32,9 @@ const ConfirmModal: React.FC<ModalProps> = ({ isOpen, onCloseModal, name }) => {
   const onDelete = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { success, payload } = await deleteConversation(conversationId);
-      if (!success) return;
+      const payload = await deleteConversation(conversationId);
 
       onCloseModal();
-
-      // 타입 가드: success가 true이면 payload는 DeleteConversationSuccessResponse
-      if (!payload || !("ok" in payload) || payload.ok !== true) {
-        toast.error("삭제 이벤트 응답이 없습니다.");
-        return;
-      }
 
       const event = payload.event;
       if (!event?.type) {

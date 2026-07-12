@@ -1,4 +1,6 @@
 import { FieldValues } from "react-hook-form";
+import { apiFetch } from "@/src/app/utils/apiFetch";
+import type { FullMessageType } from "@/src/app/types/conversation";
 
 type sendMessageProps = {
     conversationId: string;
@@ -7,14 +9,15 @@ type sendMessageProps = {
     messageId: string;
 }
 
+type SendMessageResponse = {
+    newMessage: FullMessageType;
+};
+
 export const sendMessage = async ({ conversationId, data, image, messageId }: sendMessageProps) => {
     const inferredType: "text" | "image" = image ? 'image' : 'text';
     const messageType = (data as { type?: "text" | "image" | "system" })?.type || inferredType;
-    const res = await fetch(`/api/messages`, {
+    return apiFetch<SendMessageResponse>(`/api/messages`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
             ...data,
             image,
@@ -22,11 +25,6 @@ export const sendMessage = async ({ conversationId, data, image, messageId }: se
             messageId,
             type: messageType,
         }),
+        defaultErrorMessage: "메시지 전송 실패",
     });
-
-    if (!res.ok) {
-        throw new Error(`메시지 전송 실패 (status: ${res.status})`);
-    }
-
-    return res.json();
 }
