@@ -1,5 +1,6 @@
 import { FragranceWithAuthor } from "@/src/app/types/fragrance";
 import prisma from "@/prisma/db";
+import { apiFetch } from "@/src/app/utils/apiFetch";
 
 // ─────────────────────────────────────────────
 // Server-only functions (Prisma 직접 조회)
@@ -40,61 +41,33 @@ export const getFragrances = async (
     { pageParam }: FragranceListParam
 ): Promise<FragranceWithAuthor[]> => {
     const searchParams = '?cursor=' + encodeURIComponent(pageParam ?? '');
-    const res = await fetch(`/api/fragrance${searchParams}`, {
-        method: 'GET',
-        headers: { "Content-Type": "application/json" },
-    });
-
-    const responseData = await res.json();
-
-    if (!res.ok) {
-        throw new Error(responseData.message || "향수 목록을 가져오는데 실패했습니다.");
-    }
-
-    return responseData.fragrances;
+    const { fragrances } = await apiFetch<{ fragrances: FragranceWithAuthor[] }>(
+        `/api/fragrance${searchParams}`,
+        { defaultErrorMessage: "향수 목록을 가져오는데 실패했습니다." },
+    );
+    return fragrances;
 };
 
 export const getFragranceBySlug = async (slug: string): Promise<{ fragrance: FragranceWithAuthor }> => {
-    const res = await fetch(`/api/fragrance?slug=${slug}`, {
-        method: 'GET',
-        headers: { "Content-Type": "application/json" },
+    return apiFetch(`/api/fragrance?slug=${slug}`, {
+        defaultErrorMessage: "향수 정보를 가져오는데 실패했습니다.",
     });
-
-    const responseData = await res.json();
-
-    if (!res.ok) {
-        throw new Error(responseData.message || "향수 정보를 가져오는데 실패했습니다.");
-    }
-
-    return responseData;
 };
 
 export const getFragranceBrands = async (): Promise<string[]> => {
-    const res = await fetch('/api/fragrance/brands', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+    const { brands } = await apiFetch<{ brands: string[] }>('/api/fragrance/brands', {
+        defaultErrorMessage: '브랜드 목록을 가져오는데 실패했습니다.',
     });
-
-    const responseData = await res.json();
-
-    if (!res.ok) {
-        throw new Error(responseData.message || '브랜드 목록을 가져오는데 실패했습니다.');
-    }
-
-    return responseData.brands;
+    return brands;
 };
 
 /** 슬러그 존재 여부만 확인 (중복 체크 등). 전체 fragrance 데이터 불필요할 때 사용 */
 export const checkFragranceSlugExists = async (
     slug: string
 ): Promise<{ exists: boolean; id?: number }> => {
-    const res = await fetch(
+    const data = await apiFetch<{ exists?: boolean; id?: number }>(
         `/api/fragrance/slug-exists?slug=${encodeURIComponent(slug)}`,
-        { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+        { defaultErrorMessage: '슬러그 확인에 실패했습니다.' },
     );
-    const data = await res.json();
-    if (!res.ok) {
-        throw new Error(data.message || '슬러그 확인에 실패했습니다.');
-    }
     return { exists: data.exists ?? false, id: data.id };
 };

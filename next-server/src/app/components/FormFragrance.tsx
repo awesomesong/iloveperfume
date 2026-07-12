@@ -100,10 +100,6 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
         setIsAnalyzing(true);
         try {
             const result = await analyzeFragranceImage(src);
-            if (!result) {
-                toast.error("AI 분석에 실패했습니다.");
-                return;
-            }
             if (!result.isFragrance) {
                 toast.error("향수 이미지가 아닙니다. 향수 제품 사진을 업로드해주세요.");
                 return;
@@ -128,11 +124,7 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
             }
             toast.success("AI가 향수 정보를 자동으로 입력했습니다.", { icon: "✨" });
         } catch (error: unknown) {
-            if (error instanceof Error && (error as Error & { code?: string }).code === 'invalid_image_format') {
-                toast.error(error.message);
-            } else {
-                toast.error("AI 분석 중 오류가 발생했습니다.");
-            }
+            toast.error(error instanceof Error ? error.message : "AI 분석 중 오류가 발생했습니다.");
         } finally {
             setIsAnalyzing(false);
         }
@@ -231,6 +223,9 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                     toast.error("향수와 관련된 내용이 아닙니다. 향수 설명과 노트 정보를 올바르게 입력해 주세요.");
                     return;
                 }
+            } catch (error: unknown) {
+                toast.error(error instanceof Error ? error.message : "콘텐츠 검증 중 오류가 발생했습니다.");
+                return;
             } finally {
                 setIsValidating(false);
             }
