@@ -1,21 +1,15 @@
+import { apiFetch } from "@/src/app/utils/apiFetch";
+import { CreateReviewResponse } from "@/src/app/types/reviews";
+
 interface Props {
   id: string;
   text: string;
 }
 
 export const createFragranceReviews = async ({ id, text }: Props) => {
-  const res = await fetch(`/api/fragrance/${id}/reviews`, {
+  return apiFetch<CreateReviewResponse>(`/api/fragrance/${id}/reviews`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify({ text }),
+    defaultErrorMessage: "리뷰 등록에 실패했습니다.",
   });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(
-      (data && (data.message || data.error)) || "리뷰 등록에 실패했습니다."
-    );
-  }
-  return data;
 };

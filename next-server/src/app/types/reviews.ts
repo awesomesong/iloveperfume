@@ -2,6 +2,10 @@ import type { FragranceReviewType } from "./fragrance";
 import type { ReviewPage, ReviewsInfinite } from "@/src/app/lib/react-query/reviewsCache";
 
 // ===== API Response Types =====
+export interface CreateReviewResponse {
+  newReview: FragranceReviewType;
+}
+
 export interface UpdateReviewResponse {
   updateReview: FragranceReviewType;
 }

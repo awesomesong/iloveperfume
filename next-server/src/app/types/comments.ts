@@ -28,6 +28,13 @@ export type CommentPage = [
 export type PartialCommentType = Partial<CommentType>;
 
 /**
+ * 댓글 작성 응답 타입
+ */
+export type CreateCommentResponse = {
+  newComment: CommentType;
+};
+
+/**
  * 댓글 API 응답 타입
  */
 export type UpdateCommentResponse = {
