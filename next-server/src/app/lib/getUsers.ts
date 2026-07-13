@@ -1,20 +1,15 @@
-import toast from "react-hot-toast";
+import { apiFetch } from "@/src/app/utils/apiFetch";
+import type { IUserList } from "@/src/app/types/common";
+
+type GetUsersResponse = {
+    users: IUserList[];
+    message?: string;
+};
 
 const getUsers = async () => {
-    const res = await fetch(`/api/chatMember`,{
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    }); 
-
-    const { users, message } = await res.json();
-
-    if (!res.ok) {
-        toast.error(message);
-    }
-
-    return { users, message };
+    return apiFetch<GetUsersResponse>(`/api/chatMember`, {
+        defaultErrorMessage: "채팅 멤버를 찾지 못했습니다.",
+    });
 }
 
 export default getUsers;
