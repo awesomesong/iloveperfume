@@ -48,26 +48,9 @@ export const getFragrances = async (
     return fragrances;
 };
 
-export const getFragranceBySlug = async (slug: string): Promise<{ fragrance: FragranceWithAuthor }> => {
-    return apiFetch(`/api/fragrance?slug=${slug}`, {
-        defaultErrorMessage: "향수 정보를 가져오는데 실패했습니다.",
-    });
-};
-
 export const getFragranceBrands = async (): Promise<string[]> => {
     const { brands } = await apiFetch<{ brands: string[] }>('/api/fragrance/brands', {
         defaultErrorMessage: '브랜드 목록을 가져오는데 실패했습니다.',
     });
     return brands;
-};
-
-/** 슬러그 존재 여부만 확인 (중복 체크 등). 전체 fragrance 데이터 불필요할 때 사용 */
-export const checkFragranceSlugExists = async (
-    slug: string
-): Promise<{ exists: boolean; id?: number }> => {
-    const data = await apiFetch<{ exists?: boolean; id?: number }>(
-        `/api/fragrance/slug-exists?slug=${encodeURIComponent(slug)}`,
-        { defaultErrorMessage: '슬러그 확인에 실패했습니다.' },
-    );
-    return { exists: data.exists ?? false, id: data.id };
 };
