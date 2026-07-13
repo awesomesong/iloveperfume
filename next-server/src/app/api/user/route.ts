@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 export async function GET(){
     const user = await getCurrentUser();  
 
-    if(!user) return new NextResponse('로그인이 되지 않았습니다.', {status: 401});
+    if(!user) return NextResponse.json({ message: '로그인이 되지 않았습니다.' }, {status: 401});
 
     try {
         const userInfo = await prisma.user.findUnique({

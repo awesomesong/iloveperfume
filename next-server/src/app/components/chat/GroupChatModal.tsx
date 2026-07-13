@@ -11,6 +11,7 @@ import { SelectInstance, GroupBase, MultiValue } from "react-select";
 import getUsers from "@/src/app/lib/getUsers";
 import { useQuery } from "@tanstack/react-query";
 import { FormInputSkeleton } from "@/src/app/components/FragranceSkeleton";
+import StatusMessage from "@/src/app/components/StatusMessage";
 import type { FullConversationType } from "@/src/app/types/conversation";
 
 interface GroupChatModalProps {
@@ -32,6 +33,7 @@ const GroupChatModal: React.FC<GroupChatModalProps> = ({
   const {
     data: chatMember,
     status: statusMember,
+    error: errorMember,
   } = useQuery({
     queryKey: ["chatMember"],
     queryFn: getUsers,
@@ -244,14 +246,16 @@ const GroupChatModal: React.FC<GroupChatModalProps> = ({
               variant="underlined"
               fullWidth={true}
             />
-            {statusMember === "success"
+            {statusMember === "error" ? (
+              <StatusMessage error={errorMember ?? undefined} fallbackMessage="채팅 멤버를 불러오지 못했습니다." minHeight="min-h-0" />
+            ) : statusMember === "success"
               ? (<SelectBox
                 isOpen={isOpen}
                 disabled={isLoading}
                 label="채팅 멤버"
-                options={chatMember?.users?.map((user: IUserList) => ({
+                options={chatMember?.users?.filter((user): user is IUserList & { id: string } => !!user.id).map((user) => ({
                   value: user.id,
-                  label: user.name,
+                  label: user.name ?? "",
                 })) ?? []}
                 onChange={(value: MultiValue<OptionType> | null) =>
                   setValue("members", value, {

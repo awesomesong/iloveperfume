@@ -68,7 +68,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onCloseModal }) => 
     if (!userInfo) return [];
     return [
       { label: "가입일", value: createdAtText },
-      { label: "인증", value: userInfo.provider === "credentials" ? "회원가입" : userInfo.provider },
+      { label: "인증", value: userInfo.provider === "credentials" ? "회원가입" : (userInfo.provider ?? "") },
       { label: "대화방", value: `${userInfo._count.conversations ?? 0}개` },
       { label: "메시지", value: `${userInfo._count.messages ?? 0}회` },
     ];
