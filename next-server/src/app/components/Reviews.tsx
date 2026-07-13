@@ -30,6 +30,7 @@ import { useSocket } from "../context/socketContext";
 import { SOCKET_EVENTS } from "@/src/app/lib/react-query/utils";
 import { ReviewsSkeleton } from "./FragranceSkeleton";
 import CircularProgress from "./CircularProgress";
+import StatusMessage from "./StatusMessage";
 import toast from "react-hot-toast";
 import DOMPurify from "dompurify";
 import EditableItemRow from "./EditableItemRow";
@@ -68,7 +69,7 @@ const Reviews = ({ id, name, user }: ReviewsProps) => {
     };
   }, []);
 
-  const { data, status, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, status, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       queryKey: fragranceReviewsKey(id),
       queryFn: getFragranceReviews,
@@ -221,7 +222,9 @@ const Reviews = ({ id, name, user }: ReviewsProps) => {
 
   return (
     <>
-      {status === "pending" ? (
+      {status === "error" ? (
+        <StatusMessage error={error ?? undefined} fallbackMessage="리뷰를 불러오지 못했습니다." minHeight="min-h-0" />
+      ) : status === "pending" ? (
         <ReviewsSkeleton />
       ) : (
         <>
