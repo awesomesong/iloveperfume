@@ -5,25 +5,6 @@ import { generateBrandIndexSlug } from '../../lib/fragranceSlug';
 
 export async function GET(req: NextRequest) {
     try {
-        const { searchParams } = new URL(req.url);
-        const slug = searchParams.get('slug');
-
-        if (slug) {
-            // DB에서 먼저 찾고 없으면 정적 데이터에서 찾음
-            const fragrance = await prisma.fragrance.findUnique({
-                where: { slug },
-                include: {
-                    author: { select: { id: true, name: true, email: true, image: true, profileImage: true, role: true } }
-                }
-            });
-
-            if (!fragrance) {
-                return NextResponse.json({ message: '해당 향수를 찾을 수 없습니다.' }, { status: 404 });
-            }
-
-            return NextResponse.json({ fragrance }, { status: 200 });
-        }
-
         const cursorParam = req.nextUrl.searchParams.get('cursor');
         const cursor = cursorParam ? cursorParam : null;
         const limit = 12;
