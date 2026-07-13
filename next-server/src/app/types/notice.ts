@@ -27,14 +27,13 @@ export type FormPostFilesData = {
 };
 
 export type NoticeProps = {
-  [key: string]: string | string[] | Date | Author;
   id: string;
   title: string;
   content: string;
   image: string[];
   authorEmail: string;
-  createdAt: Date;
-  author: Author;
+  createdAt: Date | string;
+  author: { name: string | null; email?: string; image: string | null } | null;
 };
 
 export type Author = {
@@ -53,7 +52,7 @@ export interface Notice {
     image: string | null;
   } | null;
   image: string[];
-  createdAt: Date;
+  createdAt: Date | string;
   _count: {
     comments: number;
   };

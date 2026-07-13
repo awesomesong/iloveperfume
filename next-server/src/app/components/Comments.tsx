@@ -20,6 +20,7 @@ import FormComment from "./FormComment";
 import { useSocket } from "../context/socketContext";
 import { CommentsSkeleton } from "./FragranceSkeleton";
 import CircularProgress from "./CircularProgress";
+import StatusMessage from "./StatusMessage";
 import toast from "react-hot-toast";
 import { SOCKET_EVENTS } from "../lib/react-query/utils";
 import type { CommentPage } from "@/src/app/types/comments";
@@ -49,7 +50,7 @@ const Comments = ({ noticeId, user }: CommentsProps) => {
     return user?.role === "admin" || user?.email === comment.author?.email;
   }, [user?.role, user?.email]);
 
-  const { data, status, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, status, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       queryKey: noticesCommentsKey(noticeId),
       queryFn: getNoticesComments,
@@ -210,7 +211,9 @@ const Comments = ({ noticeId, user }: CommentsProps) => {
           <span className="text-gradient-ilp">댓글 {commentsCount}개</span>
         </h4>
       )}
-      {status === "pending" ? (
+      {status === "error" ? (
+        <StatusMessage error={error ?? undefined} fallbackMessage="댓글을 불러오지 못했습니다." minHeight="min-h-0" />
+      ) : status === "pending" ? (
         <CommentsSkeleton />
       ) : (
         <>
