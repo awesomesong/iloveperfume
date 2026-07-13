@@ -119,6 +119,9 @@ const nextConfig = {
             'react-select',
             '@tanstack/react-query',
         ],
+        // 정적 생성 워커를 1개로 제한 — 워커마다 별도 PrismaClient(=별도 커넥션 풀)가
+        // 생성되어 DB 동시 연결 허용치를 넘기는 문제(P2024)를 막기 위함
+        cpus: 1,
     },
 };
 
