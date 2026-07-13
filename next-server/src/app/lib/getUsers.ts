@@ -1,8 +1,15 @@
 import { apiFetch } from "@/src/app/utils/apiFetch";
-import type { IUserList } from "@/src/app/types/common";
+
+export type ChatMember = {
+    id: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+    role: string | null;
+};
 
 type GetUsersResponse = {
-    users: IUserList[];
+    users: ChatMember[];
     message?: string;
 };
 
