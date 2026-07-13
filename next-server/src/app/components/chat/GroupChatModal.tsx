@@ -3,7 +3,6 @@ import Button from "@/src/app/components/Button";
 import TextField from "@/src/app/components/TextField";
 import Modal from "@/src/app/components/Modal";
 import SelectBox from "@/src/app/components/SelectBox";
-import { IUserList } from "@/src/app/types/common";
 import { useRouter } from "next/navigation";
 import { memo, useEffect, useRef, useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
@@ -253,7 +252,7 @@ const GroupChatModal: React.FC<GroupChatModalProps> = ({
                 isOpen={isOpen}
                 disabled={isLoading}
                 label="채팅 멤버"
-                options={chatMember?.users?.filter((user): user is IUserList & { id: string } => !!user.id).map((user) => ({
+                options={chatMember?.users?.map((user) => ({
                   value: user.id,
                   label: user.name ?? "",
                 })) ?? []}
