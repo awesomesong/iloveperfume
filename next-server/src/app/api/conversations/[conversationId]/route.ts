@@ -24,10 +24,13 @@ export async function GET(req: NextRequest, { params }: ParamsProp) {
       where: { id: conversationId },
       select: {
         id: true,
+        createdAt: true,
         name: true,
         isGroup: true,
         isAIChat: true,
         aiAgentType: true,
+        lastMessageId: true,
+        memberKey: true,
         userIds: true,
         lastMessageAt: true,
         users: {

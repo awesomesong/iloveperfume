@@ -1,20 +1,16 @@
+import type { Conversation } from "@prisma/client";
+import type { IUserList } from "@/src/app/types/common";
+import { apiFetch } from "@/src/app/utils/apiFetch";
 
-const getConversationById = async ( conversationId: string) => {
-    
-    const res = await fetch(`/api/conversations/${conversationId}`,{
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    }); 
+type GetConversationByIdResponse = {
+    conversation: Conversation & { users: IUserList[] };
+    message?: string;
+};
 
-    if (!res.ok) {
-        const errorData = await res.json();
-        return errorData; 
-    }
-
-    const { conversation, message } = await res.json();
-    return { conversation, message };
+const getConversationById = async (conversationId: string) => {
+    return apiFetch<GetConversationByIdResponse>(`/api/conversations/${conversationId}`, {
+        defaultErrorMessage: "대화방을 불러오지 못했습니다.",
+    });
 };
 
 export default getConversationById;

@@ -34,6 +34,7 @@ const ConversationList = memo(function ConversationList() {
     data: listData,
     isLoading,
     status,
+    error,
   } = useQuery({
     queryKey: conversationListKey,
     queryFn: getConversations,
@@ -90,7 +91,9 @@ const ConversationList = memo(function ConversationList() {
           />
         </div>
         <div className="chat-sidebar__body">
-          {status !== "success" ? (
+          {status === "error" ? (
+            <StatusMessage error={error ?? undefined} />
+          ) : status === "pending" ? (
             <ChatListSkeleton
               variant="conversation"
               widths={{ primary: "w-[130px] xs:w-40", secondary: "w-40 xs:w-60" }}

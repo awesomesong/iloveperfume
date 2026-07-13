@@ -1,7 +1,7 @@
 "use client";
 import Avatar from "@/src/app/components/Avatar";
 import useOtherUser from "@/src/app/hooks/useOtherUser";
-import { Conversation, User } from "@prisma/client";
+import { Conversation } from "@prisma/client";
 import Link from "next/link";
 import { memo, useEffect, useMemo, useState } from "react";
 import { HiChevronLeft, HiEllipsisHorizontal } from "react-icons/hi2";
@@ -13,7 +13,7 @@ import { IUserList, IUserListOptions } from "../../types/common";
 
 interface HeaderProps {
   conversation: Conversation & {
-    users: User[];
+    users: IUserList[];
   };
   currentUser: IUserList | null | undefined;
 }
