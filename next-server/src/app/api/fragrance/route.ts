@@ -1,5 +1,6 @@
 import prisma from '../../../../prisma/db';
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from 'next/cache';
 import { getCurrentUser } from '../../lib/session';
 import { generateBrandIndexSlug } from '../../lib/fragranceSlug';
 
@@ -74,6 +75,9 @@ export async function POST(req: Request) {
                 },
             },
         });
+
+        // SSG로 미리 빌드된 슬러그 목록에 없는 신규 향수라, 첫 조회 전에 캐시를 채워둠
+        revalidatePath(`/fragrance/${newFragrance.slug}`);
 
         return NextResponse.json({ newFragrance }, { status: 200 });
     } catch (error: unknown) {

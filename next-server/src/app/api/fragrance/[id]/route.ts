@@ -143,6 +143,9 @@ export async function DELETE(req: Request, { params }: { params: Promise<IParams
             prisma.fragrance.delete({ where: { id: existing.id } }),
         ]);
 
+        // SSG로 미리 빌드된 정적 페이지가 삭제 후에도 남아있지 않도록 캐시 무효화
+        revalidatePath(`/fragrance/${existing.slug}`);
+
         return NextResponse.json({ deletedFragrance }, { status: 200 });
     } catch (error: unknown) {
         console.error("[DELETE /api/fragrance/[id]]", error);
