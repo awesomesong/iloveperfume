@@ -20,7 +20,15 @@ export async function POST(req: NextRequest) {
         });
 
         const result = await res.json();
-        
+
+        if (!result.secure_url) {
+            console.error('[Cloudinary upload Error] no secure_url:', result);
+            return NextResponse.json(
+                { message: result?.error?.message || '이미지 업로드에 실패했습니다.' },
+                { status: 502 }
+            );
+        }
+
         return NextResponse.json({ url: result.secure_url , message: '이미지 업로드를 성공하였습니다.' }, { status: 200 });
     } catch (error) {
         console.error('[Cloudinary upload Error]', error);
@@ -72,6 +80,6 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ data }, {status: 200});
     } catch (error) {
         console.error('[Cloudinary Delete Error]', error);
-        return NextResponse.json({message: "이미지를 삭제하지 못했습니다."})
+        return NextResponse.json({message: "이미지를 삭제하지 못했습니다."}, {status: 500})
     }
 }
