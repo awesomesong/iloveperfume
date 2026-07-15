@@ -174,7 +174,7 @@ export async function POST(req: Request) {
   try {
     const user = await getCurrentUser();
     if (!user?.id || !user?.email) {
-      return new NextResponse("로그인이 필요합니다.", { status: 401 });
+      return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
     }
 
     const body = await req.json();
@@ -182,10 +182,10 @@ export async function POST(req: Request) {
 
     const hasContent = !!(image || message?.trim());
     if (!hasContent) {
-      return new NextResponse("메시지 내용이 없습니다.", { status: 400 });
+      return NextResponse.json({ message: "메시지 내용이 없습니다." }, { status: 400 });
     }
     if (message && containsProhibited(String(message))) {
-      return new NextResponse("부적절한 내용은 허용되지 않습니다.", { status: 400 });
+      return NextResponse.json({ message: "부적절한 내용은 허용되지 않습니다." }, { status: 400 });
     }
 
     const msgId = messageId || randomUUID();
@@ -232,15 +232,15 @@ export async function POST(req: Request) {
 
     // ── 1:1 채팅 ──────────────────────────────────────────────────────────
     if (!isGroup) {
-      if (!userId) return new NextResponse("상대 유저 ID가 필요합니다.", { status: 400 });
-      if (userId === user.id) return new NextResponse("본인과는 대화를 시작할 수 없습니다.", { status: 400 });
+      if (!userId) return NextResponse.json({ message: "상대 유저 ID가 필요합니다." }, { status: 400 });
+      if (userId === user.id) return NextResponse.json({ message: "본인과는 대화를 시작할 수 없습니다." }, { status: 400 });
 
       const userIdsSorted = toSortedIds([user.id, userId]);
       const memberKey = `dm:${userIdsSorted.join(",")}`;
 
       // 상대방 존재 확인
       const targetUser = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
-      if (!targetUser) return new NextResponse("해당 회원을 찾을 수 없습니다.", { status: 404 });
+      if (!targetUser) return NextResponse.json({ message: "해당 회원을 찾을 수 없습니다." }, { status: 404 });
 
       const { conv, existing } = await findOrCreateConversation(memberKey, {
         isGroup: false,
@@ -257,7 +257,7 @@ export async function POST(req: Request) {
       : [];
     const memberIdsSorted = toSortedIds([user.id, ...memberIds]);
     if (memberIdsSorted.length < 2) {
-      return new NextResponse("대화방에 참여한 멤버가 없습니다.", { status: 400 });
+      return NextResponse.json({ message: "대화방에 참여한 멤버가 없습니다." }, { status: 400 });
     }
 
     const memberKey = `grp:${memberIdsSorted.join(",")}`;
@@ -271,6 +271,6 @@ export async function POST(req: Request) {
     return buildResponse(conv, msg, existing);
   } catch (err) {
     console.error("[POST /api/conversations/first-message] error:", err);
-    return new NextResponse("서버 오류", { status: 500 });
+    return NextResponse.json({ message: "서버 오류" }, { status: 500 });
   }
 }

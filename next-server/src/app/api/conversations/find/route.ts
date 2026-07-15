@@ -14,7 +14,7 @@ const toSortedIds = (ids: string[]) => [...new Set(ids)].sort();
 export async function GET(req: Request) {
   const user = await getCurrentUser();
   if (!user?.id) {
-    return new NextResponse("로그인이 필요합니다.", { status: 401 });
+    return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -46,9 +46,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ conversationId: found?.id ?? null });
     }
 
-    return new NextResponse("파라미터가 필요합니다.", { status: 400 });
+    return NextResponse.json({ message: "파라미터가 필요합니다." }, { status: 400 });
   } catch (e) {
     console.error('[GET /api/conversations/find] error:', e);
-    return new NextResponse("서버 오류: " + ((e as Error)?.message ?? ''), { status: 500 });
+    return NextResponse.json({ message: "서버 오류: " + ((e as Error)?.message ?? '') }, { status: 500 });
   }
 }

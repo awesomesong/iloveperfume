@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { memo, useEffect, useRef, useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { SelectInstance, GroupBase, MultiValue } from "react-select";
+import toast from "react-hot-toast";
 import getUsers from "@/src/app/lib/getUsers";
 import { useQuery } from "@tanstack/react-query";
 import { FormInputSkeleton } from "@/src/app/components/FragranceSkeleton";
@@ -146,7 +147,9 @@ const GroupChatModal: React.FC<GroupChatModalProps> = ({
         let conversationId = cached?.conversationId;
         if (cached === null) {
           const res = await fetch(`/api/conversations/find?userId=${encodeURIComponent(userId)}`);
-          ({ conversationId } = await res.json());
+          const resData = await res.json();
+          if (!res.ok) throw new Error(resData?.message || "대화방 조회에 실패했습니다.");
+          ({ conversationId } = resData);
         }
         path = conversationId
           ? `/conversations/${conversationId}`
@@ -162,7 +165,9 @@ const GroupChatModal: React.FC<GroupChatModalProps> = ({
         if (cached === null) {
           const params = new URLSearchParams({ isGroup: 'true', members: memberIds });
           const res = await fetch(`/api/conversations/find?${params.toString()}`);
-          ({ conversationId } = await res.json());
+          const resData = await res.json();
+          if (!res.ok) throw new Error(resData?.message || "대화방 조회에 실패했습니다.");
+          ({ conversationId } = resData);
         }
 
         if (conversationId) {
@@ -183,6 +188,8 @@ const GroupChatModal: React.FC<GroupChatModalProps> = ({
       clearErrors();
       onCloseModal();
       router.push(path);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "대화방을 시작하지 못했습니다.");
     } finally {
       setIsLoading(false);
     }
