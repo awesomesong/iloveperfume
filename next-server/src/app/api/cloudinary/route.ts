@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import sha1 from 'sha1';
-import { getCurrentUser } from "../../lib/session";
+import { requireUser } from "../../lib/apiAuth";
   
 export async function POST(req: NextRequest) {
     try {
-        const user = await getCurrentUser();
         const formData = await req.formData();
 
-        if(!user?.id || !user?.email) return NextResponse.json({message: '로그인이 되지 않았습니다. 로그인 후에 이용해주세요.'}, {status: 401})
+        const auth = await requireUser('로그인이 되지 않았습니다. 로그인 후에 이용해주세요.');
+        if (!auth.ok) return auth.response;
+
         const cloudName = process.env.CLOUDINARY_CLOUD_NAME!;
         const preset = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_PRESET!;
         
@@ -49,11 +50,11 @@ const getPublicIdFromUrl = ({ url }: { url: string }) => {
 export async function DELETE(req: NextRequest) {
 
     try {
-        const user = await getCurrentUser();
         const body = await req.json();
         const { url } = body;
 
-        if(!user?.id || !user?.email) return NextResponse.json({message: '로그인이 되지 않았습니다. 로그인 후에 이용해주세요.'}, {status: 401})
+        const auth = await requireUser('로그인이 되지 않았습니다. 로그인 후에 이용해주세요.');
+        if (!auth.ok) return auth.response;
 
         const cloudName = process.env.CLOUDINARY_CLOUD_NAME!;
         const apiKey = process.env.CLOUDINARY_API_KEY!;

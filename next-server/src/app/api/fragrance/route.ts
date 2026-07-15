@@ -1,7 +1,7 @@
 import prisma from '../../../../prisma/db';
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from 'next/cache';
-import { getCurrentUser } from '../../lib/session';
+import { requireUser } from '../../lib/apiAuth';
 import { generateBrandIndexSlug } from '../../lib/fragranceSlug';
 
 export async function GET(req: NextRequest) {
@@ -35,12 +35,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: Request) {
-    const user = await getCurrentUser();
-
     try {
-        if (!user?.email) {
-            return NextResponse.json({ message: '로그인 후에 글을 작성해주세요.' }, { status: 401 });
-        }
+        const auth = await requireUser('로그인 후에 글을 작성해주세요.');
+        if (!auth.ok) return auth.response;
+        const { user } = auth;
 
         const { brand, name, images, description, notes } = await req.json();
 

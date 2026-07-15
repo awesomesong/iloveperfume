@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/db";
-import { getCurrentUser } from "@/src/app/lib/session";
+import { requireUser } from "@/src/app/lib/apiAuth";
 
 interface ParamsProp {
   params: Promise<{ id: string }>;
@@ -54,15 +54,11 @@ export async function GET(req: NextRequest, { params }: ParamsProp) {
 
 export async function POST(req: NextRequest, { params }: ParamsProp) {
   const { id: slug } = await params;
-  const user = await getCurrentUser();
 
   try {
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: "로그인 후에 리뷰를 작성할 수 있습니다." },
-        { status: 401 }
-      );
-    }
+    const auth = await requireUser("로그인 후에 리뷰를 작성할 수 있습니다.");
+    if (!auth.ok) return auth.response;
+    const { user } = auth;
 
     const { text } = await req.json();
     const newReview = await prisma.fragranceReview.create({

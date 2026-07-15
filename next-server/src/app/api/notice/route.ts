@@ -1,6 +1,6 @@
 import prisma from '../../../../prisma/db';
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from '../../lib/session';
+import { requireUser } from '../../lib/apiAuth';
 
 export async function GET( req: NextRequest ){
 
@@ -51,14 +51,11 @@ export async function GET( req: NextRequest ){
 };
 
 export async function POST(req: Request){
-    const user = await getCurrentUser();
-
     try {
-        if(!user?.email) {
-            return NextResponse.json({ message: '로그인 후에 글을 작성해주세요.'}, { status: 401 })
-        }
+        const auth = await requireUser('로그인 후에 글을 작성해주세요.');
+        if (!auth.ok) return auth.response;
+        const { user } = auth;
 
-        
         const { title, content, image } = await req.json();
 
         if (title === '') return NextResponse.json({ message: '제목을 입력해 주세요.' }, { status: 401 });

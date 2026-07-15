@@ -1,11 +1,11 @@
-import { getCurrentUser } from '../../lib/session';
+import { requireUser } from '../../lib/apiAuth';
 import prisma from '../../../../prisma/db';
 import { NextResponse } from "next/server";
 
 export async function GET(){
-    const user = await getCurrentUser();  
-
-    if(!user) return NextResponse.json({ message: '로그인이 되지 않았습니다.' }, {status: 401});
+    const auth = await requireUser('로그인이 되지 않았습니다.');
+    if (!auth.ok) return auth.response;
+    const { user } = auth;
 
     try {
         const userInfo = await prisma.user.findUnique({

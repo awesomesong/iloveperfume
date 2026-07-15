@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/src/app/lib/session";
+import { requireUser } from "@/src/app/lib/apiAuth";
 import prisma from "@/prisma/db";
 import { containsProhibited } from "@/src/app/utils/aiPolicy";
 
@@ -7,11 +7,9 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
-
-    if (!user?.id || !user?.email) {
-      return new NextResponse("로그인이 필요합니다.", { status: 401 });
-    }
+    const auth = await requireUser("로그인이 필요합니다.");
+    if (!auth.ok) return auth.response;
+    const { user } = auth;
 
     const {
       conversationId,
