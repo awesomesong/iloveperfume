@@ -1,13 +1,12 @@
-import { getCurrentUser } from "@/src/app/lib/session";
+import { requireUser } from "@/src/app/lib/apiAuth";
 import { NextResponse } from "next/server";
 import prisma from "../../../../prisma/db";
 
 
 export async function GET() {
-  const user = await getCurrentUser();
-
-  if (!user?.email)
-    return NextResponse.json({ message: "로그인이 되지 않았습니다." }, { status: 401 });
+  const auth = await requireUser("로그인이 되지 않았습니다.");
+  if (!auth.ok) return auth.response;
+  const { user } = auth;
 
   try {
     // ✅ 스냅샷 시점 먼저 고정 (모든 쿼리가 이 시점 이전 데이터만 조회)

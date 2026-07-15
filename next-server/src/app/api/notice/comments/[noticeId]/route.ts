@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@/src/app/lib/session';
+import { requireUser } from '@/src/app/lib/apiAuth';
 import prisma from '../../../../../../prisma/db';
 import { NextRequest, NextResponse } from "next/server";
 
@@ -68,12 +68,11 @@ export async function POST(
     { params }: ParamsProp
 ){
     const { noticeId } = await params;
-    const user = await getCurrentUser();
-    
+
     try {
-        if(!user?.email) {
-            return NextResponse.json({ message: '로그인 후에 댓글을 작성할 수 있습니다.'}, { status: 401 })
-        }
+        const auth = await requireUser('로그인 후에 댓글을 작성할 수 있습니다.');
+        if (!auth.ok) return auth.response;
+        const { user } = auth;
 
         const { text } = await req.json();
         const newComment = await prisma.comment.create({

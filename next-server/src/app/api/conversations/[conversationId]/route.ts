@@ -1,6 +1,6 @@
 import prisma from "@/prisma/db";
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/src/app/lib/session";
+import { requireUser } from "@/src/app/lib/apiAuth";
 
 interface ParamsProp {
   params: Promise<{
@@ -11,13 +11,9 @@ interface ParamsProp {
 export async function GET(req: NextRequest, { params }: ParamsProp) {
   try {
     const { conversationId } = await params;
-    const user = await getCurrentUser();
-
-    if (!user?.email)
-      return NextResponse.json(
-        { message: "로그인이 되지 않았습니다. 로그인 후에 이용해주세요." },
-        { status: 401 },
-      );
+    const auth = await requireUser("로그인이 되지 않았습니다. 로그인 후에 이용해주세요.");
+    if (!auth.ok) return auth.response;
+    const { user } = auth;
 
     // ✅ 중복 DB 조회 정리: 왕복 1회로 줄이기
     const conversation = await prisma.conversation.findUnique({
@@ -71,13 +67,9 @@ export async function GET(req: NextRequest, { params }: ParamsProp) {
 export async function DELETE(req: Request, { params }: ParamsProp) {
   try {
     const { conversationId } = await params;
-    const user = await getCurrentUser();
-
-    if (!user?.id)
-      return NextResponse.json(
-        { message: "로그인이 되지 않았습니다. 로그인 후에 이용해주세요." },
-        { status: 401 },
-      );
+    const auth = await requireUser("로그인이 되지 않았습니다. 로그인 후에 이용해주세요.");
+    if (!auth.ok) return auth.response;
+    const { user } = auth;
 
     const existingConversation = await prisma?.conversation.findUnique({
       where: {

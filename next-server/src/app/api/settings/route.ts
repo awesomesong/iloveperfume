@@ -1,13 +1,14 @@
-import { getCurrentUser } from "@/src/app/lib/session";
+import { requireUser } from "@/src/app/lib/apiAuth";
 import { NextResponse } from "next/server";
 import prisma from '@/prisma/db'
 
 export async function POST(req: Request) {
     try {
-        const user = await getCurrentUser();
         const { name, image } = await req.json();
 
-        if(!user?.id) return NextResponse.json({message: '로그인이 되지 않았습니다. 로그인 후에 이용해주세요.'}, {status: 401});
+        const auth = await requireUser('로그인이 되지 않았습니다. 로그인 후에 이용해주세요.');
+        if (!auth.ok) return auth.response;
+        const { user } = auth;
 
         const updateUser = await prisma.user.update({
             where: {

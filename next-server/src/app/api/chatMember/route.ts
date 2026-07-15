@@ -1,16 +1,11 @@
 import prisma from '@/prisma/db';
-import { getCurrentUser } from "@/src/app/lib/session";
+import { requireUser } from "@/src/app/lib/apiAuth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest){
-    const user = await getCurrentUser();
-
-    if (!user?.email) {
-        return NextResponse.json(
-            { message: '로그인이 필요합니다.' },
-            { status: 401 }
-        );
-    }
+    const auth = await requireUser('로그인이 필요합니다.');
+    if (!auth.ok) return auth.response;
+    const { user } = auth;
 
     try {
         const { searchParams } = new URL(req.url);
