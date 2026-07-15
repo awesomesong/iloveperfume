@@ -1,7 +1,7 @@
 import prisma from '../../../../../prisma/db';
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from 'next/cache';
-import { getCurrentUser } from '../../../lib/session';
+import { requireOwner } from '../../../lib/apiAuth';
 import { generateBrandIndexSlug } from '../../../lib/fragranceSlug';
 
 interface IParams {
@@ -36,32 +36,24 @@ export async function GET(req: NextRequest, { params }: { params: Promise<IParam
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<IParams> }) {
-    const user = await getCurrentUser();
     const { id: idOrSlug } = await params;
 
     try {
-        if (!user?.email) {
-            return NextResponse.json({ message: '로그인이 필요합니다.' }, { status: 401 });
-        }
+        // GET과 동일하게 id 또는 slug로 레코드 찾기 (edit URL이 slug일 수 있음)
+        const auth = await requireOwner({
+            lookup: () => prisma.fragrance.findFirst({
+                where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+            }),
+            unauthorizedMessage: '로그인이 필요합니다.',
+            notFoundMessage: '향수를 찾을 수 없습니다.',
+            forbiddenMessage: '수정 권한이 없습니다.',
+            allowAdmin: true,
+        });
+        if (!auth.ok) return auth.response;
+        const { record: existing } = auth;
 
         const body = await req.json();
         const { brand, name, images, description, notes } = body;
-
-        // GET과 동일하게 id 또는 slug로 레코드 찾기 (edit URL이 slug일 수 있음)
-        const existing = await prisma.fragrance.findFirst({
-            where: {
-                OR: [{ id: idOrSlug }, { slug: idOrSlug }],
-            },
-        });
-        if (!existing) {
-            return NextResponse.json({ message: '향수를 찾을 수 없습니다.' }, { status: 404 });
-        }
-
-        const isAuthor = existing.authorEmail === user.email;
-        const isAdmin = user.role === 'admin';
-        if (!isAuthor && !isAdmin) {
-            return NextResponse.json({ message: '수정 권한이 없습니다.' }, { status: 403 });
-        }
 
         if (description !== undefined && !description) {
             return NextResponse.json({ message: '향수 상세 설명은 필수 입력값입니다.' }, { status: 400 });
@@ -117,26 +109,20 @@ export async function PATCH(req: Request, { params }: { params: Promise<IParams>
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<IParams> }) {
-    const user = await getCurrentUser();
     const { id: idOrSlug } = await params;
 
     try {
-        if (!user?.email) {
-            return NextResponse.json({ message: '로그인이 필요합니다.' }, { status: 401 });
-        }
-
-        const existing = await prisma.fragrance.findFirst({
-            where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+        const auth = await requireOwner({
+            lookup: () => prisma.fragrance.findFirst({
+                where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+            }),
+            unauthorizedMessage: '로그인이 필요합니다.',
+            notFoundMessage: '향수를 찾을 수 없습니다.',
+            forbiddenMessage: '삭제 권한이 없습니다.',
+            allowAdmin: true,
         });
-        if (!existing) {
-            return NextResponse.json({ message: '향수를 찾을 수 없습니다.' }, { status: 404 });
-        }
-
-        const isAuthor = existing.authorEmail === user.email;
-        const isAdmin = user.role === 'admin';
-        if (!isAuthor && !isAdmin) {
-            return NextResponse.json({ message: '삭제 권한이 없습니다.' }, { status: 403 });
-        }
+        if (!auth.ok) return auth.response;
+        const { record: existing } = auth;
 
         const [, deletedFragrance] = await prisma.$transaction([
             prisma.fragranceReview.deleteMany({ where: { fragranceSlug: existing.slug } }),

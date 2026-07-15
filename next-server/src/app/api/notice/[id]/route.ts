@@ -1,6 +1,6 @@
 import prisma from '../../../../../prisma/db';
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/src/app/lib/session";
+import { requireOwner } from "@/src/app/lib/apiAuth";
 
 type ParamsProp = {
     params: Promise<{
@@ -48,27 +48,18 @@ export async function GET(req: Request, { params }: ParamsProp){
 }
 
 export async function DELETE(req: Request,  { params }: ParamsProp) {
-    const user = await getCurrentUser();
     const { id: noticeId } = await params;
 
     try {
-        if(!user?.email) {
-            return NextResponse.json({ message: '로그인 후에 삭제를 할 수 있습니다.'}, { status: 401 })
-        }
-
-        const notice = await prisma.notice.findUnique({
-            where: { id: noticeId },
+        const auth = await requireOwner({
+            lookup: () => prisma.notice.findUnique({ where: { id: noticeId } }),
+            unauthorizedMessage: '로그인 후에 삭제를 할 수 있습니다.',
+            notFoundMessage: '해당 글을 찾을 수 없습니다.',
+            forbiddenMessage: '해당 글을 삭제할 권한이 없습니다.',
         });
+        if (!auth.ok) return auth.response;
 
-        if(!notice) {
-            return NextResponse.json({message: '해당 글을 찾을 수 없습니다.'}, { status: 404 });
-        }
-
-        if (notice.authorEmail !== user.email) {
-            return NextResponse.json({ message: "해당 글을 삭제할 권한이 없습니다." },{ status: 403 });
-        }
-
-        await prisma.notice.delete({ 
+        await prisma.notice.delete({
             where: { 
                 id: noticeId
             },
@@ -83,26 +74,17 @@ export async function DELETE(req: Request,  { params }: ParamsProp) {
 
 
 export async function PUT(req: Request, { params }: ParamsProp){
-    const user = await getCurrentUser();
     const { id: noticeId } = await params;
 
     try {
-        if(!user?.email) {
-            return NextResponse.json({ message: '로그인 후에 수정을 할 수 있습니다.'}, { status: 401 })
-        }
-
-        const notice = await prisma.notice.findUnique({
-            where: { id: noticeId },
-            select: { authorEmail: true },
+        const auth = await requireOwner({
+            lookup: () => prisma.notice.findUnique({ where: { id: noticeId }, select: { authorEmail: true } }),
+            unauthorizedMessage: '로그인 후에 수정을 할 수 있습니다.',
+            notFoundMessage: '존재하지 않는 공지사항입니다.',
+            forbiddenMessage: '해당 글을 수정할 권한이 없습니다.',
         });
-      
-        if (!notice) {
-            return NextResponse.json({ message: '존재하지 않는 공지사항입니다.' }, { status: 404 });
-        }
-      
-        if (notice.authorEmail !== user.email) {
-            return NextResponse.json({ message: '해당 글을 수정할 권한이 없습니다.' }, { status: 403 });
-        }
+        if (!auth.ok) return auth.response;
+        const { user } = auth;
 
         const { title, content, image } = await req.json();
 

@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@/src/app/lib/session';
+import { requireOwner } from '@/src/app/lib/apiAuth';
 import prisma from '../../../../../../../prisma/db';
 import { NextResponse } from "next/server";
 
@@ -12,26 +12,16 @@ export async function PUT(
     req: Request,
     { params }: ParamsProp
 ) {
-    const user = await getCurrentUser();
     const { commentId } = await params;
 
     try {
-        if (!user?.email) {
-            return NextResponse.json({ message: '로그인 후에 댓글을 수정할 수 있습니다.' }, { status: 401 });
-        }
-
-        const comment = await prisma.comment.findUnique({
-            where: { id: commentId },
-            select: { authorEmail: true },
+        const auth = await requireOwner({
+            lookup: () => prisma.comment.findUnique({ where: { id: commentId }, select: { authorEmail: true } }),
+            unauthorizedMessage: '로그인 후에 댓글을 수정할 수 있습니다.',
+            notFoundMessage: '존재하지 않는 댓글입니다.',
+            forbiddenMessage: '해당 댓글을 수정할 권한이 없습니다.',
         });
-
-        if (!comment) {
-            return NextResponse.json({ message: '존재하지 않는 댓글입니다.' }, { status: 404 });
-        }
-
-        if (comment.authorEmail !== user.email) {
-            return NextResponse.json({ message: '해당 댓글을 수정할 권한이 없습니다.' }, { status: 403 });
-        }
+        if (!auth.ok) return auth.response;
 
         const { text } = await req.json();
 
@@ -71,26 +61,16 @@ export async function DELETE(
     req: Request,
     { params }: ParamsProp
 ) {
-    const user = await getCurrentUser();
     const { commentId } = await params;
 
     try {
-        if (!user?.email) {
-            return NextResponse.json({ message: '로그인 후에 댓글을 삭제할 수 있습니다.' }, { status: 401 });
-        }
-
-        const comment = await prisma.comment.findUnique({
-            where: { id: commentId },
-            select: { authorEmail: true },
+        const auth = await requireOwner({
+            lookup: () => prisma.comment.findUnique({ where: { id: commentId }, select: { authorEmail: true } }),
+            unauthorizedMessage: '로그인 후에 댓글을 삭제할 수 있습니다.',
+            notFoundMessage: '존재하지 않는 댓글입니다.',
+            forbiddenMessage: '해당 댓글을 삭제할 권한이 없습니다.',
         });
-
-        if (!comment) {
-            return NextResponse.json({ message: '존재하지 않는 댓글입니다.' }, { status: 404 });
-        }
-
-        if (comment.authorEmail !== user.email) {
-            return NextResponse.json({ message: '해당 댓글을 삭제할 권한이 없습니다.' }, { status: 403 });
-        }
+        if (!auth.ok) return auth.response;
 
         await prisma.comment.delete({
             where: { id: commentId },
