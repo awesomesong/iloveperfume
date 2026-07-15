@@ -24,19 +24,19 @@ export async function POST(req: NextRequest) {
 
     // 간단 유효성
     if (!conversationId || typeof conversationId !== "string") {
-      return new NextResponse("conversationId가 유효하지 않습니다.", { status: 400 });
+      return NextResponse.json({ message: "conversationId가 유효하지 않습니다." }, { status: 400 });
     }
 
     // 빈 메시지 방지 (텍스트/이미지 둘 다 없음)
     const hasContent = !!(image || (body ?? message)?.trim());
     if (!hasContent && !isAIResponse && !isError) {
-      return new NextResponse("메시지 내용이 없습니다.", { status: 400 });
+      return NextResponse.json({ message: "메시지 내용이 없습니다." }, { status: 400 });
     }
 
     // 금칙어(일반 채팅)
     const text = (body || message || "").toString();
     if (text && containsProhibited(text)) {
-      return new NextResponse("부적절한 내용은 허용되지 않습니다.", { status: 400 });
+      return NextResponse.json({ message: "부적절한 내용은 허용되지 않습니다." }, { status: 400 });
     }
 
     // 대화방 존재 + 참여자 확인을 한 쿼리로
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       select: { id: true, userIds: true },
     });
     if (!conv) {
-      return new NextResponse("대화방을 찾을 수 없거나 참여자가 아닙니다.", { status: 403 });
+      return NextResponse.json({ message: "대화방을 찾을 수 없거나 참여자가 아닙니다." }, { status: 403 });
     }
 
     // now를 미리 생성 → create + updateMany 간 데이터 의존성 제거
@@ -112,6 +112,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error("[POST /api/messages] error:", err);
-    return new NextResponse("서버 오류", { status: 500 });
+    return NextResponse.json({ message: "서버 오류" }, { status: 500 });
   }
 }
