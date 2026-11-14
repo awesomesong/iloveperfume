@@ -128,7 +128,12 @@ export const useAIStream = ({ conversationId, aiAgentType = "assistant", onNewCo
         // AI 스트림 요청
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
-        const timeoutId = setTimeout(() => abortController.abort(), 60000);
+        // 60초 타임아웃 abort와 사용자 이탈(언마운트) abort를 구분한다
+        let timedOut = false;
+        const timeoutId = setTimeout(() => {
+            timedOut = true;
+            abortController.abort();
+        }, 60000);
 
         try {
             let fullResponse = "";
@@ -158,11 +163,16 @@ export const useAIStream = ({ conversationId, aiAgentType = "assistant", onNewCo
             // ✅ 스트림 완료 즉시 폼 활성화 (후처리 대기 불필요)
             onStreamEnd?.();
 
+            // 빈 응답(서버 empty 플래그 또는 본문 없음)은 성공이 아니다 → 아래 catch의 실패 처리(재시도 버튼)로 보낸다
+            if (streamResult?.empty || !fullResponse.trim()) {
+                throw new Error("AI 응답이 비어 있습니다. 다시 시도해주세요.");
+            }
+
             // ✅ 서버에서 받은 메타데이터로 메시지 업데이트
             const cache = queryClient.getQueryData(messagesKey(conversationId)) as InfiniteData<{ messages: FullMessageType[]; nextCursor: string | null }> | undefined;
             const currentMsg = cache?.pages?.flatMap(p => p.messages).find(m => String(m.id) === String(aiWaitingMessageId));
             
-            if (streamResult?.createdAt && currentMsg) {
+            if (streamResult?.createdAt && !streamResult.error && currentMsg) {
                 // ✅ 서버에서 메시지가 저장되었고 메타데이터가 있음
                 // 서버 createdAt으로 메시지 재생성하여 정렬 보장
                 const serverCreatedAtMs = new Date(streamResult.createdAt).getTime();
@@ -185,7 +195,7 @@ export const useAIStream = ({ conversationId, aiAgentType = "assistant", onNewCo
                 // ✅ 다른 브라우저/탭에 AI 응답 전달
                 onComplete?.(updatedMessage);
             } else if (currentMsg && fullResponse.trim()) {
-                // ✅ 메타데이터가 없음: 서버 저장 여부 불확실
+                // ✅ 메타데이터가 없거나 서버가 저장 실패(error)를 알림: 서버 저장 여부 불확실
                 // 서버에 메시지 저장을 직접 요청하여 보장
                 try {
                     const saveResponse = await fetch('/api/messages', {
@@ -202,7 +212,8 @@ export const useAIStream = ({ conversationId, aiAgentType = "assistant", onNewCo
                     });
 
                     if (saveResponse.ok) {
-                        const savedMessage = await saveResponse.json();
+                        // /api/messages 응답은 { newMessage } 형태
+                        const savedMessage = (await saveResponse.json())?.newMessage;
                         // ✅ 서버에서 저장된 메시지로 업데이트
                         if (savedMessage?.id) {
                             const savedCreatedAtMs = new Date(savedMessage.createdAt).getTime();
@@ -253,7 +264,7 @@ export const useAIStream = ({ conversationId, aiAgentType = "assistant", onNewCo
                     });
                 }
             } else {
-                // 메시지가 없거나 응답이 비어있으면 기본 상태만 업데이트
+                // 캐시에 메시지가 없으면 기본 상태만 업데이트
                 updateMessagePartialById(queryClient, conversationId, aiWaitingMessageId, {
                     isTyping: false,
                     isWaiting: false,
@@ -271,7 +282,27 @@ export const useAIStream = ({ conversationId, aiAgentType = "assistant", onNewCo
 
             onNewContent?.();
         } catch (error) {
-            const msg = error instanceof Error && error.name === "AbortError"
+            // 사용자 이탈(언마운트)로 인한 abort는 실패가 아니다.
+            // 서버는 연결이 끊겨도 같은 messageId로 답변을 끝까지 저장하므로, 낙관적 메시지만 지우고
+            // 다음 입장 때 서버 데이터를 다시 받도록 stale 처리한다 (지금 refetch하면 저장 전 상태를 받는다)
+            if (abortController.signal.aborted && !timedOut) {
+                queryClient.setQueryData(messagesKey(conversationId),
+                    (old: InfiniteData<{ messages: FullMessageType[]; nextCursor: string | null }> | undefined) => {
+                        if (!old?.pages) return old;
+                        return {
+                            ...old,
+                            pages: old.pages.map((page) => ({
+                                ...page,
+                                messages: page.messages.filter((m) => String(m.id) !== String(aiWaitingMessageId)),
+                            })),
+                        };
+                    }
+                );
+                queryClient.invalidateQueries({ queryKey: messagesKey(conversationId), refetchType: "none" });
+                return;
+            }
+
+            const msg = timedOut || (error instanceof Error && error.name === "AbortError")
                 ? "AI 응답 시간이 초과되었습니다. 다시 시도해주세요."
                 : formatErrorMessage(error, "AI 응답 생성 중 오류가 발생했습니다.");
             

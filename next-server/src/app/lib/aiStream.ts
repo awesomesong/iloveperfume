@@ -1,7 +1,10 @@
 // AI 스트림 처리 헬퍼들
 const META_PREFIX = "[METADATA]";
 
-type StreamMeta = { messageId?: string; createdAt?: string } | undefined;
+// error: 서버가 답변 저장에 실패함 / empty: 답변이 비어 있음 (둘 다 서버 [METADATA]가 알려준다)
+type StreamMeta =
+  | { messageId?: string; createdAt?: string; error?: boolean; empty?: boolean }
+  | undefined;
 
 const safeJSON = <T = unknown>(s: string): T | undefined => {
   try { return JSON.parse(s) as T; } catch { return undefined; }
@@ -9,9 +12,14 @@ const safeJSON = <T = unknown>(s: string): T | undefined => {
 
 const parseMetadataLine = (line: string): StreamMeta => {
   if (!line.startsWith(META_PREFIX)) return undefined;
-  const obj = safeJSON<{ type?: string; messageId?: string; createdAt?: string }>(line.slice(META_PREFIX.length));
+  const obj = safeJSON<{ type?: string; messageId?: string; createdAt?: string; error?: unknown; empty?: unknown }>(line.slice(META_PREFIX.length));
   return obj?.type === "metadata"
-    ? { messageId: obj.messageId, createdAt: obj.createdAt }
+    ? {
+        messageId: obj.messageId,
+        createdAt: obj.createdAt,
+        error: obj.error === true,
+        empty: obj.empty === true,
+      }
     : undefined;
 };
 
