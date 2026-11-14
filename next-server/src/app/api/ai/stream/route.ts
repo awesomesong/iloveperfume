@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getCurrentUser } from "@/src/app/lib/session";
 import prisma from "@/prisma/db";
 import { randomUUID } from "crypto";
@@ -27,8 +27,12 @@ export async function OPTIONS() {
 // 상수 정의
 const CONSTANTS = {
   MAX_MESSAGE_LENGTH: 4000,
-  MAX_HISTORY_MESSAGES: 8,
-  STREAM_TIMEOUT: 30000, // 30초
+  // 대화 기록 글자 예산. 시작값이며 "[ai/stream] usage" 로그(prompt/cached 토큰)를 보고 조정한다
+  HISTORY_CHAR_BUDGET: 20_000,
+  HISTORY_MIN_MESSAGES: 2, // 예산을 넘겨도 최신 2개는 항상 포함
+  HISTORY_QUERY_LIMIT: 100, // 기록 조회 상한
+  STREAM_TIMEOUT: 30000, // 30초 (응답 헤더까지)
+  UPSTREAM_DEADLINE: 55000, // 헤더+본문 전체 상한 (maxDuration 60초보다 짧게)
   RATE_LIMIT_WINDOW: 60000, // 1분
   RATE_LIMIT_MAX_REQUESTS: 10,
 } as const;
@@ -127,49 +131,86 @@ function isOptionalId(value: unknown): value is string | null | undefined {
   return value == null || typeof value === "string";
 }
 
-// 대화 기록을 가져오는 함수 (최적화)
-async function getConversationHistory(
-  conversationId: string,
-  limit: number = CONSTANTS.MAX_HISTORY_MESSAGES,
-) {
-  try {
-    const messages = await prisma.message.findMany({
-      where: {
-        conversationId: conversationId,
-        type: "text",
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: limit,
-      select: {
-        body: true,
-        isAIResponse: true,
-        createdAt: true,
-        sender: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
-
-    return messages.reverse();
-  } catch (error) {
-    console.error("대화 기록 가져오기 오류:", error);
-    return [];
-  }
-}
-
-// 대화 컨텍스트를 포함한 메시지 배열 생성 (최적화)
+// 대화 기록을 가져오는 함수
+// 개수가 아니라 글자 예산으로 자른다: 입력 단가($0.10/1M 토큰)에서는 기록 수만 토큰도 요청당 1센트 미만이고,
+// 기록이 뒤로만 늘어나면 프롬프트 앞부분이 유지돼 이전 턴은 캐시 단가로 읽힌다
+// (개수 기준 슬라이딩 윈도우는 매 턴 앞부분이 바뀐다).
 type HistoryMessage = {
   body: string | null;
   isAIResponse: boolean | null;
   createdAt: Date;
-  sender?: { name: string | null; email: string | null } | null;
 };
 
+type ConversationHistory = {
+  messages: HistoryMessage[];
+  chars: number;
+  truncated: boolean; // 예산 또는 조회 상한에 걸려 과거 메시지가 빠졌는지
+};
+
+async function getConversationHistory(
+  conversationId: string,
+  currentMessage: string,
+  userMessageCreatedAt?: Date,
+  existingAIMessageId?: string,
+): Promise<ConversationHistory> {
+  try {
+    const rows = await prisma.message.findMany({
+      where: {
+        conversationId: conversationId,
+        type: "text",
+        // 에러 행 제외. isError는 nullable이라 { not: true }를 쓰면 NULL 행까지 빠진다
+        OR: [{ isError: false }, { isError: null }],
+        // 현재 질문은 이미 저장돼 있다 → 그 이전 메시지만 사용 (재시도 시 이후 대화도 제외)
+        ...(userMessageCreatedAt ? { createdAt: { lt: userMessageCreatedAt } } : {}),
+        ...(existingAIMessageId ? { id: { not: existingAIMessageId } } : {}),
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: CONSTANTS.HISTORY_QUERY_LIMIT,
+      select: {
+        body: true,
+        isAIResponse: true,
+        createdAt: true,
+      },
+    });
+
+    let truncated = rows.length >= CONSTANTS.HISTORY_QUERY_LIMIT;
+
+    // 질문 메시지를 특정하지 못한 경우: 방금 저장된 현재 질문이 맨 끝에 있으면 뺀다 (중복 전송 방지)
+    if (
+      !userMessageCreatedAt &&
+      rows[0] &&
+      !rows[0].isAIResponse &&
+      rows[0].body?.trim() === currentMessage.trim()
+    ) {
+      rows.shift();
+    }
+
+    // 최신 → 과거 순으로 예산만큼 담는다
+    const kept: HistoryMessage[] = [];
+    let chars = 0;
+    for (const row of rows) {
+      if (!row.body?.trim()) continue;
+      if (
+        kept.length >= CONSTANTS.HISTORY_MIN_MESSAGES &&
+        chars + row.body.length > CONSTANTS.HISTORY_CHAR_BUDGET
+      ) {
+        truncated = true;
+        break;
+      }
+      kept.push(row);
+      chars += row.body.length;
+    }
+
+    return { messages: kept.reverse(), chars, truncated };
+  } catch (error) {
+    console.error("대화 기록 가져오기 오류:", error);
+    return { messages: [], chars: 0, truncated: false };
+  }
+}
+
+// 대화 컨텍스트를 포함한 메시지 배열 생성
 function buildConversationContext(messages: HistoryMessage[], currentMessage: string) {
   const contextMessages: Array<{
     role: "system" | "user" | "assistant";
@@ -181,10 +222,8 @@ function buildConversationContext(messages: HistoryMessage[], currentMessage: st
       },
     ];
 
-  // 이전 대화 기록 추가 (최대 8개 메시지)
-  const recentMessages = messages.slice(-CONSTANTS.MAX_HISTORY_MESSAGES);
-
-  for (const msg of recentMessages) {
+  // 이전 대화 기록 추가
+  for (const msg of messages) {
     contextMessages.push({
       role: msg.isAIResponse ? "assistant" : "user",
       content: msg.body ?? "",
@@ -200,85 +239,147 @@ function buildConversationContext(messages: HistoryMessage[], currentMessage: st
   return contextMessages;
 }
 
-// 스트리밍 응답 처리 함수
-async function handleStreamingResponse(
-  response: Response,
-  controller: ReadableStreamDefaultController,
-  conversationId: string,
-  userId: string,
-  messageId?: string,
-  existingAIMessageId?: string,
-  userMessageId?: string,
-) {
-  const reader = response.body?.getReader();
-  const decoder = new TextDecoder();
-  let fullResponse = "";
-  let isStreamingComplete = false;
+// 스트리밍 처리에 필요한 요청 정보
+type StreamContext = {
+  conversationId: string;
+  userId: string;
+  messageId?: string;
+  existingAIMessageId?: string;
+  userMessageCreatedAt?: Date; // 답변 대상 사용자 메시지 시각 (이 대화방에서 찾은 경우만)
+  history: { count: number; chars: number; truncated: boolean };
+};
 
-  if (!reader) {
-    // 스트리밍을 시작할 수 없는 경우 에러 메시지 저장
-    try {
-      await prisma.message.create({
-        data: {
-          id: randomUUID(),
-          body: "AI 응답을 생성할 수 없습니다. 다시 시도해주세요.",
-          type: "text",
-          conversation: { connect: { id: conversationId } },
-          sender: { connect: { id: userId } },
-          isAIResponse: true, // 에러 메시지도 AI 메시지로 간주
-          isError: true, // 에러 상태 표시
-        },
-        select: {
-          id: true,
-          body: true,
-          createdAt: true,
-          conversationId: true,
-          sender: {
-            select: { id: true, name: true, email: true, image: true },
-          },
-          conversation: { select: { isGroup: true, userIds: true } },
+// 클라이언트 연결 상태 (ReadableStream의 cancel()과 공유)
+type ClientState = { gone: boolean };
+
+// OpenAI usage 청크에서 로그에 쓰는 필드
+type OpenAIUsage = {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  prompt_tokens_details?: { cached_tokens?: number };
+  completion_tokens_details?: { reasoning_tokens?: number };
+};
+
+// 토큰 상한(finish_reason: "length")에서 잘린 답변 끝에 붙이는 안내
+const LENGTH_NOTICE =
+  '\n\n(답변이 길어 여기서 끊겼습니다. 이어서 보려면 "계속"이라고 입력해 주세요.)';
+
+// AI 메시지 createdAt: 사용자 메시지 +1ms (못 찾으면 현재 시각)
+function getAIMessageCreatedAt(ctx: StreamContext) {
+  return ctx.userMessageCreatedAt
+    ? new Date(ctx.userMessageCreatedAt.getTime() + 1)
+    : new Date();
+}
+
+// 에러 메시지 저장
+// 클라이언트가 보낸 messageId로 저장한다 → 클라이언트의 실패 메시지와 같은 메시지가 되어
+// 재시도(existingAIMessageId) 때 함께 정리된다. 같은 ID가 이미 있으면 P2002로 실패하고 기존 행은 그대로 둔다
+async function saveAIErrorMessage(ctx: StreamContext, body: string) {
+  try {
+    // 재시도가 또 실패한 경우: 이전 에러 행을 대체한다 (정상 답변은 지우지 않는다)
+    if (ctx.existingAIMessageId) {
+      await prisma.message.deleteMany({
+        where: {
+          id: ctx.existingAIMessageId,
+          conversationId: ctx.conversationId,
+          isAIResponse: true,
+          isError: true,
         },
       });
-    } catch (error) {
-      console.error("AI 에러 메시지 저장 오류:", error);
     }
-    controller.close();
+
+    await prisma.message.create({
+      data: {
+        id: ctx.messageId ?? randomUUID(),
+        body,
+        type: "text",
+        conversation: { connect: { id: ctx.conversationId } },
+        sender: { connect: { id: ctx.userId } },
+        isAIResponse: true, // 에러 메시지도 AI 메시지로 간주
+        isError: true, // 에러 상태 표시
+        createdAt: getAIMessageCreatedAt(ctx),
+      },
+    });
+  } catch (error) {
+    console.error("AI 에러 메시지 저장 오류:", error);
+  }
+}
+
+// 스트리밍 응답 처리 함수
+async function handleStreamingResponse(
+  upstream: { response: Response; clearDeadline: () => void },
+  controller: ReadableStreamDefaultController<Uint8Array>,
+  client: ClientState,
+  ctx: StreamContext,
+) {
+  const { conversationId, userId, messageId, existingAIMessageId } = ctx;
+  const reader = upstream.response.body?.getReader();
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  const result: {
+    text: string;
+    finishReason: string | null;
+    usage: OpenAIUsage | null;
+  } = { text: "", finishReason: null, usage: null };
+
+  // 클라이언트가 떠나면 enqueue가 throw한다 → 전송만 멈추고, 업스트림은 끝까지 읽어 답변을 저장한다
+  const send = (text: string) => {
+    if (client.gone) return;
+    try {
+      controller.enqueue(encoder.encode(text));
+    } catch {
+      client.gone = true;
+    }
+  };
+
+  if (!reader) {
+    upstream.clearDeadline();
+    // 스트리밍을 시작할 수 없는 경우 에러 메시지 저장
+    await saveAIErrorMessage(ctx, "AI 응답을 생성할 수 없습니다. 다시 시도해주세요.");
+    try {
+      controller.close();
+    } catch {
+      // 이미 닫힌 경우 무시
+    }
     return;
   }
+
+  // OpenAI SSE 한 줄 처리 ([DONE]이면 true)
+  const handleLine = (line: string): boolean => {
+    if (!line.startsWith("data: ")) return false;
+    const data = line.slice(6).trim();
+    if (data === "[DONE]") return true;
+
+    try {
+      const parsed = JSON.parse(data);
+      // include_usage: 마지막 청크는 choices가 빈 배열이고 usage만 담겨 온다
+      if (parsed.usage) result.usage = parsed.usage;
+      const choice = parsed.choices?.[0];
+      if (choice?.finish_reason) result.finishReason = choice.finish_reason;
+
+      const content = choice?.delta?.content;
+      if (content) {
+        result.text += content;
+        send(`data: ${JSON.stringify({ content })}\n\n`);
+      }
+    } catch (e) {
+      // JSON 파싱 오류는 스트리밍 중 정상적인 상황이므로 무시
+      console.debug("스트리밍 데이터 파싱 오류:", e);
+    }
+    return false;
+  };
 
   try {
     // ✅ 모바일 사파리: 버퍼를 사용하여 스트림 안정성 향상
     let buffer = "";
-    while (true) {
+    let isStreamingComplete = false;
+    while (!isStreamingComplete) {
       const { done, value } = await reader.read();
 
       if (done) {
         // ✅ 스트림 완료 시 남은 버퍼 처리
-        if (buffer.trim()) {
-          const lines = buffer.split(/\r?\n/);
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6).trim();
-              if (data === "[DONE]") {
-                isStreamingComplete = true;
-              } else {
-                try {
-                  const parsed = JSON.parse(data);
-                  const content = parsed.choices?.[0]?.delta?.content;
-                  if (content) {
-                    fullResponse += content;
-                    controller.enqueue(
-                      new TextEncoder().encode(
-                        `data: ${JSON.stringify({ content })}\n\n`,
-                      ),
-                    );
-                  }
-                } catch {
-                  // 파싱 오류 무시
-                }
-              }
-            }
-          }
+        for (const line of buffer.split(/\r?\n/)) {
+          if (handleLine(line)) break;
         }
         break;
       }
@@ -291,37 +392,34 @@ async function handleStreamingResponse(
       buffer = lines.pop() ?? "";
 
       for (const line of lines) {
-        if (!line.trim()) continue;
-
-        if (line.startsWith("data: ")) {
-          const data = line.slice(6).trim();
-
-          if (data === "[DONE]") {
-            isStreamingComplete = true;
-            break;
-          }
-
-          try {
-            const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
-
-            if (content) {
-              fullResponse += content;
-              controller.enqueue(
-                new TextEncoder().encode(
-                  `data: ${JSON.stringify({ content })}\n\n`,
-                ),
-              );
-            }
-          } catch (e) {
-            // JSON 파싱 오류는 스트리밍 중 정상적인 상황이므로 무시
-            console.debug("스트리밍 데이터 파싱 오류:", e);
-          }
+        if (handleLine(line)) {
+          isStreamingComplete = true;
+          break;
         }
       }
-
-      if (isStreamingComplete) break;
     }
+    upstream.clearDeadline();
+
+    // 토큰 상한에서 잘린 답변: 안내 문구를 스트림과 저장 본문 모두에 붙인다
+    if (result.finishReason === "length" && result.text.trim()) {
+      result.text += LENGTH_NOTICE;
+      send(`data: ${JSON.stringify({ content: LENGTH_NOTICE })}\n\n`);
+    }
+    const fullResponse = result.text;
+
+    // 사용량 로그 (메시지 본문은 남기지 않는다) — HISTORY_CHAR_BUDGET 조정 근거
+    console.info("[ai/stream] usage", {
+      conversationId,
+      historyMessages: ctx.history.count,
+      historyChars: ctx.history.chars,
+      historyTruncated: ctx.history.truncated,
+      promptTokens: result.usage?.prompt_tokens ?? null,
+      cachedTokens: result.usage?.prompt_tokens_details?.cached_tokens ?? null,
+      completionTokens: result.usage?.completion_tokens ?? null,
+      reasoningTokens: result.usage?.completion_tokens_details?.reasoning_tokens ?? null,
+      finishReason: result.finishReason,
+      clientDisconnected: client.gone,
+    });
 
     // 스트리밍 완료 후 AI 메시지를 데이터베이스에 저장 또는 업데이트
     if (fullResponse.trim()) {
@@ -344,19 +442,8 @@ async function handleStreamingResponse(
           }
         }
 
-        // 사용자 메시지 조회하여 +1ms 계산
-        let aiCreatedAt = new Date();
-
-        if (userMessageId) {
-          const userMsg = await prisma.message.findFirst({
-            where: { id: userMessageId, conversationId },
-            select: { createdAt: true },
-          });
-
-          if (userMsg?.createdAt) {
-            aiCreatedAt = new Date(userMsg.createdAt.getTime() + 1);
-          }
-        }
+        // 사용자 메시지 +1ms
+        const aiCreatedAt = getAIMessageCreatedAt(ctx);
 
         // ✅ messageId가 있고 기존 메시지가 있으면 업데이트, 없으면 생성
         const savedMessageId = messageId || randomUUID();
@@ -417,73 +504,46 @@ async function handleStreamingResponse(
           messageId: savedMessageId,
           createdAt: aiCreatedAt.toISOString(),
         });
-        controller.enqueue(new TextEncoder().encode(`\n\n[METADATA]${metadata}\n\n`));
+        send(`\n\n[METADATA]${metadata}\n\n`);
       } catch (error) {
         console.error("AI 메시지 저장 오류:", error);
-        // ✅ 메시지 저장 실패 시에도 메타데이터 전송 시도 (클라이언트에 알림)
-        try {
-          const errorMessageId = messageId || randomUUID();
-          const errorMetadata = JSON.stringify({
-            type: 'metadata',
-            messageId: errorMessageId,
-            createdAt: new Date().toISOString(),
-            error: true,
-          });
-          controller.enqueue(new TextEncoder().encode(`\n\n[METADATA]${errorMetadata}\n\n`));
-        } catch (metaError) {
-          console.error("메타데이터 전송 오류:", metaError);
-        }
+        // ✅ 메시지 저장 실패 시에도 메타데이터 전송 (클라이언트에 알림)
+        const errorMetadata = JSON.stringify({
+          type: 'metadata',
+          messageId: messageId || randomUUID(),
+          createdAt: new Date().toISOString(),
+          error: true,
+        });
+        send(`\n\n[METADATA]${errorMetadata}\n\n`);
       }
     } else {
       // ✅ 응답이 비어있어도 메타데이터 전송 (클라이언트에 알림)
       console.warn("AI 응답이 비어있습니다.");
-      try {
-        const emptyMetadata = JSON.stringify({
-          type: 'metadata',
-          messageId: messageId || randomUUID(),
-          createdAt: new Date().toISOString(),
-          empty: true,
-        });
-        controller.enqueue(new TextEncoder().encode(`\n\n[METADATA]${emptyMetadata}\n\n`));
-      } catch (metaError) {
-        console.error("메타데이터 전송 오류:", metaError);
-      }
+      const emptyMetadata = JSON.stringify({
+        type: 'metadata',
+        messageId: messageId || randomUUID(),
+        createdAt: new Date().toISOString(),
+        empty: true,
+      });
+      send(`\n\n[METADATA]${emptyMetadata}\n\n`);
     }
 
     // ✅ DONE 신호 전송 (스트림 완료 알림)
-    controller.enqueue(new TextEncoder().encode(`data: [DONE]\n\n`));
+    send(`data: [DONE]\n\n`);
   } catch (error) {
+    // 업스트림 읽기 실패(전체 상한 초과로 인한 abort 포함). 클라이언트 이탈은 여기로 오지 않는다
     console.error("스트리밍 처리 오류:", error);
 
     // 스트리밍 중 오류 발생 시 에러 메시지 저장
-    try {
-      await prisma.message.create({
-        data: {
-          id: randomUUID(),
-          body: "AI 응답 생성 중 오류가 발생했습니다. 다시 시도해주세요.",
-          type: "text",
-          conversation: { connect: { id: conversationId } },
-          sender: { connect: { id: userId } },
-          isAIResponse: true, // 에러 메시지도 AI 메시지로 간주
-          isError: true, // 에러 상태 표시
-        },
-        select: {
-          id: true,
-          body: true,
-          createdAt: true,
-          conversationId: true,
-          sender: {
-            select: { id: true, name: true, email: true, image: true },
-          },
-          conversation: { select: { isGroup: true, userIds: true } },
-        },
-      });
-    } catch (saveError) {
-      console.error("AI 에러 메시지 저장 오류:", saveError);
-    }
+    await saveAIErrorMessage(ctx, "AI 응답 생성 중 오류가 발생했습니다. 다시 시도해주세요.");
 
-    controller.error(error);
+    try {
+      controller.error(error);
+    } catch {
+      // 이미 닫힌 경우 무시
+    }
   } finally {
+    upstream.clearDeadline();
     try {
       reader.releaseLock();
     } catch {
@@ -505,6 +565,8 @@ async function callOpenAI(apiKey: string, contextMessages: ChatMessage[]) {
     model: OPENAI_TEXT_MODEL,
     messages: contextMessages,
     stream: true,
+    // 마지막 청크로 토큰 사용량을 받는다 (usage 로그용)
+    stream_options: { include_usage: true },
     // 추론 모델: 채팅 응답 속도를 위해 추론을 끈다 (추론 토큰도 출력 토큰으로 과금됨)
     reasoning_effort: "none",
     temperature: 0.7,
@@ -513,6 +575,7 @@ async function callOpenAI(apiKey: string, contextMessages: ChatMessage[]) {
   };
 
   const controller = new AbortController();
+  const startedAt = Date.now();
   const timeoutId = setTimeout(() => controller.abort(), CONSTANTS.STREAM_TIMEOUT);
 
   try {
@@ -538,7 +601,13 @@ async function callOpenAI(apiKey: string, contextMessages: ChatMessage[]) {
       throw new Error(`AI 서비스 오류: ${response.status}`);
     }
 
-    return response;
+    // 헤더를 받은 뒤 본문이 멈추는 경우에 대비해, 전체 상한까지 남은 시간으로 abort를 다시 건다
+    const deadlineId = setTimeout(
+      () => controller.abort(),
+      Math.max(0, CONSTANTS.UPSTREAM_DEADLINE - (Date.now() - startedAt)),
+    );
+
+    return { response, clearDeadline: () => clearTimeout(deadlineId) };
   } catch (error) {
     clearTimeout(timeoutId);
     if (error instanceof Error && error.name === "AbortError") {
@@ -643,30 +712,63 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 5-2. 답변 대상 사용자 메시지 (이 대화방 것만): 기록의 기준점이자 AI 메시지 createdAt(+1ms)의 기준
+    let userMessageCreatedAt: Date | undefined;
+    if (userMessageId) {
+      const userMsg = await prisma.message.findFirst({
+        where: { id: userMessageId, conversationId },
+        select: { createdAt: true },
+      });
+      userMessageCreatedAt = userMsg?.createdAt;
+    }
+
     // 6. 대화 컨텍스트 준비
-    const conversationHistory = await getConversationHistory(conversationId);
+    const conversationHistory = await getConversationHistory(
+      conversationId,
+      message,
+      userMessageCreatedAt,
+      existingAIMessageId,
+    );
     const contextMessages = buildConversationContext(
-      conversationHistory,
+      conversationHistory.messages,
       message,
     );
 
     // 7. OpenAI API 호출
-    const response = await callOpenAI(apiKey, contextMessages);
+    const upstream = await callOpenAI(apiKey, contextMessages);
 
     // 8. 스트리밍 응답 생성
-    const stream = new ReadableStream({
-      async start(controller) {
-        await handleStreamingResponse(
-          response,
-          controller,
+    const client: ClientState = { gone: false };
+    let streamDone: Promise<void> = Promise.resolve();
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        streamDone = handleStreamingResponse(upstream, controller, client, {
           conversationId,
-          user.id,
+          userId: user.id,
           messageId,
           existingAIMessageId,
-          userMessageId,
-        );
+          userMessageCreatedAt,
+          history: {
+            count: conversationHistory.messages.length,
+            chars: conversationHistory.chars,
+            truncated: conversationHistory.truncated,
+          },
+        }).catch((error) => {
+          console.error("스트리밍 처리 오류:", error);
+        });
+      },
+      // 클라이언트가 연결을 끊은 경우: 전송만 멈추고 답변 저장은 계속한다
+      cancel() {
+        client.gone = true;
       },
     });
+
+    // 응답이 닫힌 뒤에도(클라이언트 이탈 포함) 저장이 끝날 때까지 함수 실행을 유지한다
+    try {
+      after(streamDone);
+    } catch (error) {
+      console.error("after 등록 오류:", error);
+    }
 
     return new NextResponse(stream, {
       headers: {
