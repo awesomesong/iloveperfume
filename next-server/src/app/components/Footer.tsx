@@ -1,9 +1,32 @@
+import Link from 'next/link';
 import AnimatedLogo from './AnimatedLogo';
+import {
+    FOOTER_BRAND,
+    FOOTER_CONTACT,
+    FOOTER_LEGAL_LINKS,
+    FOOTER_LINK_GROUPS,
+    type FooterLink,
+} from '@/src/app/config/footer';
 
-const TECH_STACK = ['Next.js 15', 'React 19', 'TypeScript', 'socket.io', 'TanStack Query', 'Prisma'];
+function FooterLinkItem({ link, className }: { link: FooterLink; className: string }) {
+    if (link.external) {
+        return (
+            <a href={link.href} target="_blank" rel="noopener noreferrer" className={className}>
+                {link.label}
+            </a>
+        );
+    }
+    return (
+        <Link href={link.href} className={className}>
+            {link.label}
+        </Link>
+    );
+}
 
 export default function Footer() {
     const year = new Date().getFullYear();
+    const linkGroups = FOOTER_LINK_GROUPS.filter((group) => group.links.length > 0);
+    const hasContact = Boolean(FOOTER_CONTACT.email) || FOOTER_CONTACT.channels.length > 0;
 
     return (
         <footer className="footer-root">
@@ -16,36 +39,58 @@ export default function Footer() {
                     <div className="[&_.line-gradient-deco]:hidden">
                         <AnimatedLogo />
                     </div>
-                    <p className="footer-brand-sub">향수를 수집하고 기록하는 공간</p>
+                    <p className="footer-brand-sub">{FOOTER_BRAND.tagline}</p>
                 </div>
 
-                {/* 우: 개발자 정보 */}
-                <div className="footer-dev">
-                    <p className="footer-nav-title">Developer</p>
-                    <a
-                        href="https://github.com/awesomesong/next-socket"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="footer-github"
-                    >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
-                        </svg>
-                        강송희
-                    </a>
-                    <ul className="footer-stack">
-                        {TECH_STACK.map((tech) => (
-                            <li key={tech} className="footer-stack-badge">
-                                {tech}
-                            </li>
-                        ))}
-                    </ul>
+                {/* 우: 링크 그룹 + 문의 */}
+                <div className="footer-links">
+                    {linkGroups.map((group) => (
+                        <nav key={group.title} aria-label={group.title}>
+                            <p className="footer-nav-title">{group.title}</p>
+                            <ul className="footer-nav-list">
+                                {group.links.map((link) => (
+                                    <li key={link.href}>
+                                        <FooterLinkItem link={link} className="footer-nav-link" />
+                                    </li>
+                                ))}
+                            </ul>
+                        </nav>
+                    ))}
+
+                    {hasContact && (
+                        <div>
+                            <p className="footer-nav-title">{FOOTER_CONTACT.title}</p>
+                            <ul className="footer-nav-list">
+                                {FOOTER_CONTACT.email && (
+                                    <li>
+                                        <a href={`mailto:${FOOTER_CONTACT.email}`} className="footer-nav-link">
+                                            {FOOTER_CONTACT.email}
+                                        </a>
+                                    </li>
+                                )}
+                                {FOOTER_CONTACT.channels.map((link) => (
+                                    <li key={link.href}>
+                                        <FooterLinkItem link={link} className="footer-nav-link" />
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* 하단 저작권 */}
+            {/* 하단: 저작권 + 법적 고지 */}
             <div className="footer-bottom">
-                <p>© {year} 강송희. All rights reserved.</p>
+                <p>© {year} {FOOTER_BRAND.copyrightHolder}. All rights reserved.</p>
+                {FOOTER_LEGAL_LINKS.length > 0 && (
+                    <ul className="footer-legal">
+                        {FOOTER_LEGAL_LINKS.map((link) => (
+                            <li key={link.href}>
+                                <FooterLinkItem link={link} className="footer-legal-link" />
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
         </footer>
     );

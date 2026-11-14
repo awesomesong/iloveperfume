@@ -2048,23 +2048,18 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   color: var(--color-accent);
 }
 
-.footer-dev {
+.footer-links {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2rem 3.5rem;
 }
 
-.footer-github {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.83rem;
-  color: var(--color-text-primary);
-  text-decoration: none;
-  margin-bottom: 0.9rem;
-  transition: color 0.2s;
-}
-.footer-github:hover {
-  color: var(--color-accent);
+@media (max-width: 640px) {
+  .footer-links {
+    justify-content: flex-start;
+    gap: 1.5rem 2.5rem;
+  }
 }
 
 .footer-stack {
@@ -2100,6 +2095,119 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   border-top: 1px solid var(--footer-border);
   max-width: 1440px;
   margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1.25rem;
+}
+
+.footer-legal {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.footer-legal-link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-legal-link:hover {
+  color: var(--color-accent);
+}
+
+/* 개인정보처리방침은 법령상 눈에 띄게 표시 */
+.footer-legal li:last-child .footer-legal-link {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* =============================================
+   이용약관 · 개인정보처리방침 (LegalDocument)
+   ============================================= */
+.legal-doc {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+@media (min-width: 768px) {
+  .legal-doc {
+    padding: 3rem 2rem;
+  }
+}
+
+.legal-intro {
+  margin-top: 1.25rem;
+  color: var(--color-text-secondary);
+}
+
+.legal-section {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.legal-section h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+.legal-list {
+  list-style: disc;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.legal-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-card-border);
+  border-radius: 12px;
+}
+
+.legal-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.legal-table th,
+.legal-table td {
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+.legal-table thead th {
+  background: var(--color-accent-pale);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.legal-table tbody th {
+  font-weight: 600;
+}
+
+.legal-table tbody tr:last-child th,
+.legal-table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 /* 무한 스크롤 로딩 sentinel (Reviews, Comments 등) */
