@@ -376,9 +376,38 @@ function contrast(hex1, hex2) {
 | 페이지 헤더 | `.product-fragrance-header-layout` + `flex justify-between items-center` |
 | 카드 그리드 | `.layout-card` (1→2→3→4열) |
 | 공지 그리드 | `.notice-grid` |
+| 뉴스 목록 | `.news-list` (1열, 6-1 참고) |
 | 히어로 높이 | `calc(100dvh - var(--header-height))` — `--header-height: 56px` |
 | 섹션 패딩 | `py-16 md:py-24` |
 | 섹션 간격 | `gap-8` ~ `gap-16` |
+
+---
+
+## 6-1. 뉴스 목록 패턴 (`/news`)
+
+> 토스피드식 **글자 위계 + 여백** 목록. 카드·구분선·밑줄 탭·그라데이션을 쓰지 않는다.
+> 아래 세 가지는 다른 목록형 페이지에서도 그대로 쓰는 **공통 요소**다.
+
+| 공통 요소 | 위치 | 규칙 |
+|-----------|------|------|
+| 페이지 머리 | `PageIntro` (`.page-intro`) | 제목 + 한 줄 설명. 모바일: 왼쪽 정렬·제목만(20px). 768px~: 가운데 정렬·24px·설명 표시 |
+| 글자형 탭 | `TextTabs` (`.text-tabs` / `.text-tab`) | 밑줄·박스 없이 굵은 글자 나열(16px → 18px). 선택만 진하게, 나머지는 50% 농도. `role="tablist"`·`aria-selected`·좌우 화살표/Home/End |
+| 메타 줄 | `.meta-line` | 13px → 14px 보조색. 자식 사이 가운뎃점은 CSS가 넣는다(마크업에 `·` 직접 쓰지 않기) |
+
+뉴스 전용:
+
+| 요소 | 클래스 | 규칙 |
+|------|--------|------|
+| 페이지 | `.news-page` | 다른 페이지와 같은 폭(최대 1440px), 좌우 16px → 32px |
+| 목록 | `ul.news-list` > `li.news-item` | 항상 1열. 항목 사이 선 없음, 여백 28px → 44px. 각 항목은 `.news-page` 폭을 그대로 쓴다(글줄 폭 제한 없음) |
+| 항목 구성 | `NoticeCard` | `.news-item__thumb`(있으면, 768px부터 좌측 고정폭 18rem) + `.news-item__body`(`.meta-line`(분류 · 매체) → 제목 → 요약 → `.meta-line`(시간 · 조회 · 댓글)). 768px 미만은 썸네일 위 / 본문 아래로 쌓는다 |
+| 썸네일 | `.news-item__thumb img` | 원문 og:image를 그대로 쓴다(재호스팅 없음). `<img>` 태그 — 매체 도메인이 매번 달라 next/image `remotePatterns`를 쓸 수 없다. 못 가져왔거나 로드 실패 시 영역 자체가 없다 |
+| 제목 | `h3.news-item__title` | 18px → 24px / 700, 2줄 제한, hover 시 밑줄(이동·그림자 효과 없음) |
+| 요약 | `.news-item__summary` | 15px → 17px, 보조색, 3줄 제한 |
+| 시간 | `formatNewsTime` | "3시간 전" → "2일 전" → "2026.11.14." |
+| 상세 | `.notice-detail__thumb`(있으면) → `.news-article__press` → `h1.notice-detail__title` → `.meta-line.notice-detail__meta` | 썸네일(16:9, `.news-page` 폭) → 매체명 → 단색 제목(22px → 28px, 그라데이션 금지) → 분류 · "입력 2026.11.14. 오후 3:20" · 조회 · 댓글. 본문도 `.news-page` 폭을 그대로 쓴다(글줄 폭 제한 없음) |
+
+기준점은 768px 하나다. 한글 제목·요약은 `word-break: keep-all`로 어절 단위 줄바꿈.
 
 ---
 

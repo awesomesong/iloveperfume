@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import type {
   Notice as INotice,
   NoticeDetailQueryData,
+  NoticeListFilter,
 } from "@/src/app/types/notice";
 import type {
   CommentType,
@@ -12,64 +13,35 @@ import type {
 // 타입 별칭 정의
 type NoticeCommentsDataProps = { pages: CommentPage[]; pageParams?: unknown[] };
 
+/** 목록 쿼리 공통 prefix — 실제 키는 noticeListKey(filter) */
 export const NOTICE_LIST_KEY = ["notices"] as const;
+export const noticeListKey = (filter: NoticeListFilter) =>
+  ["notices", filter] as const;
 export const noticeDetailKey = (noticeId: string) =>
   ["noticeDetail", String(noticeId)] as const;
 export const noticesCommentsKey = (noticeId: string) =>
   ["noticesComments", String(noticeId)] as const;
 
-type NoticeCard = Pick<
-  INotice,
-  "id" | "title" | "image" | "createdAt" | "author" | "_count" | "viewCount"
-> &
+type NoticeCard = INotice & Record<string, unknown>;
+
+type NoticeCardPatch = { id: string } & Partial<Omit<INotice, "id">> &
   Record<string, unknown>;
 
-type NoticeCardPatch = { id: string } & Partial<
-  Pick<
-    INotice,
-    "title" | "image" | "createdAt" | "author" | "_count" | "viewCount"
-  >
-> &
-  Record<string, unknown>;
+type NoticeListInfinite = { pages: NoticeCard[][]; pageParams?: unknown[] };
 
-export type NoticeListInfinite = { pages: NoticeCard[][]; pageParams?: unknown[] };
-
-function withNoticeListCache(
-  queryClient: QueryClient,
-  updater: (old: NoticeListInfinite | undefined) => NoticeListInfinite | undefined,
-): void {
-  queryClient.setQueriesData(
-    { queryKey: NOTICE_LIST_KEY, exact: true },
-    (old: NoticeListInfinite | undefined) => updater(old),
-  );
-}
-
+// 필터(전체·카테고리)별로 목록 캐시가 나뉘므로 prefix로 전부 갱신한다
 function withNoticeListCacheAllPages(
   queryClient: QueryClient,
   transform: (pages: NoticeCard[][]) => NoticeCard[][],
 ): void {
-  withNoticeListCache(queryClient, (old) => {
-    if (!old || !Array.isArray(old.pages)) return old;
-    const pages = old.pages.map((p) => (Array.isArray(p) ? p : []));
-    const nextPages = transform(pages);
-    return { ...old, pages: nextPages };
-  });
-}
-
-export function prependNoticeCard(
-  queryClient: QueryClient,
-  notice: NoticeCard,
-): void {
-  withNoticeListCache(queryClient, (old) => {
-    if (!old || !Array.isArray(old.pages)) {
-      return {
-        pages: [[notice]],
-        pageParams: Array.isArray(old?.pageParams) ? old.pageParams : [""],
-      } as NoticeListInfinite;
-    }
-    const first = Array.isArray(old.pages[0]) ? old.pages[0] : [];
-    return { ...old, pages: [[notice, ...first], ...old.pages.slice(1)] };
-  });
+  queryClient.setQueriesData(
+    { queryKey: NOTICE_LIST_KEY },
+    (old: NoticeListInfinite | undefined) => {
+      if (!old || !Array.isArray(old.pages)) return old;
+      const pages = old.pages.map((p) => (Array.isArray(p) ? p : []));
+      return { ...old, pages: transform(pages) };
+    },
+  );
 }
 
 export function upsertNoticeCardById(
@@ -116,80 +88,12 @@ export function incrementNoticeCommentsCountById(
   );
 }
 
-// ===== Snapshot / Restore utilities for optimistic delete =====
-export type NoticeCardBackup =
-  | { pageIndex: number; itemIndex: number; item: NoticeCard }
-  | undefined;
-
-export function snapshotNoticeCardPosition(
-  queryClient: QueryClient,
-  noticeId: string,
-): NoticeCardBackup {
-  const snapshot = queryClient.getQueryData(NOTICE_LIST_KEY) as | NoticeListInfinite | undefined;
-  if (!snapshot?.pages || !Array.isArray(snapshot.pages)) return undefined;
-  for (let pi = 0; pi < snapshot.pages.length; pi++) {
-    const page = snapshot.pages[pi];
-    if (!Array.isArray(page)) continue;
-    const idx = page.findIndex((b) => b?.id === String(noticeId));
-    if (idx !== -1) return { pageIndex: pi, itemIndex: idx, item: page[idx] };
-  }
-  return undefined;
-}
-
-export function restoreNoticeCardPosition(
-  queryClient: QueryClient,
-  backup: NoticeCardBackup,
-  fallbackSnapshot?: NoticeListInfinite,
-): void {
-  if (!backup) {
-    if (fallbackSnapshot) {
-      queryClient.setQueryData(NOTICE_LIST_KEY, fallbackSnapshot);
-    }
-    return;
-  }
-  withNoticeListCache(queryClient, (old) => {
-    if (!old?.pages) return old ?? fallbackSnapshot;
-    const pages = old.pages.map((page, i) => {
-      if (i !== backup!.pageIndex || !Array.isArray(page)) return page;
-      const next = [...page];
-      next.splice(backup!.itemIndex, 0, backup!.item);
-      return next;
-    });
-    return { ...old, pages };
-  });
-}
-
-export function snapshotNoticeDetail(queryClient: QueryClient, noticeId: string): NoticeDetailQueryData {
-  return queryClient.getQueryData(noticeDetailKey(noticeId)) as NoticeDetailQueryData;
-}
-
-export function restoreNoticeDetail(
-  queryClient: QueryClient,
-  noticeId: string,
-  prevDetail: NoticeDetailQueryData,
-): void {
-  if (!prevDetail) return;
-  queryClient.setQueryData(noticeDetailKey(noticeId), prevDetail);
-}
-
-// ===== noticeDetail helpers =====
-export function upsertNoticeDetailPartial(
-  queryClient: QueryClient,
-  noticeId: string,
-  partial: Record<string, unknown>,
-): void {
-  queryClient.setQueryData(noticeDetailKey(noticeId), (old: NoticeDetailQueryData) => {
-    if (!old?.notice) return old;
-    return { ...old, notice: { ...old.notice, ...partial } };
-  });
-}
-
 export function incrementNoticeDetailCommentsCount(
   queryClient: QueryClient,
   noticeId: string,
   delta: number = 1,
 ): void {
-  // 블로그 상세페이지 댓글 수 업데이트
+  // 상세 페이지 댓글 수 업데이트
   queryClient.setQueryData(noticeDetailKey(noticeId), (old: NoticeDetailQueryData) => {
     if (!old?.notice) return old;
     const prev = old.notice?._count?.comments ?? 0;
@@ -204,7 +108,7 @@ export function incrementNoticeDetailCommentsCount(
     };
   });
 
-  // 블로그 리스트 페이지 댓글 수 업데이트
+  // 목록 페이지 댓글 수 업데이트
   incrementNoticeCommentsCountById(queryClient, noticeId, delta);
 }
 // --------------블로그 댓글 캐시 업데이트 함수 --------------

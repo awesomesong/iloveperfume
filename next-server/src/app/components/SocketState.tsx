@@ -12,10 +12,7 @@ import {
   normalizeDate,
 } from "@/src/app/lib/react-query/utils";
 import {
-  prependNoticeCard,
-  upsertNoticeCardById,
   removeNoticeCardById,
-  upsertNoticeDetailPartial,
   incrementNoticeDetailCommentsCount,
   prependNoticeCommentFirstPage,
   noticeDetailKey,
@@ -60,10 +57,7 @@ import {
 } from "@/src/app/types/conversation";
 import type {
   NoticeCommentNewPayload,
-  NoticeNewPayload,
-  NoticeUpdatedPayload,
   NoticeDeletedPayload,
-  NoticeData,
   NoticeDetailQueryData,
 } from "@/src/app/types/notice";
 import type {
@@ -863,44 +857,6 @@ const SocketState = () => {
     }
   }, [queryClient]);
 
-  const handleNoticeNew = useCallback((payload: NoticeNewPayload) => {
-    try {
-      const notice = payload?.notice;
-      if (!notice?.id) return;
-      const createdAt = normalizeDate(notice.createdAt);
-      prependNoticeCard(queryClient, { ...notice, createdAt });
-    } catch (error) {
-      console.error("Error handling notice new:", error);
-    }
-  }, [queryClient]);
-
-  const handleNoticeUpdated = useCallback((payload: NoticeUpdatedPayload) => {
-    try {
-      const notice = payload?.notice as NoticeData;
-      if (!notice?.id) return;
-      const patch: { id: string } & Partial<Pick<NoticeData, 'title' | 'image' | 'author' | 'viewCount'>> & { createdAt?: Date; _count?: { comments: number } } = { id: String(notice.id) };
-      if (notice.title !== undefined) patch.title = notice.title;
-      if (notice.image !== undefined) patch.image = notice.image;
-      if (notice.createdAt !== undefined) {
-        patch.createdAt = notice.createdAt instanceof Date ? notice.createdAt : new Date(notice.createdAt);
-      }
-      if (notice.author !== undefined) patch.author = notice.author;
-      if (notice._count?.comments !== undefined) patch._count = { comments: notice._count.comments };
-      if (notice.viewCount !== undefined) patch.viewCount = notice.viewCount;
-      upsertNoticeCardById(queryClient, patch as unknown as Parameters<typeof upsertNoticeCardById>[1]);
-
-      const partial: Partial<Pick<NoticeData, 'title' | 'content' | 'image'>> = {};
-      if (notice.title !== undefined) partial.title = notice.title;
-      if (notice.content !== undefined) partial.content = notice.content;
-      if (notice.image !== undefined) partial.image = notice.image;
-      if (Object.keys(partial).length > 0) {
-        upsertNoticeDetailPartial(queryClient, String(notice.id), partial);
-      }
-    } catch (error) {
-      console.error("Error handling notice updated:", error);
-    }
-  }, [queryClient]);
-
   const handleNoticeDeleted = useCallback((payload: NoticeDeletedPayload) => {
     try {
       if (!payload?.noticeId) return;
@@ -981,8 +937,6 @@ const SocketState = () => {
     handleNoticeCommentNew,
     handleNoticeCommentUpdated,
     handleNoticeCommentDeleted,
-    handleNoticeNew,
-    handleNoticeUpdated,
     handleNoticeDeleted,
     handleFragranceReviewNew,
     handleFragranceReviewUpdated,
@@ -1001,8 +955,6 @@ const SocketState = () => {
       handleNoticeCommentNew,
       handleNoticeCommentUpdated,
       handleNoticeCommentDeleted,
-      handleNoticeNew,
-      handleNoticeUpdated,
       handleNoticeDeleted,
       handleFragranceReviewNew,
       handleFragranceReviewUpdated,
@@ -1018,8 +970,6 @@ const SocketState = () => {
     handleNoticeCommentNew,
     handleNoticeCommentUpdated,
     handleNoticeCommentDeleted,
-    handleNoticeNew,
-    handleNoticeUpdated,
     handleNoticeDeleted,
     handleFragranceReviewNew,
     handleFragranceReviewUpdated,
@@ -1058,8 +1008,6 @@ const SocketState = () => {
       [SOCKET_EVENTS.NOTICE_COMMENT_NEW, handlers.handleNoticeCommentNew as (payload: unknown) => void],
       [SOCKET_EVENTS.NOTICE_COMMENT_UPDATED, handlers.handleNoticeCommentUpdated as (payload: unknown) => void],
       [SOCKET_EVENTS.NOTICE_COMMENT_DELETED, handlers.handleNoticeCommentDeleted as (payload: unknown) => void],
-      [SOCKET_EVENTS.NOTICE_NEW, handlers.handleNoticeNew as (payload: unknown) => void],
-      [SOCKET_EVENTS.NOTICE_UPDATED, handlers.handleNoticeUpdated as (payload: unknown) => void],
       [SOCKET_EVENTS.NOTICE_DELETED, handlers.handleNoticeDeleted as (payload: unknown) => void],
       [SOCKET_EVENTS.FRAGRANCE_REVIEW_NEW, handlers.handleFragranceReviewNew as (payload: unknown) => void],
       [SOCKET_EVENTS.FRAGRANCE_REVIEW_UPDATED, handlers.handleFragranceReviewUpdated as (payload: unknown) => void],

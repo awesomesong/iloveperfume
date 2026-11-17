@@ -16,6 +16,19 @@ export async function requireUser(unauthorizedMessage: string): Promise<Failure 
     return { ok: true, user: user as AuthedUser };
 }
 
+/** 관리자(role === 'admin')만 통과. 비로그인 401, 일반 유저 403. */
+export async function requireAdmin(
+    unauthorizedMessage: string,
+    forbiddenMessage: string,
+): Promise<Failure | AuthSuccess> {
+    const auth = await requireUser(unauthorizedMessage);
+    if (!auth.ok) return auth;
+    if (auth.user.role !== "admin") {
+        return { ok: false, response: NextResponse.json({ message: forbiddenMessage }, { status: 403 }) };
+    }
+    return auth;
+}
+
 type OwnedRecord = { authorEmail: string | null };
 
 type RequireOwnerOptions<T extends OwnedRecord> = {

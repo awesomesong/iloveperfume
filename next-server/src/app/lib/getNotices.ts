@@ -1,29 +1,28 @@
-import toast from "react-hot-toast";
+import { apiFetch } from "@/src/app/utils/apiFetch";
+import type { Notice, NoticeListFilter } from "@/src/app/types/notice";
 
-type ParamProps = {
-    pageParam: string;
-}
+type GetNoticesParams = {
+  pageParam: string;
+  queryKey: readonly unknown[];
+};
 
-export const getNotices = async (
-    { pageParam }: ParamProps
-) => {
+type GetNoticesResponse = {
+  noticePosts: Notice[];
+};
 
-    const searchParams =  pageParam !== '' ? '?cursor='+pageParam : '';
-    const res = await fetch(`/api/notice${searchParams}`, {
-        next: {
-            tags: ['notices']
-        },
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    });
+/** queryKey: ["notices", filter] — filter는 "ALL" | 카테고리 */
+export const getNotices = async ({ pageParam, queryKey }: GetNoticesParams) => {
+  const filter = (queryKey[1] ?? "ALL") as NoticeListFilter;
 
-    const { noticePosts } = await res.json();
+  const params = new URLSearchParams();
+  if (pageParam) params.set("cursor", pageParam);
+  if (filter !== "ALL") params.set("category", filter);
 
-    if (!res.ok) {
-        toast.error('공지사항에 대한 내용을 찾지 못했습니다.');
-    }
+  const query = params.toString();
+  const { noticePosts } = await apiFetch<GetNoticesResponse>(
+    `/api/notice${query ? `?${query}` : ""}`,
+    { defaultErrorMessage: "향수 뉴스를 불러오지 못했습니다." },
+  );
 
-    return noticePosts;
+  return noticePosts;
 };
