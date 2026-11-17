@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/src/app/lib/session";
 import { NextResponse } from "next/server";
 import prisma from "@/prisma/db";
 import { randomUUID } from "crypto";
-import { containsProhibited } from "@/src/app/utils/aiPolicy";
+import { containsProhibited, validatePrompt } from "@/src/app/utils/aiPolicy";
 
 export const runtime = "nodejs";
 
@@ -186,6 +186,14 @@ export async function POST(req: Request) {
     }
     if (message && containsProhibited(String(message))) {
       return NextResponse.json({ message: "부적절한 내용은 허용되지 않습니다." }, { status: 400 });
+    }
+    // AI 질문은 /api/ai/stream과 같은 공용 검증(길이 제한 포함)을 저장 전에 적용한다.
+    // 저장한 뒤에는 AI 라우트가 매번 거절해 답을 받을 수 없는 질문이 남는다
+    if (aiAgentType && message) {
+      const check = validatePrompt(String(message));
+      if (!check.isValid) {
+        return NextResponse.json({ message: check.error }, { status: 400 });
+      }
     }
 
     const msgId = messageId || randomUUID();
