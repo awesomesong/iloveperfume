@@ -3,6 +3,11 @@ import { getCurrentUser } from "@/src/app/lib/session";
 import prisma from "@/prisma/db";
 import { randomUUID } from "crypto";
 import { validatePrompt } from "@/src/app/utils/aiPolicy";
+import { OPENAI_TEXT_MODEL } from "@/src/app/lib/ai/models";
+
+export const runtime = "nodejs";
+// 클라이언트(useAIStream)가 60초에 abort하므로 그 이상 유지할 필요가 없다
+export const maxDuration = 60;
 
 // OPTIONS 요청 처리
 export async function OPTIONS() {
@@ -96,10 +101,10 @@ const AI_AGENT_PROMPTS = {
 
 // 입력 검증 함수
 function validateInput(
-  message: string,
-  conversationId: string,
+  message: unknown,
+  conversationId: unknown,
 ): { isValid: boolean; error?: string } {
-  if (!message?.trim()) {
+  if (typeof message !== "string" || !message.trim()) {
     return { isValid: false, error: "메시지가 비어있습니다." };
   }
 
@@ -110,11 +115,16 @@ function validateInput(
     };
   }
 
-  if (!conversationId?.trim()) {
+  if (typeof conversationId !== "string" || !conversationId.trim()) {
     return { isValid: false, error: "대화 ID가 필요합니다." };
   }
 
   return { isValid: true };
+}
+
+// 선택적 ID 파라미터(messageId 등): 없거나(null/undefined) 문자열이어야 한다
+function isOptionalId(value: unknown): value is string | null | undefined {
+  return value == null || typeof value === "string";
 }
 
 // 대화 기록을 가져오는 함수 (최적화)
@@ -317,27 +327,20 @@ async function handleStreamingResponse(
     if (fullResponse.trim()) {
       try {
         // ✅ 재시도 시: 기존 AI 메시지 삭제 (DB에서)
+        // 이 대화방의 AI 메시지일 때만 삭제 — 클라이언트가 보낸 ID를 그대로 믿지 않는다
         if (existingAIMessageId) {
           try {
-            // ✅ 먼저 메시지 존재 여부 확인 후 삭제
-            const existingMessage = await prisma.message.findUnique({
-              where: { id: existingAIMessageId },
-              select: { id: true },
+            // 조건에 맞는 메시지가 없으면 0건 삭제로 끝난다 (이미 삭제되었거나 로컬에만 있던 실패 메시지)
+            await prisma.message.deleteMany({
+              where: {
+                id: existingAIMessageId,
+                conversationId,
+                isAIResponse: true,
+              },
             });
-
-            if (existingMessage) {
-              await prisma.message.delete({
-                where: { id: existingAIMessageId },
-              });
-            }
-            // 메시지가 없으면 무시 (이미 삭제되었거나 존재하지 않음)
-          } catch (error: unknown) {
-            // ✅ P2025 에러(레코드 없음)는 정상적인 경우이므로 무시
-            const prismaError = error as { code?: string };
-            if (prismaError?.code !== 'P2025') {
-              console.error("기존 AI 메시지 삭제 오류:", error);
-            }
-            // 삭제 실패해도 계속 진행 (메시지가 이미 없을 수 있음)
+          } catch (error) {
+            console.error("기존 AI 메시지 삭제 오류:", error);
+            // 삭제 실패해도 계속 진행
           }
         }
 
@@ -345,8 +348,8 @@ async function handleStreamingResponse(
         let aiCreatedAt = new Date();
 
         if (userMessageId) {
-          const userMsg = await prisma.message.findUnique({
-            where: { id: userMessageId },
+          const userMsg = await prisma.message.findFirst({
+            where: { id: userMessageId, conversationId },
             select: { createdAt: true },
           });
 
@@ -359,23 +362,19 @@ async function handleStreamingResponse(
         const savedMessageId = messageId || randomUUID();
 
         if (messageId) {
-          const existingMessage = await prisma.message.findUnique({
-            where: { id: messageId },
+          // 기존 메시지 업데이트 (재시도 케이스) — 이 대화방의 AI 메시지로 한정
+          const updated = await prisma.message.updateMany({
+            where: { id: messageId, conversationId, isAIResponse: true },
+            data: {
+              body: fullResponse.trim(),
+              isError: false,
+              createdAt: aiCreatedAt,
+            },
           });
 
-          if (existingMessage) {
-            // 기존 메시지 업데이트 (재시도 케이스)
-            await prisma.message.update({
-              where: { id: messageId },
-              data: {
-                body: fullResponse.trim(),
-                isError: false,
-                isAIResponse: true,
-                createdAt: aiCreatedAt,
-              },
-            });
-          } else {
+          if (updated.count === 0) {
             // messageId로 새 메시지 생성
+            // (같은 ID가 다른 범위에 이미 있으면 P2002로 실패 → 덮어쓰지 않음)
             await prisma.message.create({
               data: {
                 id: messageId,
@@ -503,11 +502,14 @@ type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
 
 async function callOpenAI(apiKey: string, contextMessages: ChatMessage[]) {
   const requestBody = {
-    model: "gpt-4",
+    model: OPENAI_TEXT_MODEL,
     messages: contextMessages,
     stream: true,
+    // 추론 모델: 채팅 응답 속도를 위해 추론을 끈다 (추론 토큰도 출력 토큰으로 과금됨)
+    reasoning_effort: "none",
     temperature: 0.7,
-    max_tokens: 1000,
+    // 이 모델은 max_tokens를 400으로 거부한다 → max_completion_tokens 사용
+    max_completion_tokens: 1000,
   };
 
   const controller = new AbortController();
@@ -552,7 +554,10 @@ export async function POST(req: NextRequest) {
   try {
     requestData = await req.json();
   } catch {
-    return new NextResponse("잘못된 요청 형식입니다.", { status: 400 });
+    return NextResponse.json({ message: "잘못된 요청 형식입니다." }, { status: 400 });
+  }
+  if (!requestData || typeof requestData !== "object") {
+    return NextResponse.json({ message: "잘못된 요청 형식입니다." }, { status: 400 });
   }
 
   try {
@@ -560,14 +565,14 @@ export async function POST(req: NextRequest) {
     const user = await getCurrentUser();
 
     if (!user?.id || !user?.email) {
-      return new NextResponse("로그인이 필요합니다.", { status: 401 });
+      return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
     }
 
-    const { message, conversationId, messageId, existingAIMessageId, userMessageId } = requestData;
+    const { message, conversationId } = requestData;
     // 2-1. 레이트 리미트 체크
     if (!checkRateLimit(user.id)) {
-      return new NextResponse(
-        "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+      return NextResponse.json(
+        { message: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
         { status: 429 },
       );
     }
@@ -575,27 +580,67 @@ export async function POST(req: NextRequest) {
     // 3. 입력 검증
     const validation = validateInput(message, conversationId);
     if (!validation.isValid) {
-      return new NextResponse(validation.error, { status: 400 });
+      return NextResponse.json({ message: validation.error }, { status: 400 });
     }
+
+    // 3-0. 선택적 ID 파라미터 타입 검증 (빈 값은 "없음"으로 취급)
+    if (
+      !isOptionalId(requestData.messageId) ||
+      !isOptionalId(requestData.existingAIMessageId) ||
+      !isOptionalId(requestData.userMessageId)
+    ) {
+      return NextResponse.json({ message: "메시지 ID가 유효하지 않습니다." }, { status: 400 });
+    }
+    const messageId: string | undefined = requestData.messageId || undefined;
+    const existingAIMessageId: string | undefined = requestData.existingAIMessageId || undefined;
+    const userMessageId: string | undefined = requestData.userMessageId || undefined;
 
     // 3-1. 주제/안전성 검열 (공용 정책)
     const topicCheck = validatePrompt(message);
     if (!topicCheck.isValid) {
-      return new NextResponse(
-        topicCheck.error || "요청이 정책을 위반했습니다.",
+      return NextResponse.json(
+        { message: topicCheck.error || "요청이 정책을 위반했습니다." },
         { status: 400 },
       );
     }
 
     // 4. API 키 확인
-    const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       console.error("OpenAI API 키가 설정되지 않았습니다.");
 
       // ✅ API 키가 없어도 사용자 메시지는 이미 저장되었으므로 추가 저장하지 않음
-      return new NextResponse("AI 서비스를 사용할 수 없습니다.", {
-        status: 500,
+      return NextResponse.json(
+        { message: "AI 서비스를 사용할 수 없습니다." },
+        { status: 500 },
+      );
+    }
+
+    // 5. 대화방 권한 확인: 존재 + 참여자 + AI 채팅방을 한 쿼리로
+    const conversation = await prisma.conversation.findFirst({
+      where: { id: conversationId, userIds: { has: user.id }, isAIChat: true },
+      select: { id: true },
+    });
+    if (!conversation) {
+      return NextResponse.json(
+        { message: "대화방을 찾을 수 없거나 참여자가 아닙니다." },
+        { status: 403 },
+      );
+    }
+
+    // 5-1. messageId가 이미 존재한다면 이 대화방의 AI 메시지여야 한다
+    // (다른 대화방/사용자 메시지를 AI 응답으로 덮어쓰지 못하도록 OpenAI 호출 전에 거절)
+    if (messageId) {
+      const existingMessage = await prisma.message.findUnique({
+        where: { id: messageId },
+        select: { conversationId: true, isAIResponse: true },
       });
+      if (
+        existingMessage &&
+        !(existingMessage.conversationId === conversationId && existingMessage.isAIResponse === true)
+      ) {
+        return NextResponse.json({ message: "메시지 ID가 유효하지 않습니다." }, { status: 400 });
+      }
     }
 
     // 6. 대화 컨텍스트 준비
@@ -644,13 +689,16 @@ export async function POST(req: NextRequest) {
     // 에러 타입에 따른 적절한 응답
     if (error instanceof Error) {
       if (error.message.includes('AI 응답 시간 초과')) {
-        return new NextResponse('AI 응답 시간이 초과되었습니다. 다시 시도해주세요.', { status: 408 });
+        return NextResponse.json(
+          { message: "AI 응답 시간이 초과되었습니다. 다시 시도해주세요." },
+          { status: 408 },
+        );
       }
       if (error.message.includes("AI 서비스 오류")) {
-        return new NextResponse(error.message, { status: 503 });
+        return NextResponse.json({ message: error.message }, { status: 503 });
       }
     }
 
-    return new NextResponse("서버 오류가 발생했습니다.", { status: 500 });
+    return NextResponse.json({ message: "서버 오류가 발생했습니다." }, { status: 500 });
   }
 }

@@ -55,8 +55,14 @@ export async function aiStream(params: {
   });
 
   if (!resp.ok) {
+    // 서버 에러 응답은 JSON `{ message }` — 파싱 실패 시 본문 텍스트, 그것도 없으면 기본 문구
     const errText = await resp.text().catch(() => "");
-    throw new Error(errText || `AI 응답 생성 중 오류가 발생했습니다. (${resp.status})`);
+    const errMessage = safeJSON<{ message?: unknown }>(errText)?.message;
+    throw new Error(
+      (typeof errMessage === "string" && errMessage) ||
+        errText ||
+        `AI 응답 생성 중 오류가 발생했습니다. (${resp.status})`,
+    );
   }
 
   const reader = resp.body?.getReader();
