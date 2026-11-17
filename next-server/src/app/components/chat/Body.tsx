@@ -32,6 +32,7 @@ import {
   messagesKey,
   markConversationRead,
   setTotalUnreadFromList,
+  compareMessages,
   ConversationListData,
 } from "@/src/app/lib/react-query/chatCache";
 import { resetSeenUsersForLastMessage, setSeenUsersForLastMessage } from "@/src/app/lib/react-query/chatCache";
@@ -92,19 +93,6 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
     if (!data?.pages?.[0]?.seenUsersForLastMessage) return [];
     return data.pages[0].seenUsersForLastMessage;
   }, [data?.pages]);
-
-  // ✅ 안정적인 메시지 정렬 함수 (createdAt 1차, 동시간대는 id로 보조 정렬)
-  const compareMessages = useCallback((a: FullMessageType, b: FullMessageType) => {
-    const aTime = new Date(a.createdAt).getTime();
-    const bTime = new Date(b.createdAt).getTime();
-    if (aTime !== bTime) return aTime - bTime; // ✅ 오래된 → 최신 (올바름)
-
-    // 동시간대에는 randomUUID(혹은 문자열 id) 순으로 보조 정렬
-    const aId = (a.id ?? "").toString();
-    const bId = (b.id ?? "").toString();
-    if (aId && bId) return aId.localeCompare(bId); // ✅ 순서대로
-    return 0;
-  }, []);
 
   // === 1) readStateMutation: onMutate에서 낙관적 워터마크 반영 유지 ===
   const { mutate: readStateMutation } = useMutation({
@@ -205,7 +193,7 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
 
     // 서버 메시지만 정렬
     return validServerMessages.sort(compareMessages);
-  }, [data?.pages, compareMessages]);
+  }, [data?.pages]);
 
   // ✅ 전체 마지막 메시지 ID - 읽음 UI 표시 여부 결정에 사용
   const lastMessageId = useMemo(() => {

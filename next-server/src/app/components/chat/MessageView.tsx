@@ -20,6 +20,7 @@ import {
   updateMessagePartialById,
   bumpConversationOnNewMessage,
   replaceOptimisticMessage,
+  compareMessages,
   type MessagesPage,
   normalizeMessage,
 } from "@/src/app/lib/react-query/chatCache";
@@ -350,9 +351,10 @@ const MessageView: React.FC<MessageBoxProps> = ({
   });
 
   const handleRetry = useCallback(async () => {
-    // 캐시에서 메시지 목록 조회
+    // 캐시에서 메시지 목록 조회 — 아래에서 "직전 질문 / 바로 다음 AI 답변"을 인덱스로 찾으므로 시간순으로 정렬한다
+    // (캐시는 서버가 준 최신순을 유지한다. flatMap이 새 배열을 만들므로 캐시는 변경되지 않는다)
     const cache = queryClient.getQueryData(messagesKey(conversationId)) as | InfiniteData<MessagesPage> | undefined;
-    const allMessages: FullMessageType[] = cache?.pages?.flatMap((p) => p.messages) ?? [];
+    const allMessages: FullMessageType[] = (cache?.pages?.flatMap((p) => p.messages) ?? []).sort(compareMessages);
 
     if (isAIMessage) {
       // AI 응답 재시도: 직전 사용자 메시지 찾기
