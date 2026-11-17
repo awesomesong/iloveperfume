@@ -25,7 +25,6 @@ export const FragranceCardSkeleton = () => {
                 <div className="w-16 h-2 rounded-full skeleton-bg-muted shrink-0" />
                 <div className="w-24 h-4 rounded-full skeleton-bg shrink-0" />
             </div>
-            <div className="w-6 h-px product-fragrance-accent-line opacity-50 shrink-0" />
         </div>
     );
 };

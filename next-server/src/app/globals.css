@@ -69,12 +69,21 @@ blockquote{
   --guide-card-surface-border: var(--color-card-border);
   --color-accent-line: #b094e0;
   --color-select-option-text: #2d2040;
+  /* 흰 글자를 올리는 솔리드 액센트 배경 (제출 버튼) — white 9.28:1 */
+  --color-accent-solid: #3d3d8f;
+  /* var(--color-accent) 배경 위 글자색 — white on #3d3d8f 9.28:1 */
+  --color-on-accent: #ffffff;
+  /* 온라인 상태 점 (장식, aria-hidden) */
+  --color-status-online: #4ade80;
+  /* 이미지 슬라이더 좌우 버튼 */
+  --slider-nav-bg: rgba(26, 18, 16, 0.9);
+  --slider-nav-bg-hover: #1a1210;
+  --slider-nav-icon: #ffffff;
   /* 선택 메뉴는 항상 밝은 배경 — 모드 무관 고정값 */
   --color-select-hover: #c8c8de;
   --color-select-selected: #3d3d8f;
   --color-shadow-soft: rgba(0, 0, 0, 0.06);
   --color-shadow-hover: rgba(180, 150, 240, 0.18);
-  --color-glow: #fffcfa;
   --footer-border: rgba(90, 75, 120, 0.22);
   --footer-badge-bg: rgba(176, 148, 224, 0.08);
   --footer-badge-border: rgba(176, 148, 224, 0.28);
@@ -105,6 +114,8 @@ blockquote{
   --points-ball-5: #d4c8e4;
   /* 채팅 말풍선 — 라이트: own 미디엄 인디고(page 3.33:1 ✅) / other 아이보리+border+shadow */
   --chat-bubble-own: #7a80cc;
+  /* 내 메시지 말풍선 위 글자 — 라이트: primary(4.70:1 ✅) */
+  --chat-bubble-own-text: var(--color-text-primary);
   /* 드랍다운 메뉴 배경 — 라이트: 인디고 페일 / dark: 라이트 인디고(어두운 텍스트용, 13.7:1 ✅) */
   --ilp-select-menu-bg: #eaeaf8;
   --chat-bubble-ai: var(--color-card-bg);
@@ -139,8 +150,9 @@ blockquote{
   --color-accent-muted: #5c64a4;
   --color-accent-pale: #222228;
   --color-accent-border: rgba(122, 128, 204, 0.45);
-  --color-text-primary: #f0ece6;
-  --color-text-secondary: #b0a8a0;
+  /* 다크 글자색 — 순백에 가까운 글자의 눈부심을 줄이려 대비를 16:1 → 12.55:1로 낮춤 (AA 4.5:1 충족) */
+  --color-text-primary: #d6d2cc;
+  --color-text-secondary: #a09a93;
   --color-card-bg: #1a1a18;
   --color-card-border: rgba(200, 200, 200, 0.2);
   --guide-card-surface-bg: var(--color-ivory-soft);
@@ -148,10 +160,17 @@ blockquote{
   --color-accent-line: #5c64a4;
   --color-select-option-text: #2d2040;
   --color-avatar-dark-bg: #4455b8;
+  /* white on #4466cc 5.23:1 */
+  --color-accent-solid: #4466cc;
+  /* #111110 on #7a80cc 5.21:1 (흰 글자는 3.63:1 미달) */
+  --color-on-accent: #111110;
+  --color-status-online: #4ade80;
+  --slider-nav-bg: rgba(248, 246, 243, 0.95);
+  --slider-nav-bg-hover: #ffffff;
+  --slider-nav-icon: #2d1e18;
   --color-hero-dark-bg: #0c0a14;
   --color-shadow-soft: rgba(0, 0, 0, 0.28);
   --color-shadow-hover: rgba(0, 0, 0, 0.2);
-  --color-glow: rgba(255, 255, 255, 0.5);
   --footer-border: rgba(200, 200, 200, 0.16);
   --footer-badge-bg: rgba(200, 200, 200, 0.08);
   --footer-badge-border: rgba(200, 200, 200, 0.2);
@@ -176,6 +195,8 @@ blockquote{
   --points-ball-5: #b0b0b0;
   /* 채팅 말풍선 — 다크: own 미디엄 인디고(page 3.10:1 ✅) / other 카드+border+shadow */
   --chat-bubble-own: #5c64a4;
+  /* 내 메시지 말풍선 위 글자 — 다크: 본문색(#d6d2cc)은 3.66:1로 미달이라 밝은 색 유지(4.68:1 ✅) */
+  --chat-bubble-own-text: #f0ece6;
   --ilp-select-menu-bg: #e8e8f8;
   --chat-bubble-ai: var(--color-card-bg);
   --chat-bubble-other: var(--color-card-bg);
@@ -1362,13 +1383,6 @@ h6 {
 .product-fragrance-name {
   color: var(--color-text-primary);
 }
-.product-fragrance-accent-line {
-  background: var(--color-accent-line);
-}
-.product-fragrance-glow {
-  background: radial-gradient(circle, var(--color-glow) 0%, transparent 70%);
-}
-
 .product-title-layout {
   @apply flex 
   items-center 
@@ -1650,6 +1664,23 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 
 /* react-select dark mode */
 @layer components {
+  /* 이미지 슬라이더 좌우 버튼 — 라이트: 어두운 원 / 다크: 밝은 원 */
+  .slider-nav-btn {
+    background: var(--slider-nav-bg);
+    color: var(--slider-nav-icon);
+  }
+  .slider-nav-btn:hover {
+    background: var(--slider-nav-bg-hover);
+  }
+
+  /* 버튼 안 인라인 로딩 표시 — InlineSpinner 전용. 글자색(currentColor)을 따른다 */
+  .inline-spinner {
+    display: block;
+    border-radius: 9999px;
+    border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+    border-top-color: currentColor;
+    animation: ilp-spin 1s linear infinite;
+  }
   /* .ilp-select-container {
   } */
   .ilp-select-container .ilp-select__control {
@@ -2158,26 +2189,6 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   min-height: 0;
 }
 
-/* 병 주변 글로우 — 오로라 퍼플/라벤더 */
-.ilp-bottle-glow {
-  position: absolute;
-  width: 80%;
-  height: 80%;
-  background: radial-gradient(ellipse,
-    rgba(160, 130, 255, 0.22) 0%,
-    rgba(110,  88, 220, 0.10) 50%,
-    transparent 72%
-  );
-  border-radius: 50%;
-  animation: ilp-glow-pulse 4s ease-in-out infinite;
-  z-index: -1;
-}
-
-@keyframes ilp-glow-pulse {
-  0%, 100% { transform: scale(1);    opacity: 0.75; }
-  50%       { transform: scale(1.22); opacity: 1; }
-}
-
 /* 향수 이미지 — 높이에 비례해 크기 제한, 항상 보이게 */
 .ilp-bottle-img {
   width: auto !important;
@@ -2200,13 +2211,6 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   align-items: center;
   gap: 0.35em;
   min-height: 0;
-}
-
-/* 장식 분리선 — 라벤더/퍼플 */
-.ilp-deco-line {
-  width: clamp(60px, 12vw, 120px);
-  height: 1px;
-  background: var(--color-accent-border);
 }
 
 /* 메인 타이틀 — 라이트: 진한 라벤더(아이보리 대비), 다크: 밝은 라벤더 */
@@ -2554,4 +2558,8 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
     width: 380px;
     max-width: 380px;
   }
+}
+
+@keyframes ilp-spin {
+  to { transform: rotate(360deg); }
 }

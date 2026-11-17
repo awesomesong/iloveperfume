@@ -20,10 +20,12 @@
 
 | | 라이트 | 다크 |
 |--|--------|------|
-| primary | `#1a1a2e` | `#f0ece6` ✅ |
-| secondary | `#52526e` | `#b0a8a0` ✅ |
+| primary | `#1a1a2e` | `#d6d2cc` ✅ |
+| secondary | `#52526e` | `#a09a93` ✅ |
 
-> **WCAG AA 확인값** — primary: 라이트 15:1 / 다크 14:1 ✅ · secondary: 라이트 7:1 / 다크 8.9:1 ✅
+> **WCAG AA 확인값** — primary: 라이트 15:1 / 다크 12.55:1 ✅ · secondary: 라이트 7:1 / 다크 6.78:1 ✅
+>
+> **다크 글자색 원칙**: 순백에 가까운 글자(`#f0ece6`, 16:1)는 어두운 배경에서 번져 보여 눈이 피로하다. 본문 글자는 대비 11~13:1 범위로 낮춰 쓴다. `#f0ece6`은 버튼 배경·로고·내 메시지 말풍선 글자처럼 지정된 곳에만 쓴다.
 
 ---
 
@@ -67,6 +69,10 @@
 | 호버 그림자 | `var(--color-shadow-hover)` |
 | 헤더 배경 | `var(--header-bg)` |
 | 안 읽은 배지 | `--unread-badge-bg` / `--unread-badge-text` |
+| 솔리드 액센트 (흰 글자용) | `--color-accent-solid` | 라이트 `#3d3d8f` / 다크 `#4466cc` — 제출 버튼 배경 |
+| 액센트 위 글자 | `--color-on-accent` | 라이트 `#ffffff` / 다크 `#111110` — `var(--color-accent)` 배경 위 글자·아이콘 |
+| 온라인 상태 점 | `--color-status-online` | `#4ade80` (장식, `aria-hidden`) |
+| 슬라이더 좌우 버튼 | `--slider-nav-bg` / `--slider-nav-bg-hover` / `--slider-nav-icon` | `.slider-nav-btn` 클래스로 사용 |
 | 사이드바 hover/active | `--color-sidebar-state-bg` | 라이트 `var(--color-accent-pale)` = `#eaeaf8` / 다크 `rgba(61,61,143,0.30)` (인디고 틴트) |
 
 > **사이드바 active 구분 원칙**: 인디고 틴트 배경 + `box-shadow: inset 3px 0 0 var(--color-accent)` 좌측 바로 명확히 표시.
@@ -88,7 +94,7 @@
 
 ```tsx
 // SVG fill 대신 반드시 className으로 색상 지정
-// text-[var(--color-text-primary)] — 라이트 #1a1a2e / 다크 #f0ece6 (자동 전환)
+// text-[var(--color-text-primary)] — 라이트 #1a1a2e / 다크 #d6d2cc (자동 전환)
 <HiChevronLeft size={32} className="text-[var(--color-text-primary)]" />
 <HiPhoto size={30} className="text-[var(--color-text-primary)]" />
 
@@ -109,45 +115,45 @@
 |--------|------|-----------|---------|
 | `text-gradient-scent` | **페이지 대표 제목** (H2 강조 헤딩) | `#2d2040` | `#f5f0e8` |
 | `text-gradient-ilp` | 카드 제목·서브 타이틀·강조 인라인 | `var(--color-text-primary)` | `var(--color-text-primary)` |
-| `text-gradient-logo` | 로고 전용 (`AnimatedLogo`) | `#2a2840` | `#f0ece6` |
-| `text-gradient-memories` | 채팅·메모리 사이드바 제목 | `#6b5b95` | `#c8b4ff` |
+| `text-gradient-logo` | 로고 전용 (`AnimatedLogo`) — 현재 미사용 | `#2a2840` | `#f0ece6` |
+| `text-gradient-memories` | 채팅·메모리 사이드바 제목 — 현재 미사용 | `#6b5b95` | `#c8b4ff` |
 
 > 클래스 이름은 유지 (기존 컴포넌트 호환). **`-webkit-text-fill-color: currentColor`** 로 동작.  
-> `text-gradient-scent`는 반드시 `page-title-gradient`와 함께 사용 — 폰트 사이즈·자간 자동 적용.
+> 페이지 대표 제목은 **`PageIntro` 컴포넌트**로 통일한다 (6-1 참고). `text-gradient-scent`는 메인 쇼케이스처럼 큰 강조 헤딩에만 쓴다.
 
 ```tsx
-// 페이지 H2 제목 표준 패턴
-<h2 className="text-gradient-scent page-title-gradient">향수 컬렉션</h2>
+// 페이지 제목 표준 패턴
+<PageIntro title="향수 컬렉션" description="한 줄 설명" />
 ```
 
 ### 2-2. 배경 색상 클래스
 
 | 클래스 | 용도 | 색상 |
 |--------|------|------|
-| `bg-gradient-ilp` | 아이콘·배지 배경 | `var(--color-lavender)` |
-| `bg-gradient-ilp-avatar` | 아바타 배경 | 라이트: `var(--color-lavender)` / 다크: `#4455b8` |
-| `line-gradient-deco` | 섹션 구분 가로선 | `var(--color-lavender-border)` |
+| `bg-gradient-ilp` | 아이콘·배지 배경 | `var(--color-accent)` |
+| `bg-gradient-ilp-avatar` | 아바타 배경 (AI 아바타 포함) | 라이트: `var(--color-accent)` / 다크: `var(--color-avatar-dark-bg)` `#4455b8` |
+| `line-gradient-deco` | 섹션 구분 가로선 | `var(--color-accent-border)` |
 | `footer-deco-line` | 푸터 상단 구분선 | `var(--color-card-border)` |
-| `product-fragrance-divider` | 향수 섹션 내 구분선 | `var(--color-lavender-border)` |
-| `ilp-deco-line` | 히어로 섹션 브랜드명 하단 장식선 | `var(--color-lavender-border)` |
+| `product-fragrance-divider` | 향수 섹션 내 구분선 | `var(--color-accent-border)` |
+| `slider-nav-btn` | 이미지 슬라이더 좌우 버튼 | 라이트: 어두운 원 + 흰 아이콘 / 다크: 밝은 원 + 어두운 아이콘 |
 
 ### 2-3. 버튼 색상 (Button.tsx `variant="ilp"`)
 
 ```
-배경: bg-[#1a1825]  dark:bg-[#f0ece6]
-텍스트: text-white  dark:text-[#1a1825]
+배경: bg-[var(--color-accent-solid)]   (라이트 #3d3d8f / 다크 #4466cc)
+텍스트: text-white
 ```
 
-라이트 대비: 흰 텍스트 on `#1a1825` → **17.5:1** ✅  
-다크 대비: `#1a1825` on `#f0ece6` → **14.8:1** ✅
+라이트 대비: 흰 텍스트 on `#3d3d8f` → **9.28:1** ✅  
+다크 대비: 흰 텍스트 on `#4466cc` → **5.23:1** ✅
 
 ### 2-4. CTA 카드 버튼 배경 (ScanClient 등)
 
 ```tsx
 // ✅ 솔리드 카드 배경 패턴
 style={{
-  background: 'var(--color-lavender-pale)',
-  border: '1px solid var(--color-lavender-border)',
+  background: 'var(--color-accent-pale)',
+  border: '1px solid var(--color-accent-border)',
   boxShadow: '0 2px 12px var(--color-shadow-soft)',
 }}
 // 텍스트: className="text-text-primary" / "text-secondary"
@@ -167,21 +173,21 @@ import Button, { FormSubmitActions } from "@/src/app/components/Button";
 
 | variant | 용도 | 스타일 |
 |---------|------|--------|
-| `"ilp"` | **주요 CTA** (제출·분석·등록) | 다크 솔리드 배경, 흰 텍스트 |
+| `"ilp"` | **주요 CTA** (제출·분석·등록) | 인디고 솔리드 배경, 흰 텍스트 |
 | `"ghostLavender"` | **보조 CTA** (취소·다시선택·뒤로) | 투명 배경, 뉴트럴 보더·텍스트 |
 
 **실제 색상 (Button.tsx)**
 
 ```
-ilp 배경:     bg-[#1a1825]  dark:bg-[#f0ece6]
-ilp 텍스트:   text-white    dark:text-[#1a1825]
+ilp 배경:     bg-[var(--color-accent-solid)]  (라이트 #3d3d8f / 다크 #4466cc)
+ilp 텍스트:   text-white
 
-ghost 텍스트: var(--color-text-primary)  (라이트 #1a1a2e / 다크 #f0ece6)
+ghost 텍스트: var(--color-text-primary)  (라이트 #1a1a2e / 다크 #d6d2cc)
 ghost 보더:   라이트 rgba(60,58,52,0.65)  /  다크 rgba(176,168,160,0.60)
 ghost hover 보더: 라이트 rgba(60,58,52,0.90)  /  다크 rgba(200,195,188,0.45)
 ```
 
-**WCAG 대비** — ilp 흰 텍스트 on `#1a1825`: **17.5:1** ✅ / ghost 텍스트 라이트: 17.5:1 / 다크: 14.3:1 ✅
+**WCAG 대비** — ilp 흰 텍스트: 라이트 **9.28:1** / 다크 **5.23:1** ✅ / ghost 텍스트 라이트: 17.5:1 / 다크: 14.3:1 ✅
 
 ### 3-2. size prop
 
@@ -249,15 +255,21 @@ function contrast(hex1, hex2) {
 |------|--------|--------|------|
 | 라이트 page `#f7f5f2` | primary `#1a1a2e` | 15:1 | ✅ AA |
 | 라이트 page `#f7f5f2` | secondary `#52526e` | 7:1 | ✅ AA |
-| 다크 page `#111110` | primary `#f0ece6` | 15.3:1 | ✅ AA |
-| 다크 page `#111110` | secondary `#b0a8a0` | 9.9:1 | ✅ AA |
+| 다크 page `#111110` | primary `#d6d2cc` | 12.55:1 | ✅ AA |
+| 다크 page `#111110` | secondary `#a09a93` | 6.78:1 | ✅ AA |
+| 다크 card `#1a1a18` | primary `#d6d2cc` | 11.58:1 | ✅ AA |
+| 다크 card `#1a1a18` | secondary `#a09a93` | 6.26:1 | ✅ AA |
 
 #### 버튼
 
 | 배경 | 텍스트 | 대비율 | 기준 |
 |------|--------|--------|------|
-| ilp 라이트 `#1a1825` | `white` | 17.5:1 | ✅ AA |
-| ilp 다크 `#f0ece6` | `#1a1825` | 14.8:1 | ✅ AA |
+| ilp 라이트 `#3d3d8f` | `white` | 9.28:1 | ✅ AA |
+| ilp 다크 `#4466cc` | `white` | 5.23:1 | ✅ AA |
+| 다크 `var(--color-accent)` `#7a80cc` | `white` | 3.63:1 | ❌ 사용 금지 — `--color-on-accent` 사용 |
+| 다크 `var(--color-accent)` `#7a80cc` | `--color-on-accent` `#111110` | 5.21:1 | ✅ AA |
+| 슬라이더 버튼 라이트 `#1a1210` | `white` | 18.45:1 | ✅ AA |
+| 슬라이더 버튼 다크 `#f8f6f3` | `#2d1e18` | 14.86:1 | ✅ AA |
 
 #### 공통 카드 border
 
@@ -277,7 +289,7 @@ function contrast(hex1, hex2) {
 | **hero** | 라이트 | 인디고 그라데이션 `#3d3d8f` | `white` | 9.28:1 ✅ | 최저가·주요 CTA 배지 |
 | **hero** | 다크 | 인디고 그라데이션 `#3d3d8f` | `white` | 10.2:1 ✅ | 최저가·주요 CTA 배지 |
 | **filled** | 라이트 | `--color-accent-pale` `#eaeaf8` | `--color-text-primary` `#1a1a2e` | 15:1 ✅ | 활성 필터·강조 배지 |
-| **filled** | 다크 | `--color-accent-light` `#9da4e0` | `#1a1a18` | 7.95:1 ✅ | 활성 필터·정품 매칭 |
+| **filled** | 다크 | `--color-accent-light` `#9da4e0` | `#1a1a18` | 7.32:1 ✅ | 활성 필터·정품 매칭 |
 | **outline** | 라이트 | transparent | `--color-accent-muted` `#6868a8` + `accent-border` | 5.2:1 ✅ | 비활성 필터·보조 배지 |
 | **outline** | 다크 | transparent | `--color-accent-light` `#9da4e0` + `accent-border` | 6.36:1 ✅ | 비활성 필터·보조 배지 |
 
@@ -288,9 +300,9 @@ function contrast(hex1, hex2) {
 | 라이트 own `#7a80cc` | primary `#1a1a2e` | 4.70:1 | ✅ AA |
 | 라이트 own `#7a80cc` | page bg `#f7f5f2` | 3.33:1 | ✅ UI구분 |
 | 라이트 other/ai `#fffcfa` | primary `#1a1a2e` | 16.70:1 | ✅ AA |
-| 다크 own `#5c64a4` | primary `#f0ece6` | 4.68:1 | ✅ AA |
+| 다크 own `#5c64a4` | `--chat-bubble-own-text` `#f0ece6` | 4.68:1 | ✅ AA (본문색 `#d6d2cc`는 3.66:1 미달 — 사용 금지) |
 | 다크 own `#5c64a4` | page bg `#111110` | 3.53:1 | ✅ UI구분 |
-| 다크 other/ai `#1a1a18` | primary `#f0ece6` | 14.81:1 | ✅ AA |
+| 다크 other/ai `#1a1a18` | primary `#d6d2cc` | 11.58:1 | ✅ AA |
 
 #### 사이드바 활성 상태
 
@@ -299,7 +311,7 @@ function contrast(hex1, hex2) {
 | 라이트 active `#eaeaf8` | page `#f7f5f2` | 1.10:1 | 좌측 바 8.35:1로 WCAG 충족 |
 | 라이트 active `#eaeaf8` | text `#1a1a2e` | 14.31:1 | ✅ AA |
 | 다크 active `rgba(61,61,143,0.30)` ≈ `#222238` | page `#111110` | 1.32:1 | 좌측 바 4.90:1로 WCAG 충족 |
-| 다크 active `rgba(61,61,143,0.30)` ≈ `#222238` | text `#f0ece6` | 12.5:1 | ✅ AA |
+| 다크 active `rgba(61,61,143,0.30)` ≈ `#222238` | text `#d6d2cc` | 10.30:1 | ✅ AA |
 | 좌측 바 라이트 `#3d3d8f` | page `#f7f5f2` | 8.35:1 | ✅ 주 인디케이터 |
 | 좌측 바 다크 `#7a80cc` | page `#111110` | 4.90:1 | ✅ 주 인디케이터 |
 | `--color-accent-interactive` 다크 `#7a80cc` | page `#111110` | 4.90:1 | ✅ AA |
@@ -319,7 +331,7 @@ function contrast(hex1, hex2) {
 | 배경 | 텍스트/아이콘 | 대비율 | 기준 |
 |------|--------------|--------|------|
 | 전송버튼 라이트 `#3d3d8f` | `white` | 9.28:1 | ✅ AA |
-| 전송버튼 다크 `#7a80cc` | `#111110` | 4.90:1 | ✅ AA |
+| 전송버튼 다크 `#7a80cc` | `#111110` | 5.21:1 | ✅ AA |
 | 그룹아이콘 다크 `#4455b8` | `white` | 7.52:1 | ✅ AA |
 
 ---
@@ -359,6 +371,8 @@ function contrast(hex1, hex2) {
 | 이미지 (fallback 포함) | `FallbackNextImage` — blob URL은 `<img>` 직접 |
 | 이미지 슬라이더 | `ImageSlider` |
 | 풀스크린 로딩 | `<PointsLoading loadingMessage="..." />` |
+| 버튼 안 로딩 | `<InlineSpinner />` from `@/src/app/components/InlineSpinner` (글자색을 따름) |
+| 페이지 머리 | `PageIntro` from `@/src/app/components/PageIntro` |
 | 모달 제목 | `.modal-title` (text-gradient-ilp 포함) |
 | 모달 설명 | `.modal-description` |
 | 입력 필드 | `TextField` from `@/src/app/components/TextField` |
@@ -492,12 +506,18 @@ import PointsLoading from "@/src/app/components/PointsLoading";
 - [ ] 배경·텍스트에 그라데이션 사용 (`bg-gradient-to-*`, `linear-gradient`, `background-clip: text`)
 - [ ] `text-black/40` 또는 `text-white/40` 이하 opacity 텍스트 (비장식 요소)
 - [ ] 버튼·링크 텍스트에 이모지 삽입
-- [ ] 즉석 `animate-spin` spinner (PointsLoading 사용)
+- [ ] 즉석 `animate-spin` spinner (풀스크린은 `PointsLoading`, 버튼 안은 `InlineSpinner`)
 - [ ] ghostLavender 버튼을 어두운 오버레이 안에 절대 배치
 - [ ] `text-stone-*` `text-neutral-*` 등 임의 Tailwind 색 사용 (디자인 토큰 사용)
-- [ ] 페이지 대표 H2 제목에 `text-gradient-scent` 미적용
+- [ ] 새 페이지 대표 제목을 `PageIntro` 없이 직접 스타일링
 - [ ] 채팅·사이드바 아이콘에 `fill="url(#ilp-nav-gradient)"` 사용 (`className="text-[var(--color-text-primary)]"` 사용)
 - [ ] 채팅 말풍선에 하드코딩 hex 사용 (`var(--chat-bubble-own/ai/other)` 사용)
 - [ ] 새 배경색 추가 시 WCAG 대비율 미검증 (4-0 검증 함수로 확인 후 4-1 표에 기록)
 
 하나라도 해당하면 수정.
+
+**허용 예외** — 아래는 브랜드 색이 아니라 사물을 그리는 값이라 hex·그라데이션을 그대로 둔다.
+- 이미지 미리보기 고정 검정 배경 (`#0a0a0a`, 8절 미리보기 패턴)
+- 메인 `FeatureShowcase`의 휴대폰 기기 목업 (본체·유리 반사 그라데이션)
+
+**기존 페이지 제목 전환 현황** — `PageIntro` 적용: `/news`. 미적용(순차 전환 대상): 향수 등록·수정, 스캔, 스캔 결과, 가이드, 메인 컬렉션(`ProductFragrance`).

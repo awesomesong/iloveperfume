@@ -732,7 +732,7 @@ export default function GuideContent({
         </p>
 
         <div
-          className="mt-8 h-px w-full max-w-xs [background:linear-gradient(90deg,var(--color-accent-border)_0%,transparent_100%)]"
+          className="mt-8 h-px w-full max-w-xs bg-[var(--color-accent-border)]"
         />
 
         <div
@@ -823,7 +823,7 @@ export default function GuideContent({
                   >
                     <div className="flex items-start gap-3">
                       <span
-                        className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-base [background:linear-gradient(135deg,var(--color-accent-pale)_0%,var(--color-ivory-soft)_100%)]"
+                        className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-base bg-[var(--color-accent-pale)]"
                       >
                         {icon}
                       </span>
@@ -887,7 +887,7 @@ export default function GuideContent({
                       </span>
                       {i < steps.length - 1 && (
                         <div
-                          className="w-px flex-1 my-1 [background:linear-gradient(180deg,var(--color-accent-border)_0%,transparent_100%)] min-h-[32px]"
+                          className="w-px flex-1 my-1 bg-[var(--color-accent-border)] min-h-[32px]"
                         />
                       )}
                     </div>
@@ -1122,7 +1122,7 @@ export default function GuideContent({
                 'rounded-2xl border border-[var(--color-accent-border)]',
                 isOnThisPageSticky
                   ? 'max-lg:rounded-none max-lg:border-0 max-lg:border-b max-lg:border-[var(--header-border)] max-lg:bg-[var(--header-bg)] max-lg:backdrop-blur-md max-lg:py-1.5 max-lg:px-4 max-lg:md:px-8 max-lg:max-w-[1440px] max-lg:mx-auto'
-                  : 'max-lg:py-2 max-lg:px-3 max-lg:md:py-2.5 max-lg:md:px-4 [background:linear-gradient(135deg,rgba(176,148,224,0.06)_0%,transparent_100%)]',
+                  : 'max-lg:py-2 max-lg:px-3 max-lg:md:py-2.5 max-lg:md:px-4',
               )}
             >
               <p
