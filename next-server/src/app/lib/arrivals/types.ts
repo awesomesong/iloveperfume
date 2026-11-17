@@ -60,6 +60,7 @@ export type RuleDropReason =
   | "excludedTitle"
   | "excludedTag"
   | "multiPack"
+  | "exclusiveChannel"
   | "noName"
   | "notNew"
   | "noImage"

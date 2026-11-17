@@ -2,6 +2,7 @@
 
 브랜드 공식 사이트에 새로 올라온 향수를 스케줄러가 수집해 `Fragrance`에 등록한다(`source = AI_AGENT`).
 사용자가 직접 등록하는 흐름(`/fragrance/create`, `source = USER`)과 같은 테이블을 쓰고, 수집분은 `/api/cron/perfume-arrivals`만 생성한다.
+**한국에서 살 수 있는 향수만** 올린다 — 국내 정식 유통이 확인된 브랜드만 수집하고, 특정 매장·공식몰 전용 제품은 뺀다(아래 "한국 판매 기준").
 
 ## 흐름
 
@@ -9,16 +10,16 @@
 Vercel Cron (vercel.json, 매일 01:00 UTC = 10:00 KST)
   └─ GET /api/cron/perfume-arrivals       Authorization: Bearer CRON_SECRET
        1. collectArrivals     브랜드 공식 사이트의 제품 피드(/products.json) — ARRIVAL_SOURCES에 등록된 브랜드만
-       2. filterByRules       향수 유형 · 제외 단어/태그 · 묶음 구성 · 용량만 다른 중복 합치기 · 처음 등장한 날이 60일 이내 · 이미지 출처 · 소개문 길이
+       2. filterByRules       향수 유형 · 제외 단어/태그 · 묶음 구성 · 판매처 한정 · 용량만 다른 중복 합치기 · 처음 등장한 날이 60일 이내 · 이미지 출처 · 소개문 길이
        3. excludeExisting     이미 있는 공식 URL · 다시 수집하지 않기로 한 URL(FragranceBlockedUrl) · 같은 브랜드+이름 제외
        4. describeArrivals    OpenAI 1회 호출 — 향수 단품 판정 + 한국어 소개·노트(JSON)
-       5. validateDescriptions id 대조 · 향수 판정 · 확신도 · 이름이 피드 제목에 있는지 · 설명 길이/한국어 · 최대 10건
+       5. validateDescriptions id 대조 · 향수 판정 · 확신도 · 이름이 피드 제목에 있는지 · 설명 길이/한국어 · 노트 표기(용어집) · 최대 10건
        6. saveAsFragrances    Fragrance 저장 — 바로 공개 (officialUrl unique → 중복 실행에도 안전)
 ```
 
 실행 순서는 코드가 정하고 LLM은 4번에서만 판단한다(에이전트 루프가 아닌 고정 파이프라인).
 브랜드명·공식 URL·이미지·날짜는 피드에서 코드가 가져오므로 LLM이 틀리게 만들 수 없다.
-LLM이 쓰는 것은 이름 표기(피드 제목과 대조), 소개문, 노트뿐이다.
+LLM이 쓰는 것은 이름 표기(피드 제목과 대조)와 소개문뿐이다. 노트는 LLM이 원문에서 영문 이름을 골라내기만 하고, 한국어 표기는 코드가 정한다(아래 "노트 번역 규칙").
 
 ## 검증에 실패한 제품
 
@@ -34,33 +35,54 @@ LLM이 쓰는 것은 이름 표기(피드 제목과 대조), 소개문, 노트�
 | 위치 | 역할 |
 |------|------|
 | `src/app/lib/arrivals/config.ts` | 수집 대상 브랜드, 제외 단어·태그, 기간, 기준 점수 등 운영 값 — **조정은 여기서** |
-| `src/app/lib/arrivals/*.ts` | 단계별 로직 (`filterByRules`, `pickForRun`, `validateDescriptions`는 순수 함수) |
+| `src/app/lib/arrivals/noteGlossary.ts` | 노트 용어집(영문 → 한국어 표기) — **노트 표기를 바꾸거나 단어를 추가할 때는 여기서** |
+| `src/app/lib/arrivals/*.ts` | 단계별 로직 (`filterByRules`, `pickForRun`, `validateDescriptions`, `resolveNotes`는 순수 함수) |
 | `src/app/api/cron/perfume-arrivals/route.ts` | 크론 진입점 |
 | `src/app/lib/cronAuth.ts` | 크론 엔드포인트 공통 인증 (`perfume-news`와 함께 사용) |
 
 ## 수집 대상 브랜드
 
-공식 사이트가 제품 목록을 `/products.json`으로 공개하는 브랜드만 등록할 수 있다(Shopify 스토어).
-아래 규칙은 2026-11-17 기준 실제 피드를 보고 정했다.
+아래 두 조건을 모두 갖춘 브랜드만 등록한다.
 
-| 브랜드 | 도메인 | 향수 단품 판별 |
-|--------|--------|----------------|
-| D.S. & DURGA | dsanddurga.com | product_type `Eau de Parfum`, `Perfume Oil` |
-| VILHELM PARFUMERIE | vilhelmparfumerie.com | product_type `Eau de Parfum` |
-| IMAGINARY AUTHORS | www.imaginaryauthors.com | product_type `Perfume` + 제목이 `- FRAGRANCE`로 끝남 (캔들·비누·머그도 같은 유형이라) |
-| GOLDFIELD & BANKS | www.goldfieldandbanks.com | product_type `100ml` |
-| NONFICTION | www.nonfiction.com | product_type `Parfum`, `Perfume` |
-| DEDCOOL | dedcool.com | product_type `Fragrance` |
-| MAISON LOUIS MARIE | www.maisonlouismarie.com | product_type `Personal fragrance` + 제목이 `Eau de Parfum -` / `Perfume Oil -`로 시작 |
-| JULIETTE HAS A GUN | www.juliettehasagun.com | product_type `Eau de Parfum` (프랑스어 스토어 — 소개문이 짧아 대부분 길이 기준에서 걸러진다) |
+1. **한국 정식 유통이 확인된다** — 국내 수입사, 백화점·편집숍 입점처럼 근거를 `koreaChannel`에 적을 수 있어야 한다.
+2. **공식 사이트가 제품 목록을 `/products.json`으로 공개한다**(Shopify 스토어).
+
+| 브랜드 | 도메인 | 한국 정식 유통 근거 (2026-11-18 확인) | 향수 단품 판별 |
+|--------|--------|------------------------------------|----------------|
+| D.S. & DURGA | dsanddurga.com | 신세계 센텀시티 입점(2024-12), 29CM 라이징 브랜드 기획전(2026-11) | product_type `Eau de Parfum`, `Perfume Oil` |
+| JULIETTE HAS A GUN | www.juliettehasagun.com | 수입사 ㈜씨이오인터내셔널, 더현대 서울 팝업(2026-08) | product_type `Eau de Parfum` (프랑스어 스토어 — 소개문이 짧아 대부분 길이 기준에서 걸러진다) |
 
 등록하지 않은 브랜드와 이유:
 
-- BORNTOSTANDOUT (borntostandout.com): 피드의 소개문이 비어 있다(84건 중 78건). 설명을 쓸 근거가 없다.
-- BYREDO, LE LABO, DIPTYQUE, JO MALONE, AESOP, TAMBURINS: `/products.json`이 없거나(404) 자동 요청을 막는다(403).
+- **국내 정식 유통을 확인하지 못함 (2026-11-18)**: 아래 브랜드는 피드는 쓸 수 있지만 국내 수입사·입점 매장을 찾지 못해 뺐다. 한국어 페이지가 있는 해외 쇼핑몰(noseparis.com/ko 등)이나 해외 직구 판매 글은 국내 정식 유통 근거로 보지 않는다. 근거가 확인되면 아래 판별 규칙으로 다시 등록한다.
 
-브랜드를 추가하려면 `https://{도메인}/products.json?limit=250`을 직접 열어 향수 단품에 붙는 `product_type`을 확인한 뒤 `ARRIVAL_SOURCES`에 등록한다.
+  | 브랜드 | 도메인 | 향수 단품 판별 |
+  |--------|--------|----------------|
+  | VILHELM PARFUMERIE | vilhelmparfumerie.com | product_type `Eau de Parfum` |
+  | IMAGINARY AUTHORS | www.imaginaryauthors.com | product_type `Perfume` + 제목이 `- FRAGRANCE`로 끝남 (캔들·비누·머그도 같은 유형이라) |
+  | GOLDFIELD & BANKS | www.goldfieldandbanks.com | product_type `100ml` |
+  | NONFICTION | www.nonfiction.com | product_type `Parfum`, `Perfume` (미국 스토어, USD) |
+  | DEDCOOL | dedcool.com | product_type `Fragrance` |
+  | MAISON LOUIS MARIE | www.maisonlouismarie.com | product_type `Personal fragrance` + 제목이 `Eau de Parfum -` / `Perfume Oil -`로 시작 |
+
+- BORNTOSTANDOUT (borntostandout.com): 피드의 소개문이 비어 있다(84건 중 78건). 설명을 쓸 근거가 없다.
+- BYREDO, LE LABO, DIPTYQUE, JO MALONE, AESOP, TAMBURINS: 국내에서 팔지만 `/products.json`이 없거나(404) 자동 요청을 막는다(403).
+
+브랜드를 추가하려면 먼저 국내 정식 유통 근거를 찾고, `https://{도메인}/products.json?limit=250`을 직접 열어 향수 단품에 붙는 `product_type`을 확인한 뒤 `ARRIVAL_SOURCES`에 `koreaChannel`과 함께 등록한다.
 `brand`는 DB 관례대로 영문 대문자로 쓴다(피드의 `vendor`는 스토어마다 제각각이라 쓰지 않는다).
+
+## 한국 판매 기준
+
+한국에서 살 수 있는지는 두 단계로 거른다.
+
+| 단계 | 기준 | 위치 |
+|------|------|------|
+| 브랜드 | 국내 정식 유통이 확인된 브랜드만 수집 대상에 둔다 | `ARRIVAL_SOURCES`의 `koreaChannel` |
+| 제품 | 소개문에 판매처를 특정 매장·공식몰로 한정하는 문구가 있으면 뺀다(탈락 사유 `exclusiveChannel`) | `EXCLUSIVE_SALE_PATTERNS` |
+
+- 제품 단계 예: "sold exclusively at D.S. & Durga New York stores"(Rockaway Beach), "sold direct only"(Once Upon A Time In The Red Southwest). 프랑스어 스토어용으로 "vendu exclusivement…", "en exclusivité sur…"도 본다.
+- 문구는 판매 맥락으로 좁혀 잡는다. "exclusive" 한 단어로 잡으면 "Exclusive, Elégante et Somptueuse" 같은 수식어까지 걸린다(2026-11-18 두 브랜드 피드 361건으로 확인 — 좁힌 규칙은 위 2건만 잡았다).
+- 한계: 브랜드 단위 확인이라 막 나온 신제품이 아직 국내에 들어오지 않았을 수 있다. 상품별 국내 판매를 확인하려면 국내 쇼핑몰 검색이 필요한데, 네이버 쇼핑 검색 API는 2026-07-31에 종료됐다(ADR-0003). 11번가 오픈 API(키 발급 필요)가 남은 후보다.
 
 ## "신제품" 판단
 
@@ -69,6 +91,34 @@ LLM이 쓰는 것은 이름 표기(피드 제목과 대조), 소개문, 노트�
 그래서 예전 향수의 새 용량(예: Vilhelm `MORNING CHESS` 20 ML)은 수집하지 않는다.
 
 기간을 늘리면 첫 실행에서 더 많은 향수가 들어오지만, 검증에 계속 실패하는 제품을 그만큼 오래 반복 평가한다.
+
+## 노트 번역 규칙
+
+LLM에게 노트를 한국어로 옮기게 두면 같은 원료가 실행할 때마다 다르게 나오고(패출리/파촐리), 모르는 이름은 소리 나는 대로 지어 쓰거나("balm of Gilead" → "발미드 질레아드") 다른 원료로 바꿔 쓴다("baldy cypress" → "시더").
+그래서 LLM은 원문에 적힌 노트 이름을 **영문 그대로 나열**만 하고, 저장할 표기는 `resolveNotes`가 아래 순서로 정한다.
+
+| 순서 | 경우 | 저장되는 표기 | 예 |
+|------|------|---------------|-----|
+| 1 | 원문(소개문)에 없는 노트 | 버린다 | LLM이 지어낸 노트 |
+| 2 | 모든 단어가 용어집에 있는 원료 | 용어집 표기 — 실행마다 같다 | Fir Balsam Absolute → 퍼 발삼, Tonka Beans → 통카빈, Sandalwood Australia → 호주 샌달우드 |
+| 3 | 일상어로 된 표현 — 풍경·사물, 또는 원료에 일상어 수식어가 붙은 것 | LLM이 옮긴 뜻(`translations`) | sea spray → 바다 물보라, holy dirt → 성스러운 흙, flowering privet → 꽃이 핀 프리벳 |
+| 4 | 그 밖(품종·지명·상표 같은 고유한 이름, 낯선 원료) | 영문 그대로 | Balm of Gilead, Pinyon Pine, Muscenon |
+
+- 용어집은 `noteGlossary.ts`의 `MATERIAL_TERMS`(원료), `GENERAL_TERMS`(부위·형태·수식어), `ORIGINS`(산지 — 한국어에서는 원료 앞에 온다)다. 영문 그대로 저장되는 노트가 자주 보이면 그 단어를 용어집에 추가한다. 용어집은 프롬프트에도 그대로 들어가 소개문 속 원료 표기의 기준이 된다.
+- Oil·Absolute·Essence 같은 추출 방식 표기는 노트 이름에서 뺀다.
+- 3번에서 노트에 원료가 섞여 있으면, LLM의 번역이 그 원료를 용어집 표기로 썼을 때만 받는다. 아니면 4번(영문)으로 넘어간다. LLM이 원료를 다른 것으로 바꿔 쓰거나 다른 표기를 쓰는 것을 막기 위해서다.
+- 3번의 번역은 LLM이 쓰는 글이라 실행마다 조금씩 다를 수 있다(파도 물보라 / 바다 물보라). 향수 한 건은 한 번만 저장되므로 화면에서 표기가 흔들리지는 않는다.
+- 브랜드 사이트의 소개문은 문단 태그를 줄바꿈으로 바꿔 읽는다. 태그만 지우면 "Cashmeran" 뒤에 다음 문단의 "Heart notes"가 붙어 노트를 잘못 읽는다.
+
+### 모델
+
+소개문과 노트는 AI 채팅과 같은 모델(`lib/ai/models.ts`의 `OPENAI_TEXT_MODEL`)로 쓴다. 2026-11-18에 같은 피드(후보 10건)로 비교했다.
+
+| | `gpt-4o-mini` | `gpt-6-luna` |
+|---|---|---|
+| 풍경·사물 노트 | 번역 목록을 비워 영문으로 남음(Pacific Spray, Fine Sand) | 뜻으로 옮김(태평양 물보라, 고운 모래) |
+| 소개문 속 원료 표기 | 용어집을 따르지 않음(앰브록산, 녹색 올리브, 마돈나 백합) | 용어집 표기와 일치 |
+| 응답 시간 | 25~30초 | 13~15초 |
 
 ## 환경변수
 

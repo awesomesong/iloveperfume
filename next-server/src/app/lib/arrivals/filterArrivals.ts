@@ -3,6 +3,7 @@ import { parseHttpUrl } from "@/src/app/lib/news/collectNews";
 import {
   EXCLUDE_TAGS,
   EXCLUDE_TITLE_WORDS,
+  EXCLUSIVE_SALE_PATTERNS,
   MAX_CANDIDATES,
   MAX_IMAGES,
   MIN_BODY_LENGTH,
@@ -68,6 +69,8 @@ function productDropReason(raw: RawArrival): RuleDropReason | null {
   if (raw.variantTitles.length > 0 && raw.variantTitles.every((v) => MULTI_PACK_PATTERN.test(v))) {
     return "multiPack";
   }
+  // 특정 매장·공식몰에서만 파는 제품은 한국에서 살 수 없다
+  if (EXCLUSIVE_SALE_PATTERNS.some((pattern) => pattern.test(raw.bodyText))) return "exclusiveChannel";
   return null;
 }
 
@@ -87,7 +90,7 @@ function pickRepresentative(members: Member[]): Member {
 
 /**
  * LLM 호출 전 코드 단계 필터 (순수 함수 — DB 조회 없음).
- * 1) 제품 단위: 향수 유형 → 제외 단어 → 제외 태그 → 묶음 구성
+ * 1) 제품 단위: 향수 유형 → 제외 단어 → 제외 태그 → 묶음 구성 → 판매처 한정(특정 매장·공식몰 전용)
  * 2) 이름 단위: 용량·농도만 다른 제품을 하나로 합치고, 그 이름이 피드에 처음 등장한 날이 기간 안인지 본다
  *    (예전 향수의 새 용량·트래블 스프레이는 신제품이 아니다)
  * 3) 대표 제품의 이미지 출처 · 소개문 길이
@@ -98,6 +101,7 @@ export function filterByRules(raw: RawArrival[], now: Date = new Date()): RuleFi
     excludedTitle: 0,
     excludedTag: 0,
     multiPack: 0,
+    exclusiveChannel: 0,
     noName: 0,
     notNew: 0,
     noImage: 0,
