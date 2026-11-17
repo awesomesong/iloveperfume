@@ -12,13 +12,13 @@ Vercel Cron (vercel.json, 매일 01:00 UTC = 10:00 KST)
        2. filterByRules       향수 유형 · 제외 단어/태그 · 묶음 구성 · 용량만 다른 중복 합치기 · 처음 등장한 날이 60일 이내 · 이미지 출처 · 소개문 길이
        3. excludeExisting     이미 있는 공식 URL · 다시 수집하지 않기로 한 URL(FragranceBlockedUrl) · 같은 브랜드+이름 제외
        4. describeArrivals    OpenAI 1회 호출 — 향수 단품 판정 + 한국어 소개·노트(JSON)
-       5. validateDescriptions id 대조 · 향수 판정 · 확신도 · 이름이 피드 제목에 있는지 · 설명 길이/한국어 · 최대 10건
+       5. validateDescriptions id 대조 · 향수 판정 · 확신도 · 이름이 피드 제목에 있는지 · 설명 길이/한국어 · 노트 표기(용어집) · 최대 10건
        6. saveAsFragrances    Fragrance 저장 — 바로 공개 (officialUrl unique → 중복 실행에도 안전)
 ```
 
 실행 순서는 코드가 정하고 LLM은 4번에서만 판단한다(에이전트 루프가 아닌 고정 파이프라인).
 브랜드명·공식 URL·이미지·날짜는 피드에서 코드가 가져오므로 LLM이 틀리게 만들 수 없다.
-LLM이 쓰는 것은 이름 표기(피드 제목과 대조), 소개문, 노트뿐이다.
+LLM이 쓰는 것은 이름 표기(피드 제목과 대조)와 소개문뿐이다. 노트는 LLM이 원문에서 영문 이름을 골라내기만 하고, 한국어 표기는 코드가 정한다(아래 "노트 번역 규칙").
 
 ## 검증에 실패한 제품
 
@@ -34,7 +34,8 @@ LLM이 쓰는 것은 이름 표기(피드 제목과 대조), 소개문, 노트�
 | 위치 | 역할 |
 |------|------|
 | `src/app/lib/arrivals/config.ts` | 수집 대상 브랜드, 제외 단어·태그, 기간, 기준 점수 등 운영 값 — **조정은 여기서** |
-| `src/app/lib/arrivals/*.ts` | 단계별 로직 (`filterByRules`, `pickForRun`, `validateDescriptions`는 순수 함수) |
+| `src/app/lib/arrivals/noteGlossary.ts` | 노트 용어집(영문 → 한국어 표기) — **노트 표기를 바꾸거나 단어를 추가할 때는 여기서** |
+| `src/app/lib/arrivals/*.ts` | 단계별 로직 (`filterByRules`, `pickForRun`, `validateDescriptions`, `resolveNotes`는 순수 함수) |
 | `src/app/api/cron/perfume-arrivals/route.ts` | 크론 진입점 |
 | `src/app/lib/cronAuth.ts` | 크론 엔드포인트 공통 인증 (`perfume-news`와 함께 사용) |
 
@@ -69,6 +70,34 @@ LLM이 쓰는 것은 이름 표기(피드 제목과 대조), 소개문, 노트�
 그래서 예전 향수의 새 용량(예: Vilhelm `MORNING CHESS` 20 ML)은 수집하지 않는다.
 
 기간을 늘리면 첫 실행에서 더 많은 향수가 들어오지만, 검증에 계속 실패하는 제품을 그만큼 오래 반복 평가한다.
+
+## 노트 번역 규칙
+
+LLM에게 노트를 한국어로 옮기게 두면 같은 원료가 실행할 때마다 다르게 나오고(패출리/파촐리), 모르는 이름은 소리 나는 대로 지어 쓰거나("balm of Gilead" → "발미드 질레아드") 다른 원료로 바꿔 쓴다("baldy cypress" → "시더").
+그래서 LLM은 원문에 적힌 노트 이름을 **영문 그대로 나열**만 하고, 저장할 표기는 `resolveNotes`가 아래 순서로 정한다.
+
+| 순서 | 경우 | 저장되는 표기 | 예 |
+|------|------|---------------|-----|
+| 1 | 원문(소개문)에 없는 노트 | 버린다 | LLM이 지어낸 노트 |
+| 2 | 모든 단어가 용어집에 있는 원료 | 용어집 표기 — 실행마다 같다 | Fir Balsam Absolute → 퍼 발삼, Tonka Beans → 통카빈, Sandalwood Australia → 호주 샌달우드 |
+| 3 | 일상어로 된 표현 — 풍경·사물, 또는 원료에 일상어 수식어가 붙은 것 | LLM이 옮긴 뜻(`translations`) | sea spray → 바다 물보라, holy dirt → 성스러운 흙, flowering privet → 꽃이 핀 프리벳 |
+| 4 | 그 밖(품종·지명·상표 같은 고유한 이름, 낯선 원료) | 영문 그대로 | Balm of Gilead, Pinyon Pine, Muscenon |
+
+- 용어집은 `noteGlossary.ts`의 `MATERIAL_TERMS`(원료), `GENERAL_TERMS`(부위·형태·수식어), `ORIGINS`(산지 — 한국어에서는 원료 앞에 온다)다. 영문 그대로 저장되는 노트가 자주 보이면 그 단어를 용어집에 추가한다. 용어집은 프롬프트에도 그대로 들어가 소개문 속 원료 표기의 기준이 된다.
+- Oil·Absolute·Essence 같은 추출 방식 표기는 노트 이름에서 뺀다.
+- 3번에서 노트에 원료가 섞여 있으면, LLM의 번역이 그 원료를 용어집 표기로 썼을 때만 받는다. 아니면 4번(영문)으로 넘어간다. LLM이 원료를 다른 것으로 바꿔 쓰거나 다른 표기를 쓰는 것을 막기 위해서다.
+- 3번의 번역은 LLM이 쓰는 글이라 실행마다 조금씩 다를 수 있다(파도 물보라 / 바다 물보라). 향수 한 건은 한 번만 저장되므로 화면에서 표기가 흔들리지는 않는다.
+- 브랜드 사이트의 소개문은 문단 태그를 줄바꿈으로 바꿔 읽는다. 태그만 지우면 "Cashmeran" 뒤에 다음 문단의 "Heart notes"가 붙어 노트를 잘못 읽는다.
+
+### 모델
+
+소개문과 노트는 AI 채팅과 같은 모델(`lib/ai/models.ts`의 `OPENAI_TEXT_MODEL`)로 쓴다. 2026-11-18에 같은 피드(후보 10건)로 비교했다.
+
+| | `gpt-4o-mini` | `gpt-6-luna` |
+|---|---|---|
+| 풍경·사물 노트 | 번역 목록을 비워 영문으로 남음(Pacific Spray, Fine Sand) | 뜻으로 옮김(태평양 물보라, 고운 모래) |
+| 소개문 속 원료 표기 | 용어집을 따르지 않음(앰브록산, 녹색 올리브, 마돈나 백합) | 용어집 표기와 일치 |
+| 응답 시간 | 25~30초 | 13~15초 |
 
 ## 환경변수
 

@@ -22,6 +22,13 @@ type ShopifyProduct = {
 
 const asString = (value: unknown) => (typeof value === "string" ? value : "");
 
+/** 문단·줄바꿈 태그 — 그냥 지우면 앞뒤 글이 붙어 LLM이 노트를 잘못 읽는다 ("Cashmeran</p><p>Heart notes" → "CashmeranHeart notes") */
+const BLOCK_TAG = /<\/?(?:p|div|br|li|ul|ol|h[1-6]|table|tr|td|th|section|blockquote)\b[^>]*>/gi;
+
+/** 제품 소개(body_html)를 일반 텍스트로 바꾼다. 문단 경계는 줄바꿈으로 남긴다 */
+const toBodyText = (html: string) =>
+  html.replace(/\s+/g, " ").replace(BLOCK_TAG, "\n").split("\n").map(toPlainText).filter(Boolean).join("\n");
+
 const asStringArray = (value: unknown, key?: string): string[] => {
   if (!Array.isArray(value)) return [];
   return value
@@ -45,7 +52,7 @@ export function toRawArrival(source: ArrivalSource, product: ShopifyProduct): Ra
     source,
     title,
     handle,
-    bodyText: toPlainText(asString(product.body_html)),
+    bodyText: toBodyText(asString(product.body_html)),
     productType: asString(product.product_type).trim(),
     tags: asStringArray(product.tags),
     variantTitles: asStringArray(product.variants, "title"),

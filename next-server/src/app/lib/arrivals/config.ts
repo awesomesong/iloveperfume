@@ -2,6 +2,7 @@
  * 향수 신제품 수집 파이프라인 설정.
  * 운영하면서 손보는 값(수집 대상 브랜드·제외 키워드·기준 점수)은 모두 여기에 모은다.
  */
+import { OPENAI_TEXT_MODEL } from "@/src/app/lib/ai/models";
 
 export type ArrivalSource = {
   /** DB에 저장할 브랜드 표기 — 기존 관례대로 영문 대문자 (피드의 vendor는 쓰지 않는다) */
@@ -130,8 +131,14 @@ export const DESCRIPTION_MAX_LENGTH = 500;
 /** 설명에 한글이 이만큼은 있어야 한국어로 쓴 것으로 본다 */
 export const DESCRIPTION_MIN_HANGUL = 20;
 export const NOTES_MAX_LENGTH = 300;
+/** 노트 이름 한 개의 최대 길이 — 문장을 통째로 노트로 준 경우를 거른다 */
+export const NOTE_NAME_MAX_LENGTH = 40;
 
-export const OPENAI_MODEL = "gpt-4o-mini";
+/**
+ * 소개문·노트를 쓰는 모델 — AI 채팅과 같은 모델을 쓴다(교체는 lib/ai/models.ts 한 곳에서).
+ * gpt-4o-mini는 풍경·사물 노트의 뜻을 옮기지 못하고 소개문의 원료 표기도 용어집을 따르지 않았다.
+ */
+export const OPENAI_MODEL = OPENAI_TEXT_MODEL;
 export const FEED_TIMEOUT_MS = 8_000;
 export const OPENAI_TIMEOUT_MS = 45_000;
 
