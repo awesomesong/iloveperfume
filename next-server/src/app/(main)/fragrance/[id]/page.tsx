@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
+import { after } from 'next/server';
 import { getFragranceBySlugServer, getFragranceSlugsServer } from '@/src/app/lib/getFragrances';
 import FragranceDetail from '@/src/app/components/fragrance/FragranceDetail';
+import { ensureKoreanName, getCachedKoreanName } from '@/src/app/lib/scan/koreanName';
 
 // 향수 상세는 데이터 변경 빈도가 낮으므로 ISR로 캐싱 (1시간)
 export const revalidate = 3600;
@@ -23,5 +25,12 @@ export default async function FragrancePage({ params }: Props) {
   const fragrance = await getFragranceBySlugServer(slug);
   if (!fragrance) notFound();
 
-  return <FragranceDetail slug={slug} fragrance={fragrance} />;
+  // 네이버 쇼핑 검색 링크용 한글 이름 — 캐시만 읽어 렌더를 막지 않는다.
+  // 없으면 영문 이름으로 링크를 만들고, 응답 후에 음역해 두어 다음 재생성부터 한글로 검색된다.
+  const koreanName = await getCachedKoreanName(fragrance.brand, fragrance.name);
+  if (!koreanName) {
+    after(() => ensureKoreanName(fragrance.brand, fragrance.name));
+  }
+
+  return <FragranceDetail slug={slug} fragrance={fragrance} koreanName={koreanName} />;
 }
