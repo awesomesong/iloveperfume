@@ -5,11 +5,12 @@ import { analyzeFragranceFromUrl } from "@/src/app/lib/scan/visionAnalyze";
 import { enrichFragranceInfo } from "@/src/app/lib/scan/enrichInfo";
 import { findFragranceMatch } from "@/src/app/lib/scan/findMatch";
 import { checkRateLimit, getClientKey } from "@/src/app/lib/scan/rateLimit";
+import { ensureKoreanName } from "@/src/app/lib/scan/koreanName";
 
 export const runtime = "nodejs";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const SCAN_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h — 이전 ScanResult.prices 재사용 기준
+const SCAN_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h — 이전 ScanResult의 description/notes 재사용 기준
 
 export async function POST(req: NextRequest) {
   try {
@@ -94,7 +95,6 @@ export async function POST(req: NextRequest) {
     const matched = await findFragranceMatch(analysis.brand, analysis.name);
 
     // 5-1) Cache-aside: 동일 brand+name + 24h 내 ScanResult 검색
-    //      - prices 캐시 재사용으로 가격 API 호출 절감
     //      - description/notes 캐시 재사용으로 enrichInfo 호출 절감
     const recentScans = await prisma.scanResult.findMany({
       where: {
@@ -105,7 +105,6 @@ export async function POST(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       take: 5,
     });
-    const cachedScanWithPrices = recentScans.find((r) => r.prices !== null);
     const cachedScanWithDesc = recentScans.find(
       (r) => r.description && r.description.length > 0,
     );
@@ -134,6 +133,10 @@ export async function POST(req: NextRequest) {
     const finalBrand = matched?.brand ?? analysis.brand;
     const finalName = matched?.name ?? analysis.name;
 
+    // 네이버 쇼핑 검색 링크용 한글 이름을 미리 만들어 둔다 (결과 페이지가 캐시에서 읽음).
+    // 저장과 병렬로 진행하고, 실패해도 예외를 던지지 않는다 — 없으면 영문 이름으로 검색.
+    const koreanNameReady = ensureKoreanName(finalBrand, finalName);
+
     const user = await getCurrentUser();
     const session = await prisma.scanResult.create({
       data: {
@@ -148,10 +151,10 @@ export async function POST(req: NextRequest) {
         userEmail: user?.email ?? null,
         // Vision OCR + LLM enrichment 합산
         tokensUsed: analysis.tokensUsed + enrichTokensUsed,
-        // 24h 캐시 hit 시 prices 미리 채워서 가격 카드 즉시 표시
-        prices: cachedScanWithPrices?.prices ?? undefined,
       },
     });
+
+    await koreanNameReady;
 
     return NextResponse.json({
       scanId: session.id,
@@ -164,7 +167,7 @@ export async function POST(req: NextRequest) {
       matchedFragrance: matched,
       // 진단·디버깅용 (UI는 사용 안 해도 됨)
       confidence: matched?.confidence ?? null,
-      fromCache: !!cachedScanWithPrices,
+      fromCache: !!cachedScanWithDesc,
       tokensUsed: analysis.tokensUsed + enrichTokensUsed,
     });
   } catch (err) {

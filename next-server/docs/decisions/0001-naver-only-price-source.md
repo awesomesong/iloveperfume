@@ -1,6 +1,6 @@
 # ADR-0001: 가격 비교 소스를 네이버 쇼핑 단일로 한정
 
-- **Status**: Accepted (2026-05-26)
+- **Status**: Superseded by [ADR-0003](0003-naver-shopping-link-only.md) (2026-11-14) — 네이버 쇼핑 검색 API 종료로 가격 비교 자체를 내림. 원래 Accepted (2026-05-26)
 - **Context module**: [src/app/lib/scan/naverShopping.ts](../../src/app/lib/scan/naverShopping.ts)
 - **관련**: [구현 문서](../../src/app/api/scan/README.md), [설계 archive](../design/scent-scanner.md)
 

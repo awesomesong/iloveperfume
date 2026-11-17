@@ -46,5 +46,6 @@ Good / Trade-off / 되돌리는 조건.
 
 ## 현재 목록
 
-- [0001 — 가격 비교 소스를 네이버 쇼핑 단일로 한정](./0001-naver-only-price-source.md)
+- [0001 — 가격 비교 소스를 네이버 쇼핑 단일로 한정](./0001-naver-only-price-source.md) — ADR-0003으로 대체됨
 - [0002 — Vision OCR을 2-pass(low → high)로 분리](./0002-vision-two-pass-ocr.md)
+- [0003 — 가격 비교를 내리고 네이버 쇼핑 검색 링크로 전환](./0003-naver-shopping-link-only.md)

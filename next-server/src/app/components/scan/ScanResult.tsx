@@ -6,9 +6,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { HiOutlineArrowRight, HiOutlineCamera, HiOutlinePlus } from 'react-icons/hi2';
 import Button from '@/src/app/components/Button';
-import PriceCards from './PriceCards';
+import ShopLinkCard from './ShopLinkCard';
 import SimilarGallery from './SimilarGallery';
-import SimilarNaverReco from './SimilarNaverReco';
 import { useScanPrefillStore } from '@/src/app/store/scanPrefillStore';
 
 interface MatchedFragrance {
@@ -28,6 +27,8 @@ export interface ScanResultData {
   imageWidth?: number | null;
   imageHeight?: number | null;
   matchedFragrance?: MatchedFragrance | null;
+  /** 네이버 쇼핑 검색어용 한글 이름 (없으면 영문 이름 사용) */
+  koreanName?: string | null;
 }
 
 interface Props {
@@ -202,15 +203,11 @@ export default function ScanResult({ data }: Props) {
         )}
 
         <div className="pt-8 border-t border-[var(--color-card-border)]">
-          <PriceCards scanId={data.scanId} />
+          <ShopLinkCard name={name} koreanName={data.koreanName} />
         </div>
 
         <div className="pt-8 border-t border-[var(--color-card-border)]">
           <SimilarGallery scanId={data.scanId} />
-        </div>
-
-        <div className="pt-8 border-t border-[var(--color-card-border)]">
-          <SimilarNaverReco scanId={data.scanId} />
         </div>
 
       </div>

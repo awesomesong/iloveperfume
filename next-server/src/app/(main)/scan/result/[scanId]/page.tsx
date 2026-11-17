@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import prisma from '@/prisma/db';
 import ScanResult from '@/src/app/components/scan/ScanResult';
+import { getCachedKoreanName } from '@/src/app/lib/scan/koreanName';
 
 type Props = {
   params: Promise<{ scanId: string }>;
@@ -42,6 +43,9 @@ export default async function ScanResultPage({ params }: Props) {
       })
     : null;
 
+  // 네이버 쇼핑 검색 링크용 한글 이름 (스캔 시점에 생성해 둠 — 없으면 영문 이름 사용)
+  const koreanName = await getCachedKoreanName(scan.brand, scan.name);
+
   return (
     <div className="px-4 pt-8 pb-4 md:p-8 max-w-[1440px] w-full mx-auto">
       <div className="text-center">
@@ -66,6 +70,7 @@ export default async function ScanResultPage({ params }: Props) {
             imageWidth: scan.imageWidth,
             imageHeight: scan.imageHeight,
             matchedFragrance: matched,
+            koreanName,
           }}
         />
       </section>
