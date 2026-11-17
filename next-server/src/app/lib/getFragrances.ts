@@ -16,22 +16,14 @@ export const getFragranceSlugsServer = async (): Promise<string[]> => {
     return fragrances.map((f) => f.slug);
 };
 
-export const getFragranceBySlugServer = async (
-    slug: string
-): Promise<{ fragrance: FragranceWithAuthor }> => {
-    const fragrance = await prisma.fragrance.findUnique({
+/** 없으면 null — 페이지에서 notFound()로 404를 낸다 (예외를 던지면 500이 된다) */
+export const getFragranceBySlugServer = async (slug: string): Promise<FragranceWithAuthor | null> =>
+    prisma.fragrance.findUnique({
         where: { slug },
         include: {
             author: { select: { id: true, name: true, email: true, image: true, profileImage: true, role: true } }
         },
     });
-
-    if (!fragrance) {
-        throw new Error("해당 향수를 찾을 수 없습니다.");
-    }
-
-    return { fragrance };
-};
 
 type FragranceListParam = {
     pageParam: string;
