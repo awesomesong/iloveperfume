@@ -13,33 +13,48 @@ export type ArrivalSource = {
   productTypes: readonly string[];
   /** product_type만으로 향수 단품을 가를 수 없는 브랜드는 제목 패턴도 맞아야 한다 */
   titlePattern?: RegExp;
+  /**
+   * 한국 정식 유통 근거(수입사·국내 판매처·확인일). 한국에서 살 수 있는 향수만 올리기 위해
+   * 국내 정식 유통이 확인된 브랜드만 등록한다 — 근거를 적을 수 없으면 등록하지 않는다.
+   */
+  koreaChannel: string;
 };
 
 /**
- * 수집 대상 — 공식 사이트가 제품 목록(/products.json)을 공개하는 브랜드만 등록한다.
- * 브랜드별 규칙은 2026-11-17 기준 실제 피드를 보고 정했다 (근거: docs/arrivals-pipeline.md).
+ * 수집 대상 — 아래 두 조건을 모두 갖춘 브랜드만 등록한다.
+ * 1) 한국 정식 유통이 확인된다 (koreaChannel)
+ * 2) 공식 사이트가 제품 목록(/products.json)을 공개한다
+ * 브랜드별 규칙은 실제 피드를 보고 정했다. 등록하지 않은 브랜드와 이유는 docs/arrivals-pipeline.md.
  */
 export const ARRIVAL_SOURCES: readonly ArrivalSource[] = [
-  { brand: "D.S. & DURGA", domain: "dsanddurga.com", productTypes: ["eau de parfum", "perfume oil"] },
-  { brand: "VILHELM PARFUMERIE", domain: "vilhelmparfumerie.com", productTypes: ["eau de parfum"] },
   {
-    brand: "IMAGINARY AUTHORS",
-    domain: "www.imaginaryauthors.com",
-    productTypes: ["perfume"],
-    // 캔들·비누·머그도 product_type이 "Perfume"이다 — 향수만 제목이 "- FRAGRANCE"로 끝난다
-    titlePattern: /-\s*FRAGRANCE$/i,
+    brand: "D.S. & DURGA",
+    domain: "dsanddurga.com",
+    productTypes: ["eau de parfum", "perfume oil"],
+    koreaChannel: "신세계 센텀시티 입점(2024-12), 29CM 라이징 브랜드 기획전(2026-11) — 2026-11-18 확인",
   },
-  { brand: "GOLDFIELD & BANKS", domain: "www.goldfieldandbanks.com", productTypes: ["100ml"] },
-  { brand: "NONFICTION", domain: "www.nonfiction.com", productTypes: ["parfum", "perfume"] },
-  { brand: "DEDCOOL", domain: "dedcool.com", productTypes: ["fragrance"] },
   {
-    brand: "MAISON LOUIS MARIE",
-    domain: "www.maisonlouismarie.com",
-    productTypes: ["personal fragrance"],
-    // 헤어·바디 미스트와 세트도 같은 product_type이다
-    titlePattern: /^(eau de parfum|perfume oil)\s*-/i,
+    brand: "JULIETTE HAS A GUN",
+    domain: "www.juliettehasagun.com",
+    productTypes: ["eau de parfum"],
+    koreaChannel: "수입사 ㈜씨이오인터내셔널, 더현대 서울 팝업(2026-08) — 2026-11-18 확인",
   },
-  { brand: "JULIETTE HAS A GUN", domain: "www.juliettehasagun.com", productTypes: ["eau de parfum"] },
+];
+
+/**
+ * 국내 정식 유통 브랜드라도 판매처를 특정 매장·공식몰로 한정한 제품은 한국에서 살 수 없다.
+ * 소개문에 이 문구가 있으면 제외한다 (영문 피드 + 프랑스어 피드).
+ * 넓게 잡으면 오탐이 난다 — "exclusive" 하나로는 "Exclusive, Elégante…" 같은 수식어까지 걸린다.
+ * 예) "sold exclusively at D.S. & Durga New York stores", "sold direct only"
+ */
+export const EXCLUSIVE_SALE_PATTERNS: readonly RegExp[] = [
+  /\b(?:sold|available) (?:only|exclusively) (?:at|in|through|on|via|from)\b/i,
+  /\b(?:only|exclusively) (?:sold|available) (?:at|in|through|on|via|from)\b/i,
+  /\bsold direct(?:ly)? only\b|\bdirect[- ]only\b/i,
+  /\b(?:online|web|website|boutique|in-store|u\.?s\.?|usa|north america)[- ]exclusive\b/i,
+  /\bexclusive(?:ly)? (?:to|at) (?:our|the) (?:[\w.&' -]{1,40} )?(?:stores?|boutiques?|shops?|website|flagship)\b/i,
+  /\b(?:vendue?s?|disponibles?) (?:exclusivement|uniquement) (?:en|sur|dans|chez|à)\b/i,
+  /\ben exclusivité (?:sur|en|dans|chez)\b/i,
 ];
 
 /** 피드 한 페이지의 제품 수 (Shopify 최대 250) */

@@ -2,6 +2,7 @@
 
 브랜드 공식 사이트에 새로 올라온 향수를 스케줄러가 수집해 `Fragrance`에 등록한다(`source = AI_AGENT`).
 사용자가 직접 등록하는 흐름(`/fragrance/create`, `source = USER`)과 같은 테이블을 쓰고, 수집분은 `/api/cron/perfume-arrivals`만 생성한다.
+**한국에서 살 수 있는 향수만** 올린다 — 국내 정식 유통이 확인된 브랜드만 수집하고, 특정 매장·공식몰 전용 제품은 뺀다(아래 "한국 판매 기준").
 
 ## 흐름
 
@@ -9,7 +10,7 @@
 Vercel Cron (vercel.json, 매일 01:00 UTC = 10:00 KST)
   └─ GET /api/cron/perfume-arrivals       Authorization: Bearer CRON_SECRET
        1. collectArrivals     브랜드 공식 사이트의 제품 피드(/products.json) — ARRIVAL_SOURCES에 등록된 브랜드만
-       2. filterByRules       향수 유형 · 제외 단어/태그 · 묶음 구성 · 용량만 다른 중복 합치기 · 처음 등장한 날이 60일 이내 · 이미지 출처 · 소개문 길이
+       2. filterByRules       향수 유형 · 제외 단어/태그 · 묶음 구성 · 판매처 한정 · 용량만 다른 중복 합치기 · 처음 등장한 날이 60일 이내 · 이미지 출처 · 소개문 길이
        3. excludeExisting     이미 있는 공식 URL · 다시 수집하지 않기로 한 URL(FragranceBlockedUrl) · 같은 브랜드+이름 제외
        4. describeArrivals    OpenAI 1회 호출 — 향수 단품 판정 + 한국어 소개·노트(JSON)
        5. validateDescriptions id 대조 · 향수 판정 · 확신도 · 이름이 피드 제목에 있는지 · 설명 길이/한국어 · 노트 표기(용어집) · 최대 10건
@@ -41,27 +42,47 @@ LLM이 쓰는 것은 이름 표기(피드 제목과 대조)와 소개문뿐이�
 
 ## 수집 대상 브랜드
 
-공식 사이트가 제품 목록을 `/products.json`으로 공개하는 브랜드만 등록할 수 있다(Shopify 스토어).
-아래 규칙은 2026-11-17 기준 실제 피드를 보고 정했다.
+아래 두 조건을 모두 갖춘 브랜드만 등록한다.
 
-| 브랜드 | 도메인 | 향수 단품 판별 |
-|--------|--------|----------------|
-| D.S. & DURGA | dsanddurga.com | product_type `Eau de Parfum`, `Perfume Oil` |
-| VILHELM PARFUMERIE | vilhelmparfumerie.com | product_type `Eau de Parfum` |
-| IMAGINARY AUTHORS | www.imaginaryauthors.com | product_type `Perfume` + 제목이 `- FRAGRANCE`로 끝남 (캔들·비누·머그도 같은 유형이라) |
-| GOLDFIELD & BANKS | www.goldfieldandbanks.com | product_type `100ml` |
-| NONFICTION | www.nonfiction.com | product_type `Parfum`, `Perfume` |
-| DEDCOOL | dedcool.com | product_type `Fragrance` |
-| MAISON LOUIS MARIE | www.maisonlouismarie.com | product_type `Personal fragrance` + 제목이 `Eau de Parfum -` / `Perfume Oil -`로 시작 |
-| JULIETTE HAS A GUN | www.juliettehasagun.com | product_type `Eau de Parfum` (프랑스어 스토어 — 소개문이 짧아 대부분 길이 기준에서 걸러진다) |
+1. **한국 정식 유통이 확인된다** — 국내 수입사, 백화점·편집숍 입점처럼 근거를 `koreaChannel`에 적을 수 있어야 한다.
+2. **공식 사이트가 제품 목록을 `/products.json`으로 공개한다**(Shopify 스토어).
+
+| 브랜드 | 도메인 | 한국 정식 유통 근거 (2026-11-18 확인) | 향수 단품 판별 |
+|--------|--------|------------------------------------|----------------|
+| D.S. & DURGA | dsanddurga.com | 신세계 센텀시티 입점(2024-12), 29CM 라이징 브랜드 기획전(2026-11) | product_type `Eau de Parfum`, `Perfume Oil` |
+| JULIETTE HAS A GUN | www.juliettehasagun.com | 수입사 ㈜씨이오인터내셔널, 더현대 서울 팝업(2026-08) | product_type `Eau de Parfum` (프랑스어 스토어 — 소개문이 짧아 대부분 길이 기준에서 걸러진다) |
 
 등록하지 않은 브랜드와 이유:
 
-- BORNTOSTANDOUT (borntostandout.com): 피드의 소개문이 비어 있다(84건 중 78건). 설명을 쓸 근거가 없다.
-- BYREDO, LE LABO, DIPTYQUE, JO MALONE, AESOP, TAMBURINS: `/products.json`이 없거나(404) 자동 요청을 막는다(403).
+- **국내 정식 유통을 확인하지 못함 (2026-11-18)**: 아래 브랜드는 피드는 쓸 수 있지만 국내 수입사·입점 매장을 찾지 못해 뺐다. 한국어 페이지가 있는 해외 쇼핑몰(noseparis.com/ko 등)이나 해외 직구 판매 글은 국내 정식 유통 근거로 보지 않는다. 근거가 확인되면 아래 판별 규칙으로 다시 등록한다.
 
-브랜드를 추가하려면 `https://{도메인}/products.json?limit=250`을 직접 열어 향수 단품에 붙는 `product_type`을 확인한 뒤 `ARRIVAL_SOURCES`에 등록한다.
+  | 브랜드 | 도메인 | 향수 단품 판별 |
+  |--------|--------|----------------|
+  | VILHELM PARFUMERIE | vilhelmparfumerie.com | product_type `Eau de Parfum` |
+  | IMAGINARY AUTHORS | www.imaginaryauthors.com | product_type `Perfume` + 제목이 `- FRAGRANCE`로 끝남 (캔들·비누·머그도 같은 유형이라) |
+  | GOLDFIELD & BANKS | www.goldfieldandbanks.com | product_type `100ml` |
+  | NONFICTION | www.nonfiction.com | product_type `Parfum`, `Perfume` (미국 스토어, USD) |
+  | DEDCOOL | dedcool.com | product_type `Fragrance` |
+  | MAISON LOUIS MARIE | www.maisonlouismarie.com | product_type `Personal fragrance` + 제목이 `Eau de Parfum -` / `Perfume Oil -`로 시작 |
+
+- BORNTOSTANDOUT (borntostandout.com): 피드의 소개문이 비어 있다(84건 중 78건). 설명을 쓸 근거가 없다.
+- BYREDO, LE LABO, DIPTYQUE, JO MALONE, AESOP, TAMBURINS: 국내에서 팔지만 `/products.json`이 없거나(404) 자동 요청을 막는다(403).
+
+브랜드를 추가하려면 먼저 국내 정식 유통 근거를 찾고, `https://{도메인}/products.json?limit=250`을 직접 열어 향수 단품에 붙는 `product_type`을 확인한 뒤 `ARRIVAL_SOURCES`에 `koreaChannel`과 함께 등록한다.
 `brand`는 DB 관례대로 영문 대문자로 쓴다(피드의 `vendor`는 스토어마다 제각각이라 쓰지 않는다).
+
+## 한국 판매 기준
+
+한국에서 살 수 있는지는 두 단계로 거른다.
+
+| 단계 | 기준 | 위치 |
+|------|------|------|
+| 브랜드 | 국내 정식 유통이 확인된 브랜드만 수집 대상에 둔다 | `ARRIVAL_SOURCES`의 `koreaChannel` |
+| 제품 | 소개문에 판매처를 특정 매장·공식몰로 한정하는 문구가 있으면 뺀다(탈락 사유 `exclusiveChannel`) | `EXCLUSIVE_SALE_PATTERNS` |
+
+- 제품 단계 예: "sold exclusively at D.S. & Durga New York stores"(Rockaway Beach), "sold direct only"(Once Upon A Time In The Red Southwest). 프랑스어 스토어용으로 "vendu exclusivement…", "en exclusivité sur…"도 본다.
+- 문구는 판매 맥락으로 좁혀 잡는다. "exclusive" 한 단어로 잡으면 "Exclusive, Elégante et Somptueuse" 같은 수식어까지 걸린다(2026-11-18 두 브랜드 피드 361건으로 확인 — 좁힌 규칙은 위 2건만 잡았다).
+- 한계: 브랜드 단위 확인이라 막 나온 신제품이 아직 국내에 들어오지 않았을 수 있다. 상품별 국내 판매를 확인하려면 국내 쇼핑몰 검색이 필요한데, 네이버 쇼핑 검색 API는 2026-07-31에 종료됐다(ADR-0003). 11번가 오픈 API(키 발급 필요)가 남은 후보다.
 
 ## "신제품" 판단
 
