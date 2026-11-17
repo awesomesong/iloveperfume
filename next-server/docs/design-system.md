@@ -382,7 +382,6 @@ function contrast(hex1, hex2) {
 | 페이지 컨테이너 | `max-w-[1440px] mx-auto w-full px-4 md:px-8` |
 | 페이지 헤더 | `.product-fragrance-header-layout` + `flex justify-between items-center` |
 | 카드 그리드 | `.layout-card` (1→2→3→4열) |
-| 공지 그리드 | `.notice-grid` |
 | 뉴스 목록 | `.news-list` (1열, 6-1 참고) |
 | 히어로 높이 | `calc(100dvh - var(--header-height))` — `--header-height: 56px` |
 | 섹션 패딩 | `py-16 md:py-24` |
@@ -429,7 +428,7 @@ shadow rest:    0 2px 12px var(--color-shadow-soft)
 shadow hover:   0 16px 40px var(--color-shadow-hover), 0 0 0 1px var(--color-accent-border)
 ```
 
-기존 클래스 그대로 재사용: `.notice-card` / `.product-fragrance-card`
+기존 클래스 그대로 재사용: `.product-fragrance-card`
 
 ---
 
