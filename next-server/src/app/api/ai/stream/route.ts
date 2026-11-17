@@ -26,7 +26,6 @@ export async function OPTIONS() {
 
 // 상수 정의
 const CONSTANTS = {
-  MAX_MESSAGE_LENGTH: 4000,
   // 대화 기록 글자 예산. 시작값이며 "[ai/stream] usage" 로그(prompt/cached 토큰)를 보고 조정한다
   HISTORY_CHAR_BUDGET: 20_000,
   HISTORY_MIN_MESSAGES: 2, // 예산을 넘겨도 최신 2개는 항상 포함
@@ -36,6 +35,9 @@ const CONSTANTS = {
   RATE_LIMIT_WINDOW: 60000, // 1분
   RATE_LIMIT_MAX_REQUESTS: 10,
 } as const;
+
+// 에러가 아닌 메시지 조건. isError는 nullable이라 { not: true }를 쓰면 NULL 행까지 빠진다
+const NOT_ERROR = { OR: [{ isError: false }, { isError: null }] };
 
 // === 설정 ===
 const WINDOW_MS = CONSTANTS.RATE_LIMIT_WINDOW; // 예: 60_000 (1분)
@@ -112,13 +114,6 @@ function validateInput(
     return { isValid: false, error: "메시지가 비어있습니다." };
   }
 
-  if (message.length > CONSTANTS.MAX_MESSAGE_LENGTH) {
-    return {
-      isValid: false,
-      error: `메시지가 너무 깁니다. (최대 ${CONSTANTS.MAX_MESSAGE_LENGTH}자)`,
-    };
-  }
-
   if (typeof conversationId !== "string" || !conversationId.trim()) {
     return { isValid: false, error: "대화 ID가 필요합니다." };
   }
@@ -158,8 +153,7 @@ async function getConversationHistory(
       where: {
         conversationId: conversationId,
         type: "text",
-        // 에러 행 제외. isError는 nullable이라 { not: true }를 쓰면 NULL 행까지 빠진다
-        OR: [{ isError: false }, { isError: null }],
+        ...NOT_ERROR,
         // 현재 질문은 이미 저장돼 있다 → 그 이전 메시지만 사용 (재시도 시 이후 대화도 제외)
         ...(userMessageCreatedAt ? { createdAt: { lt: userMessageCreatedAt } } : {}),
         ...(existingAIMessageId ? { id: { not: existingAIMessageId } } : {}),
@@ -271,33 +265,55 @@ function getAIMessageCreatedAt(ctx: StreamContext) {
     : new Date();
 }
 
+// 같은 질문에 달린 "다른" AI 행의 조건. 한 질문의 AI 답변 자리는 질문 시각 +1ms 하나이고,
+// 재시도는 대상 ID(existingAIMessageId)도 함께 가리킨다. 이 대화방의 AI 메시지로 한정하므로
+// 클라이언트가 보낸 ID로 다른 방·사용자 메시지를 건드릴 수 없다.
+// 연결이 끊긴 원 요청과 재시도가 각자 끝까지 저장하면 한 질문에 행이 둘 생기므로, 저장 전에 이 조건으로 정리한다
+function otherAnswersWhere(ctx: StreamContext, ownId: string, createdAt: Date) {
+  const targets = [
+    ...(ctx.existingAIMessageId ? [{ id: ctx.existingAIMessageId }] : []),
+    ...(ctx.userMessageCreatedAt ? [{ createdAt }] : []),
+  ];
+  // 질문을 특정하지 못했고 재시도도 아니면 정리할 대상이 없다
+  if (targets.length === 0) return null;
+  return {
+    conversationId: ctx.conversationId,
+    isAIResponse: true,
+    id: { not: ownId },
+    OR: targets,
+  };
+}
+
+async function hasValidAnswer(others: NonNullable<ReturnType<typeof otherAnswersWhere>>) {
+  return (await prisma.message.count({ where: { AND: [others, NOT_ERROR] } })) > 0;
+}
+
 // 에러 메시지 저장
 // 클라이언트가 보낸 messageId로 저장한다 → 클라이언트의 실패 메시지와 같은 메시지가 되어
 // 재시도(existingAIMessageId) 때 함께 정리된다. 같은 ID가 이미 있으면 P2002로 실패하고 기존 행은 그대로 둔다
 async function saveAIErrorMessage(ctx: StreamContext, body: string) {
   try {
-    // 재시도가 또 실패한 경우: 이전 에러 행을 대체한다 (정상 답변은 지우지 않는다)
-    if (ctx.existingAIMessageId) {
-      await prisma.message.deleteMany({
-        where: {
-          id: ctx.existingAIMessageId,
-          conversationId: ctx.conversationId,
-          isAIResponse: true,
-          isError: true,
-        },
-      });
+    const id = ctx.messageId ?? randomUUID();
+    const createdAt = getAIMessageCreatedAt(ctx);
+    const others = otherAnswersWhere(ctx, id, createdAt);
+
+    if (others) {
+      // 같은 질문에 정상 답변이 이미 있으면 에러 행을 덧붙이지 않는다 (정상 답변은 지우지 않는다)
+      if (await hasValidAnswer(others)) return;
+      // 이전 에러 행은 대체한다
+      await prisma.message.deleteMany({ where: { ...others, isError: true } });
     }
 
     await prisma.message.create({
       data: {
-        id: ctx.messageId ?? randomUUID(),
+        id,
         body,
         type: "text",
         conversation: { connect: { id: ctx.conversationId } },
         sender: { connect: { id: ctx.userId } },
         isAIResponse: true, // 에러 메시지도 AI 메시지로 간주
         isError: true, // 에러 상태 표시
-        createdAt: getAIMessageCreatedAt(ctx),
+        createdAt,
       },
     });
   } catch (error) {
@@ -424,58 +440,39 @@ async function handleStreamingResponse(
     // 스트리밍 완료 후 AI 메시지를 데이터베이스에 저장 또는 업데이트
     if (fullResponse.trim()) {
       try {
-        // ✅ 재시도 시: 기존 AI 메시지 삭제 (DB에서)
-        // 이 대화방의 AI 메시지일 때만 삭제 — 클라이언트가 보낸 ID를 그대로 믿지 않는다
-        if (existingAIMessageId) {
+        // 사용자 메시지 +1ms
+        const aiCreatedAt = getAIMessageCreatedAt(ctx);
+        const savedMessageId = messageId || randomUUID();
+        const others = otherAnswersWhere(ctx, savedMessageId, aiCreatedAt);
+
+        if (others) {
+          // 연결이 끊긴 원 요청: 그 사이 재시도가 이미 답을 저장했다면 사용자가 본 그 답을 유지한다
+          if (client.gone && !existingAIMessageId && (await hasValidAnswer(others))) return;
+
+          // 같은 질문의 다른 AI 행(재시도 대상, 이전 에러 행)을 지워 질문 하나에 답변 하나만 남긴다
           try {
             // 조건에 맞는 메시지가 없으면 0건 삭제로 끝난다 (이미 삭제되었거나 로컬에만 있던 실패 메시지)
-            await prisma.message.deleteMany({
-              where: {
-                id: existingAIMessageId,
-                conversationId,
-                isAIResponse: true,
-              },
-            });
+            await prisma.message.deleteMany({ where: others });
           } catch (error) {
             console.error("기존 AI 메시지 삭제 오류:", error);
             // 삭제 실패해도 계속 진행
           }
         }
 
-        // 사용자 메시지 +1ms
-        const aiCreatedAt = getAIMessageCreatedAt(ctx);
-
-        // ✅ messageId가 있고 기존 메시지가 있으면 업데이트, 없으면 생성
-        const savedMessageId = messageId || randomUUID();
-
-        if (messageId) {
-          // 기존 메시지 업데이트 (재시도 케이스) — 이 대화방의 AI 메시지로 한정
-          const updated = await prisma.message.updateMany({
-            where: { id: messageId, conversationId, isAIResponse: true },
-            data: {
-              body: fullResponse.trim(),
-              isError: false,
-              createdAt: aiCreatedAt,
-            },
-          });
-
-          if (updated.count === 0) {
-            // messageId로 새 메시지 생성
-            // (같은 ID가 다른 범위에 이미 있으면 P2002로 실패 → 덮어쓰지 않음)
-            await prisma.message.create({
+        // 같은 ID의 AI 메시지가 이 대화방에 있으면 업데이트, 없으면 생성
+        const updated = messageId
+          ? await prisma.message.updateMany({
+              where: { id: messageId, conversationId, isAIResponse: true },
               data: {
-                id: messageId,
                 body: fullResponse.trim(),
-                type: "text",
-                conversation: { connect: { id: conversationId } },
-                sender: { connect: { id: userId } },
-                isAIResponse: true,
+                isError: false,
                 createdAt: aiCreatedAt,
               },
-            });
-          }
-        } else {
-          // messageId가 없으면 새 ID로 생성
+            })
+          : { count: 0 };
+
+        if (updated.count === 0) {
+          // (같은 ID가 다른 범위에 이미 있으면 P2002로 실패 → 덮어쓰지 않음)
           await prisma.message.create({
             data: {
               id: savedMessageId,
@@ -490,10 +487,9 @@ async function handleStreamingResponse(
         }
 
         // ✅ AI 메시지 저장 후 conversation.lastMessageAt 업데이트 (대화방 목록 반영용)
-        // 재생성 시: aiCreatedAt이 기존과 동일(U+1ms)할 수 있으므로 lte 사용
-        const isRegenerate = Boolean(existingAIMessageId);
+        // 같은 자리(U+1ms)의 행을 교체한 경우 lastMessageAt이 aiCreatedAt과 같으므로 lte 사용
         await prisma.conversation.updateMany({
-          where: { id: conversationId, lastMessageAt: isRegenerate ? { lte: aiCreatedAt } : { lt: aiCreatedAt } },
+          where: { id: conversationId, lastMessageAt: { lte: aiCreatedAt } },
           data: { lastMessageAt: aiCreatedAt, lastMessageId: savedMessageId },
         });
 
@@ -664,7 +660,7 @@ export async function POST(req: NextRequest) {
     const existingAIMessageId: string | undefined = requestData.existingAIMessageId || undefined;
     const userMessageId: string | undefined = requestData.userMessageId || undefined;
 
-    // 3-1. 주제/안전성 검열 (공용 정책)
+    // 3-1. 길이 제한 + 주제/안전성 검열 (공용 정책 — 클라이언트 입력 검증과 같은 함수)
     const topicCheck = validatePrompt(message);
     if (!topicCheck.isValid) {
       return NextResponse.json(

@@ -8,6 +8,7 @@ import {
   bumpConversationOnNewMessage,
   upsertMessageSortedInCache,
   replaceOptimisticMessage,
+  removeMessageById,
   messagesKey,
 } from "@/src/app/lib/react-query/chatCache";
 import type { FullMessageType } from "@/src/app/types/conversation";
@@ -55,21 +56,9 @@ export const useAIStream = ({ conversationId, aiAgentType = "assistant", onNewCo
       currentUser, 
       conversation 
     }: RequestAIOptions) => {
-        // 재시도 시: 기존 실패한 AI 메시지 제거
+        // 재시도 시: 기존 실패한 AI 메시지 제거 (오래된 페이지에 있어도 지운다)
         if (isRetry && existingAIMessageId) {
-            queryClient.setQueryData(messagesKey(conversationId),
-                (old: InfiniteData<{ messages: FullMessageType[]; nextCursor: string | null }> | undefined) => {
-                    if (!old?.pages) return old;
-                    return {
-                        ...old,
-                        pages: old.pages.map((page, idx) =>
-                            idx === 0
-                            ? { ...page, messages: page.messages.filter((m) => String(m.id) !== String(existingAIMessageId)) }
-                            : page
-                        ),
-                    };
-                }
-            );
+            removeMessageById(queryClient, conversationId, existingAIMessageId);
             // localStorage에서도 제거
             removeFailedMessage(conversationId, existingAIMessageId);
         }
@@ -286,18 +275,7 @@ export const useAIStream = ({ conversationId, aiAgentType = "assistant", onNewCo
             // 서버는 연결이 끊겨도 같은 messageId로 답변을 끝까지 저장하므로, 낙관적 메시지만 지우고
             // 다음 입장 때 서버 데이터를 다시 받도록 stale 처리한다 (지금 refetch하면 저장 전 상태를 받는다)
             if (abortController.signal.aborted && !timedOut) {
-                queryClient.setQueryData(messagesKey(conversationId),
-                    (old: InfiniteData<{ messages: FullMessageType[]; nextCursor: string | null }> | undefined) => {
-                        if (!old?.pages) return old;
-                        return {
-                            ...old,
-                            pages: old.pages.map((page) => ({
-                                ...page,
-                                messages: page.messages.filter((m) => String(m.id) !== String(aiWaitingMessageId)),
-                            })),
-                        };
-                    }
-                );
+                removeMessageById(queryClient, conversationId, aiWaitingMessageId);
                 queryClient.invalidateQueries({ queryKey: messagesKey(conversationId), refetchType: "none" });
                 return;
             }

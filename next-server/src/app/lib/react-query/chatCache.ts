@@ -577,6 +577,37 @@ export function updateMessagePartialById(
   );
 }
 
+// 캐시의 모든 페이지에서 메시지를 제거한다
+export function removeMessageById(
+  queryClient: QueryClient,
+  conversationId: string,
+  matchId: string,
+): void {
+  queryClient.setQueryData<InfiniteData<MessagesPage>>(messagesKey(conversationId), (old) => {
+    if (!old?.pages) return old;
+    return {
+      ...old,
+      pages: old.pages.map((page) => ({
+        ...page,
+        messages: page.messages.filter((m) => String(m.id) !== String(matchId)),
+      })),
+    };
+  });
+}
+
+// 메시지 시간순 정렬 (오래된 → 최신, 같은 시각은 id로 보조 정렬).
+// 서버는 최신순으로 내려주고 캐시는 받은 순서를 유지하므로,
+// 앞뒤 메시지를 찾을 때는 캐시를 그대로 쓰지 말고 이 함수로 정렬한 복사본을 쓴다
+export function compareMessages(a: FullMessageType, b: FullMessageType): number {
+  const aTime = new Date(a.createdAt).getTime();
+  const bTime = new Date(b.createdAt).getTime();
+  if (aTime !== bTime) return aTime - bTime;
+
+  const aId = (a.id ?? "").toString();
+  const bId = (b.id ?? "").toString();
+  return aId && bId ? aId.localeCompare(bId) : 0;
+}
+
 export function markConversationRead(
   queryClient: QueryClient,
   conversationId: string,
