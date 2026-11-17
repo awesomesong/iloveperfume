@@ -292,6 +292,13 @@ function contrast(hex1, hex2) {
 | 다크 own `#5c64a4` | page bg `#111110` | 3.53:1 | ✅ UI구분 |
 | 다크 other/ai `#1a1a18` | primary `#f0ece6` | 14.81:1 | ✅ AA |
 
+#### 안내 박스 (notice-detail__notice — 관리자 상태 안내)
+
+| 배경 | 텍스트 | 대비율 | 기준 |
+|------|--------|--------|------|
+| 라이트 `--color-accent-pale` `#eaeaf8` | primary `#1a1a2e` | 14.31:1 | ✅ AA |
+| 다크 `--color-accent-pale` `#222228` | primary `#f0ece6` | 14.81:1 | ✅ AA |
+
 #### 사이드바 활성 상태
 
 | 배경 | 대상 | 대비율 | 비고 |
