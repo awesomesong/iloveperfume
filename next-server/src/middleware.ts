@@ -17,7 +17,5 @@ export const config = {
     "/profile",
     "/fragrance/create",
     "/fragrance/:id/edit",
-    "/notice/create",
-    "/notice/:id/edit",
   ],
 };

@@ -19,6 +19,9 @@ const nextConfig = {
                 destination: 'https://www.iloveperfume.co.kr/:path*',
                 permanent: true,
             },
+            // 향수 뉴스 경로 변경(/notice → /news) — 기존 링크·검색 결과 유지용
+            { source: '/notice', destination: '/news', permanent: true },
+            { source: '/notice/:id', destination: '/news/:id', permanent: true },
         ];
     },
     async headers() {
