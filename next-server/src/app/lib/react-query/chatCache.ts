@@ -595,6 +595,61 @@ export function removeMessageById(
   });
 }
 
+// ===== AI 답변 대기/실패 =====
+export const AI_WAITING_BODY = "AI가 응답을 준비 중입니다.";
+export const AI_FAILED_BODY = "AI 응답을 불러오지 못했습니다. 아래 재시도 버튼을 눌러 다시 시도해 주세요.";
+// 서버가 답변을 저장할 수 있는 최대 시간(/api/ai/stream: 업스트림 55초 상한, maxDuration 60초)보다 길게 잡는다.
+// 질문 후 이 시간이 지나도 답이 없으면 더 이상 저장될 수 없으므로 실패로 확정한다
+export const AI_REPLY_TIMEOUT_MS = 70_000;
+
+export type PendingReply = {
+  message: FullMessageType; // 목록 끝에 화면으로만 덧붙이는 대기/실패 말풍선 (캐시에는 넣지 않는다)
+  askedAt: number; // 질문 시각(ms)
+  expiresAt: number; // 이 시각부터 실패로 본다
+};
+
+// 시간순으로 정렬된 메시지 목록에서 "답을 받지 못한 마지막 내 질문"을 찾는다.
+// 대기·실패 상태를 브라우저 메모리에 두면 방을 나갔다 오거나 새로고침할 때 사라지므로,
+// 서버에서 받은 목록만으로 다시 계산할 수 있게 한다.
+// - 마지막 메시지가 내 질문이 아니거나 그 뒤에 AI 메시지가 있으면(진행 중인 요청의 대기 말풍선 포함) null
+// - 질문 후 AI_REPLY_TIMEOUT_MS 이내면 대기, 지나면 실패
+export function getPendingReply(
+  messages: FullMessageType[],
+  myId: string,
+  now: number,
+): PendingReply | null {
+  const last = messages[messages.length - 1];
+  if (!last || !myId || last.isAIResponse || last.isError || !last.body?.trim()) return null;
+  if (String(getMessageSenderId(last)) !== String(myId)) return null;
+
+  const askedAt = new Date(last.createdAt).getTime();
+  if (!Number.isFinite(askedAt)) return null;
+
+  const expiresAt = askedAt + AI_REPLY_TIMEOUT_MS;
+  const failed = now >= expiresAt;
+  // 서버가 저장하는 AI 답변과 같은 자리(질문 +1ms)에 둔다 → 재시도가 바로 앞 메시지를 이 질문으로 찾는다
+  const replyAt = askedAt + 1;
+
+  return {
+    askedAt,
+    expiresAt,
+    message: {
+      ...last,
+      id: `pending-reply:${last.id}`,
+      clientMessageId: undefined,
+      body: failed ? AI_FAILED_BODY : AI_WAITING_BODY,
+      image: null,
+      type: "text",
+      createdAt: new Date(replyAt),
+      serverCreatedAtMs: replyAt,
+      isAIResponse: true,
+      isWaiting: !failed,
+      isTyping: !failed,
+      isError: failed,
+    },
+  };
+}
+
 // 메시지 시간순 정렬 (오래된 → 최신, 같은 시각은 id로 보조 정렬).
 // 서버는 최신순으로 내려주고 캐시는 받은 순서를 유지하므로,
 // 앞뒤 메시지를 찾을 때는 캐시를 그대로 쓰지 말고 이 함수로 정렬한 복사본을 쓴다

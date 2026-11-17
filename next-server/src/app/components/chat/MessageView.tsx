@@ -354,7 +354,10 @@ const MessageView: React.FC<MessageBoxProps> = ({
     // 캐시에서 메시지 목록 조회 — 아래에서 "직전 질문 / 바로 다음 AI 답변"을 인덱스로 찾으므로 시간순으로 정렬한다
     // (캐시는 서버가 준 최신순을 유지한다. flatMap이 새 배열을 만들므로 캐시는 변경되지 않는다)
     const cache = queryClient.getQueryData(messagesKey(conversationId)) as | InfiniteData<MessagesPage> | undefined;
-    const allMessages: FullMessageType[] = (cache?.pages?.flatMap((p) => p.messages) ?? []).sort(compareMessages);
+    const cached: FullMessageType[] = cache?.pages?.flatMap((p) => p.messages) ?? [];
+    // 답을 못 받은 질문 뒤에 화면으로만 덧붙인 말풍선(getPendingReply)은 캐시에 없다 → 위치를 찾을 수 있게 넣어서 정렬한다
+    const inCache = cached.some((m) => m.id === data.id);
+    const allMessages = (inCache ? cached : [...cached, data]).sort(compareMessages);
 
     if (isAIMessage) {
       // AI 응답 재시도: 직전 사용자 메시지 찾기
@@ -383,7 +386,8 @@ const MessageView: React.FC<MessageBoxProps> = ({
         userMessageId: userMsg.id,
         userCreatedAt: userCreatedAtToPass, // ✅ 기존 사용자 메시지 시간 전달
         isRetry: true,
-        existingAIMessageId: data.id,
+        // 화면 전용 말풍선은 지울 행이 없다 (서버는 같은 질문의 답변 자리를 따로 정리한다)
+        existingAIMessageId: inCache ? data.id : undefined,
         currentUser: currentUser ? {
           id: currentUser.id,
           name: currentUser.name,
@@ -441,11 +445,7 @@ const MessageView: React.FC<MessageBoxProps> = ({
     queryClient,
     conversationId,
     currentUser,
-    data.id,
-    data.body,
-    data.image,
-    data.conversation,
-    data.sender?.id,
+    data,
     resendMessage,
     requestAI,
   ]);

@@ -10,6 +10,8 @@ import {
   replaceOptimisticMessage,
   removeMessageById,
   messagesKey,
+  AI_WAITING_BODY,
+  AI_FAILED_BODY,
 } from "@/src/app/lib/react-query/chatCache";
 import type { FullMessageType } from "@/src/app/types/conversation";
 import { normalizePreviewType } from "@/src/app/types/conversation";
@@ -84,7 +86,7 @@ export const useAIStream = ({ conversationId, aiAgentType = "assistant", onNewCo
       
         const aiWaitingMessage: FullMessageType = {
             id: aiWaitingMessageId,
-            body: "AI가 응답을 준비 중입니다.",
+            body: AI_WAITING_BODY,
             image: null,
             createdAt: aiCreatedAt, // ✅ 사용자 메시지 + 1ms
             type: "text",
@@ -289,7 +291,7 @@ export const useAIStream = ({ conversationId, aiAgentType = "assistant", onNewCo
             // 실패한 AI 메시지 생성 (캐시 + localStorage)
             const failedAIMessage: FullMessageType = {
                 ...aiWaitingMessage,
-                body: "AI 응답을 불러오지 못했습니다. 아래 재시도 버튼을 눌러 다시 시도해 주세요.",    
+                body: AI_FAILED_BODY,
                 isError: true,
                 isTyping: false,
                 isWaiting: false,

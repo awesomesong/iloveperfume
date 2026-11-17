@@ -33,6 +33,7 @@ import {
   markConversationRead,
   setTotalUnreadFromList,
   compareMessages,
+  getPendingReply,
   ConversationListData,
 } from "@/src/app/lib/react-query/chatCache";
 import { resetSeenUsersForLastMessage, setSeenUsersForLastMessage } from "@/src/app/lib/react-query/chatCache";
@@ -52,6 +53,9 @@ interface seenUser {
 
 // ✅ 빈 배열 상수 - 참조 안정화를 위해
 const EMPTY_SEEN_USERS: Array<seenUser> = [];
+
+// AI 답변 대기 중 서버에 답이 저장됐는지 확인하는 주기
+const REPLY_POLL_INTERVAL_MS = 3_000;
 
 const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
   const socket = useSocket();
@@ -202,6 +206,53 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
 
   const myId = String(session?.user?.id ?? "");
 
+  // === AI 채팅: 답을 받지 못한 마지막 질문 ===
+  // 대기·실패를 캐시의 임시 메시지로만 표시하면 방을 나갔다 오거나 새로고침할 때 사라진다.
+  // 서버에서 받은 목록으로 매번 판정해 목록 끝에 대기/실패 말풍선을 덧붙인다 (캐시·읽음 처리에는 넣지 않는다)
+  const [now, setNow] = useState(() => Date.now());
+  const pendingReply = useMemo(
+    () => (isAIChat ? getPendingReply(allMessages, myId, now) : null),
+    [isAIChat, allMessages, myId, now],
+  );
+  const isAwaitingReply = pendingReply?.message.isWaiting === true;
+  const replyAskedAt = pendingReply?.askedAt;
+  const replyExpiresAt = pendingReply?.expiresAt;
+
+  useEffect(() => {
+    if (!isAwaitingReply || replyAskedAt === undefined || replyExpiresAt === undefined) return;
+
+    // 1) 제한 시간이 지나면 대기 → 실패로 다시 판정
+    //    (타이머가 조금 일찍 깨어나 아직 대기로 판정되면 now가 바뀌어 이 effect가 다시 걸린다)
+    const expireTimer = setTimeout(
+      () => setNow(Date.now()),
+      Math.max(0, replyExpiresAt - Date.now()) + 50,
+    );
+
+    // 2) 서버 첫 페이지만 확인하고, 답(또는 서버가 저장한 에러 행)이 생겼을 때만 목록을 다시 받는다.
+    //    목록 전체를 주기적으로 덮어쓰면 아직 저장 중인 낙관적 메시지가 사라질 수 있다
+    let checking = false;
+    const poll = setInterval(async () => {
+      if (checking) return;
+      checking = true;
+      try {
+        const { messages } = await getMessages({ conversationId, pageParam: null });
+        const replied = messages.some(
+          (m) => m.isAIResponse && new Date(m.createdAt).getTime() > replyAskedAt,
+        );
+        if (replied) await queryClient.invalidateQueries({ queryKey: messagesKey(conversationId) });
+      } catch {
+        // 일시적인 조회 실패는 다음 주기에 다시 확인한다
+      } finally {
+        checking = false;
+      }
+    }, REPLY_POLL_INTERVAL_MS);
+
+    return () => {
+      clearTimeout(expireTimer);
+      clearInterval(poll);
+    };
+  }, [isAwaitingReply, replyAskedAt, replyExpiresAt, now, conversationId, queryClient]);
+
   // 2) liveUsersKey 계산 (참여자 키) - 실제 대화방 참여자 목록 사용
   const liveUsersKey = useMemo(() => {
     // ✅ 최신 메시지의 conversation.userIds 사용 (소켓 이벤트로 항상 최신 상태 유지됨)
@@ -262,6 +313,21 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
       lastMessageCountRef.current = currentCount;
     }
   }, [allMessages, scrollToBottom, onNewContent]);
+
+  // ✅ 덧붙인 대기/실패 말풍선이 나타나면 위 메시지 추가와 같은 규칙으로 스크롤
+  const pendingReplyId = pendingReply?.message.id;
+  useEffect(() => {
+    if (!pendingReplyId) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (isScrollingInitialRef.current) {
+          scrollToBottom({ force: true });
+        } else {
+          onNewContent({ isScrollingInitial: false });
+        }
+      });
+    });
+  }, [pendingReplyId, scrollToBottom, onNewContent]);
 
   // === 3) 통합된 읽음 처리 로직 ===
   const hasProcessedReadRef = useRef<Set<string>>(new Set()); // read-state api 중복 처리 방지
@@ -540,7 +606,24 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
       {isFetchingNextPage && <CircularProgress aria-label="메시지 로딩중" />}
       {status === "error" ? (
         <StatusMessage error={error ?? undefined} fallbackMessage="메시지를 불러오지 못했습니다." />
-      ) : status === "success" ? messageListElements : (
+      ) : status === "success" ? (
+        <>
+          {messageListElements}
+          {pendingReply && (
+            <MessageView
+              key={pendingReply.message.id}
+              data={pendingReply.message}
+              currentUser={session?.user}
+              conversationId={conversationId}
+              showDateDivider={false}
+              isAIChat={isAIChat}
+              seenUsersForLastMessage={EMPTY_SEEN_USERS}
+              isLastOwn={false}
+              liveUsersKey={liveUsersKey}
+            />
+          )}
+        </>
+      ) : (
         <ChatListSkeleton
           variant="message"
           widths={{ primary: "w-80 md:w-[500px] max-[480px]:w-60 max-[320px]:w-36", secondary: "w-[100px] xs:w-40" }}
