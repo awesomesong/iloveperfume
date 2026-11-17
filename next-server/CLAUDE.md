@@ -43,7 +43,7 @@ Next.js 15 (App Router) · React 19 · TS · Prisma · NextAuth · Cloudinary ·
 
 - 향수 스캔(`/scan`): [src/app/api/scan/README.md](src/app/api/scan/README.md) — 만지기 전 필독.
 - 향수 뉴스(`/news`): [docs/news-pipeline.md](docs/news-pipeline.md) — 글은 크론 파이프라인만 생성. 검색어·기준 값은 `src/app/lib/news/config.ts`.
-- 의사결정 기록: [docs/decisions/](docs/decisions/) — ADR-0001(가격 소스), ADR-0002(Vision 2-pass).
+- 의사결정 기록: [docs/decisions/](docs/decisions/) — ADR-0001(가격 소스, 대체됨), ADR-0002(Vision 2-pass), ADR-0003(네이버 쇼핑 링크 전환).
 
 ---
 

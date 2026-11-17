@@ -5,6 +5,7 @@ import {
   findSimilarFragrances,
   type SimilarFragrance,
 } from '@/src/app/lib/scan/findSimilarFragrances';
+import { getCachedKoreanNames, koreanNameKey } from '@/src/app/lib/scan/koreanName';
 
 export const runtime = 'nodejs';
 
@@ -16,6 +17,15 @@ const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 interface GalleryCache {
   items: SimilarFragrance[];
   fetchedAt: string;
+}
+
+/** 네이버 쇼핑 검색 링크용 한글 이름을 붙인다 (캐시에 없으면 null → 영문 이름으로 검색). */
+async function withKoreanNames(items: SimilarFragrance[]) {
+  const names = await getCachedKoreanNames(items);
+  return items.map((item) => ({
+    ...item,
+    koreanName: names.get(koreanNameKey(item)) ?? null,
+  }));
 }
 
 export async function GET(req: NextRequest, { params }: { params: Params }) {
@@ -47,7 +57,7 @@ export async function GET(req: NextRequest, { params }: { params: Params }) {
     if (cached?.fetchedAt) {
       const age = Date.now() - new Date(cached.fetchedAt).getTime();
       if (age < CACHE_TTL_MS) {
-        return NextResponse.json({ items: cached.items, source: 'cache' });
+        return NextResponse.json({ items: await withKoreanNames(cached.items), source: 'cache' });
       }
     }
 
@@ -65,7 +75,7 @@ export async function GET(req: NextRequest, { params }: { params: Params }) {
       data: { galleryCache: cacheData as object },
     });
 
-    return NextResponse.json({ items, source: 'fresh' });
+    return NextResponse.json({ items: await withKoreanNames(items), source: 'fresh' });
   } catch (err) {
     console.error('[similar/gallery] error:', err);
     return NextResponse.json(

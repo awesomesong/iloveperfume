@@ -3,12 +3,16 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { HiOutlineArrowTopRightOnSquare } from 'react-icons/hi2';
+import { buildNaverSearchUrl } from '@/src/app/lib/scan/naverShopping';
 
 interface GalleryItem {
   slug: string;
   brand: string;
   name: string;
   images: string[];
+  /** 네이버 쇼핑 검색어용 한글 이름 (없으면 영문 이름 사용) */
+  koreanName?: string | null;
   similarity: number;
   method: 'score' | 'notes';
 }
@@ -67,35 +71,47 @@ export default function SimilarGallery({ scanId }: Props) {
               </div>
             ))
           : items.map((item) => (
-              <Link
-                key={item.slug}
-                href={`/fragrance/${item.slug}`}
-                className="group flex flex-col gap-2"
-              >
-                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--color-card-bg)] dark:bg-[var(--color-ivory-soft)] border border-[var(--color-card-border)] dark:border-accent-border group-hover:border-accent transition-colors">
-                  {item.images[0] ? (
-                    <Image
-                      src={item.images[0]}
-                      alt={`${item.brand} ${item.name}`}
-                      fill
-                      sizes="(max-width: 768px) 33vw, 200px"
-                      className="object-contain p-3 transition-transform duration-300 group-hover:scale-[1.03]"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs text-fg-secondary">no image</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col gap-0.5 px-0.5">
-                  <p className="text-[11px] text-fg-secondary font-light truncate">
-                    {item.brand}
-                  </p>
-                  <p className="text-[13px] font-medium text-fg-primary truncate group-hover:text-accent transition-colors leading-snug">
-                    {item.name}
-                  </p>
-                </div>
-              </Link>
+              // 카드 본체(상세 페이지)와 네이버 쇼핑 링크는 서로 다른 링크 — 중첩되지 않게 형제로 둔다
+              <div key={item.slug} className="flex flex-col gap-1.5">
+                <Link
+                  href={`/fragrance/${item.slug}`}
+                  className="group flex flex-col gap-2"
+                >
+                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--color-card-bg)] dark:bg-[var(--color-ivory-soft)] border border-[var(--color-card-border)] dark:border-accent-border group-hover:border-accent transition-colors">
+                    {item.images[0] ? (
+                      <Image
+                        src={item.images[0]}
+                        alt={`${item.brand} ${item.name}`}
+                        fill
+                        sizes="(max-width: 768px) 33vw, 200px"
+                        className="object-contain p-3 transition-transform duration-300 group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs text-fg-secondary">no image</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-0.5 px-0.5">
+                    <p className="text-[11px] text-fg-secondary font-light truncate">
+                      {item.brand}
+                    </p>
+                    <p className="text-[13px] font-medium text-fg-primary truncate group-hover:text-accent transition-colors leading-snug">
+                      {item.name}
+                    </p>
+                  </div>
+                </Link>
+                <a
+                  href={buildNaverSearchUrl(item.name, item.koreanName)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${item.brand} ${item.name} 네이버 쇼핑에서 보기 (새 창에서 열림)`}
+                  className="inline-flex items-center gap-1 self-start px-0.5 py-1 text-xs text-accent hover:underline"
+                >
+                  네이버 쇼핑
+                  <HiOutlineArrowTopRightOnSquare className="size-3 shrink-0" aria-hidden />
+                </a>
+              </div>
             ))}
       </div>
     </section>

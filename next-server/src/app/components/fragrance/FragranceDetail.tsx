@@ -4,6 +4,7 @@ import { useQuery, skipToken } from '@tanstack/react-query';
 
 import FragranceMotionWrapper from '@/src/app/components/FragranceMotionWrapper';
 import FragranceReviewSection from '@/src/app/components/FragranceReviewSection';
+import ShopLinkCard from '@/src/app/components/scan/ShopLinkCard';
 import { fragranceDetailKey } from '@/src/app/lib/react-query/fragranceCache';
 import type { FragranceWithAuthor } from '@/src/app/types/fragrance';
 
@@ -14,9 +15,11 @@ import FragranceHeroClient from './FragranceHeroClient';
 type Props = {
   slug: string;
   fragrance: FragranceWithAuthor;
+  /** 네이버 쇼핑 검색어용 한글 이름 (서버에서 조회, 없으면 영문 이름 사용) */
+  koreanName?: string | null;
 };
 
-export default function FragranceDetail({ slug, fragrance: initialFragrance }: Props) {
+export default function FragranceDetail({ slug, fragrance: initialFragrance, koreanName }: Props) {
   // 서버(SSG/ISR)에서 내려준 fragrance를 initialData로 두고,
   // FormFragrance가 수정 후 setQueryData(fragranceDetailKey(slug), ...)로 채워둔
   // react-query 캐시가 있으면 그 값을 그대로 읽어 화면에 반영한다.
@@ -30,6 +33,8 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance }: P
 
   const fragrance = data?.fragrance ?? initialFragrance;
   const title = `${fragrance.brand} ${fragrance.name}`.trim();
+  // 수정 직후 캐시의 이름이 서버가 내려준 이름과 다르면 한글 이름이 맞지 않으므로 쓰지 않는다
+  const shopKoreanName = fragrance.name === initialFragrance.name ? koreanName : null;
   const authorImage =
     fragrance.author?.profileImage ?? fragrance.author?.image ?? null;
 
@@ -93,6 +98,14 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance }: P
                   </div>
                 </FragranceMotionWrapper>
               )}
+
+              {/* 구매처 — 네이버 쇼핑·쿠팡 검색 링크 (스캔 결과와 같은 컴포넌트) */}
+              <div className="pt-8 border-t border-[var(--color-card-border)]">
+                <ShopLinkCard
+                  name={fragrance.name}
+                  koreanName={shopKoreanName}
+                />
+              </div>
             </div>
           </div>
         </>
@@ -102,4 +115,3 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance }: P
     </div>
   );
 }
-

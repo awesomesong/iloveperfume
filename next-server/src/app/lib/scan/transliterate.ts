@@ -1,19 +1,16 @@
 /**
  * 향수 이름 영문 → 한글 음역 변환 (OpenAI LLM).
  *
- * 목적: 네이버 쇼핑 API 1차 검색(영문)이 0건일 때, 한글로 등록된 mall title도
- * 매칭되도록 2차 검색용 한글 쿼리를 생성. 마이너 브랜드(LOE 등) 같은 케이스
- * 대응.
+ * 목적: 네이버 쇼핑 검색 링크를 한글 검색어로 만들기 위함. 네이버 쇼핑은 향수명을
+ * 한글 붙여쓰기로 등록한 판매처가 많아 한글 검색어가 결과가 더 잘 나온다.
  *
  * 비용:
- *  - gpt-4o-mini ~$0.0001~0.001/호출
- *  - max_tokens 100 (짧은 응답만)
- *  - 1차 검색에 결과 있으면 호출 안 함 → 평균 비용 매우 작음
- *  - 24h prices 캐시 hit 시도 호출 안 함
+ *  - gpt-4o-mini ~$0.0001~0.001/호출, max_tokens 100
+ *  - 결과는 FragranceKoreanName 테이블에 저장 → 향수당 1회만 호출 (koreanName.ts)
  *
  * 안전망:
- *  - LLM 응답 실패/timeout 시 빈 문자열 반환 → 호출자가 2차 검색 건너뜀
- *  - 변환 결과가 입력과 동일하면 빈 문자열 반환 (무의미한 재검색 방지)
+ *  - LLM 응답 실패/timeout 시 빈 문자열 반환 → 호출자는 영문 이름으로 링크 생성
+ *  - 변환 결과가 입력과 동일하면 빈 문자열 반환
  */
 
 const OPENAI_API = 'https://api.openai.com/v1/chat/completions';
@@ -109,7 +106,7 @@ export async function transliterateNameToKorean(name: string): Promise<string> {
     // 후처리 안전망: LLM이 띄어쓰기로 줘도 한글 사이 공백 제거
     const korean = removeKoreanSpaces(rawKorean);
 
-    // 변환 실패 또는 입력과 동일 → 무의미한 재검색 방지
+    // 변환 실패 또는 입력과 동일 → 저장할 필요 없음
     if (!korean || korean === trimmed || korean.toLowerCase() === trimmed.toLowerCase()) {
       return '';
     }
