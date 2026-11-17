@@ -4,7 +4,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { HiArrowUp, HiSparkles } from 'react-icons/hi2';
+import { toast } from 'react-hot-toast';
 import { createConversationWithFirstMessage } from '@/src/app/lib/createConversationWithFirstMessage';
+import { formatErrorMessage } from '@/src/app/lib/react-query/utils';
+import { validatePrompt } from '@/src/app/utils/aiPolicy';
 import {
   conversationKey,
   messagesKey,
@@ -53,6 +56,14 @@ export default function HomeAIChatInput() {
   const submit = async (message: string) => {
     const trimmed = message.trim();
     if (!trimmed || loading) return;
+
+    // 채팅방 입력창(AIChatForm)과 같은 검증(길이·금칙어). 저장 후에는 AI 라우트가 매번 거절해
+    // 답을 받을 수 없는 질문이 남으므로 보내기 전에 막는다. 입력한 글은 지우지 않는다
+    const check = validatePrompt(trimmed);
+    if (!check.isValid) {
+      toast.error(check.error ?? '입력값을 확인해주세요.');
+      return;
+    }
 
     setLoading(true);
     setPendingMessage(trimmed);
@@ -121,8 +132,10 @@ export default function HomeAIChatInput() {
       startTransition(() => {
         router.push(`/conversations/${conv.id}`);
       });
-    } catch {
-      alert('오류가 발생했어요. 다시 시도해주세요.');
+    } catch (err: unknown) {
+      // 서버가 알려 준 이유(길이·금칙어 등)를 그대로 보여 주고, 다시 보낼 수 있게 입력을 되돌린다
+      toast.error(formatErrorMessage(err, '오류가 발생했어요. 다시 시도해주세요.'));
+      setValue(trimmed);
     } finally {
       setLoading(false);
       setPendingMessage('');
