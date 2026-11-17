@@ -394,6 +394,7 @@ function contrast(hex1, hex2) {
 | 페이지 헤더 | `.product-fragrance-header-layout` + `flex justify-between items-center` |
 | 카드 그리드 | `.layout-card` (1→2→3→4열) |
 | 뉴스 목록 | `.news-list` (1열, 6-1 참고) |
+| 향수 목록 | `.fragrance-list` (카드 그리드, 6-2 참고) |
 | 히어로 높이 | `calc(100dvh - var(--header-height))` — `--header-height: 56px` |
 | 섹션 패딩 | `py-16 md:py-24` |
 | 섹션 간격 | `gap-8` ~ `gap-16` |
@@ -425,6 +426,28 @@ function contrast(hex1, hex2) {
 | 상세 | `.notice-detail__thumb`(있으면) → `.news-article__press` → `h1.notice-detail__title` → `.meta-line.notice-detail__meta` | 썸네일(16:9, `.news-page` 폭) → 매체명 → 단색 제목(22px → 28px, 그라데이션 금지) → 분류 · "입력 2026.11.14. 오후 3:20" · 조회 · 댓글. 본문도 `.news-page` 폭을 그대로 쓴다(글줄 폭 제한 없음) |
 
 기준점은 768px 하나다. 한글 제목·요약은 `word-break: keep-all`로 어절 단위 줄바꿈.
+
+---
+
+## 6-2. 향수 목록 패턴 (`/fragrance`)
+
+> 머리와 탭은 뉴스 목록의 공통 요소(`PageIntro`, `TextTabs`, `.meta-line`)를 그대로 쓰고, 본문만 카드 그리드다.
+> 새 색·새 카드 스타일은 없다 — 카드는 7절 카드 토큰(`.product-fragrance-card`)을 재사용한다.
+
+| 요소 | 클래스 / 컴포넌트 | 규칙 |
+|------|-------------------|------|
+| 페이지 | `.fragrance-list-page` | `.news-page`와 같은 폭·여백(최대 1440px, 좌우 16px → 32px) |
+| 탭 | `TextTabs` | 전체 / 신제품 / 직접 등록. 탭 값이 `GET /api/fragrance?source=`로 이어진다(신제품 = `AI_AGENT`, 직접 등록 = `USER`) |
+| 그리드 | `ul.fragrance-list` | `auto-fill` 그리드. 카드 최소 폭 150px·간격 12px → 768px부터 180px·20px |
+| 카드 | `FragranceListCard` (`.fragrance-list-card` + `.product-fragrance-card` + `.product-fragrance-card-layout`) | 첫 이미지(3:4, `object-contain`) → 브랜드(`.product-fragrance-brand`) → 이름(`.product-fragrance-name`) → 수집된 향수만 `.meta-line` "신제품". hover는 그림자만(이동 없음), 포커스는 액센트 외곽선 |
+| 이미지 | `FallbackNextImage` | 수집된 향수는 공식 사이트 이미지를 재호스팅 없이 링크한다 — 호스트는 `next.config.js` `remotePatterns`에 등록(`cdn.shopify.com`) |
+| 스켈레톤 | `FragranceCardSkeleton` × 12 | 같은 `.fragrance-list` 그리드 안에 그린다 |
+
+상세(`FragranceDetail`)에서 수집된 향수(`source = AI_AGENT`)는:
+
+- 작성자 자리에 `.meta-line`으로 "브랜드 공식 사이트 정보를 바탕으로 자동 수집"을 적는다.
+- 설명·노트를 HTML로 해석하지 않고 글자 그대로 그린다(`dangerouslySetInnerHTML` 금지 — 외부에서 온 글).
+- 구매처(`ShopLinkCard`) 맨 위에 "공식 사이트에서 보기" 행을 둔다. 행 스타일·대비는 4-1 "구매처 행"과 같다.
 
 ---
 

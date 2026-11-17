@@ -562,6 +562,134 @@ h6 {
   color: var(--color-accent-light);
 }
 
+/* ===== 향수 목록 (/fragrance) — 머리는 뉴스 목록 공통 요소 재사용, 그리드만 전용 ===== */
+.fragrance-list-page {
+  width: 100%;
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem 1rem 1rem;
+}
+/* 카드 자체는 7절 .product-fragrance-card-layout 재사용 — 그리드 칸만 정의 */
+.fragrance-list {
+  list-style: none;
+  margin: 0;
+  padding: 1.25rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .fragrance-list {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+  }
+}
+
+/* 공지사항 그리드 — 테마 색상 기반 최신 카드 레이아웃 */
+.notice-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  min-width: 0;
+}
+@media (min-width: 580px) {
+  .notice-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+@media (min-width: 1280px) {
+  .notice-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+@media (min-width: 1536px) {
+  .notice-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* 스켈레톤: .notice-grid와 동일한 breakpoint(580/1280/1536) 기준, 2행만 노출
+   - ~579px: 1열 → 2개
+   - 580~1279px: 2열 → 4개
+   - 1280~1535px: 3열 → 6개
+   - 1536px~: 4열 → 8개 */
+.notice-grid-skeleton > *:nth-child(n + 3) { display: none; }
+@media (min-width: 580px) {
+  .notice-grid-skeleton > *:nth-child(n + 3) { display: revert; }
+  .notice-grid-skeleton > *:nth-child(n + 5) { display: none; }
+}
+@media (min-width: 1280px) {
+  .notice-grid-skeleton > *:nth-child(n + 5) { display: revert; }
+  .notice-grid-skeleton > *:nth-child(n + 7) { display: none; }
+}
+@media (min-width: 1536px) {
+  .notice-grid-skeleton > *:nth-child(n + 7) { display: revert; }
+  .notice-grid-skeleton > *:nth-child(n + 9) { display: none; }
+}
+
+/* 공지사항 카드 — 글자 그라데이션(ilp) 색상 기반, 라이트 파스텔 / 다크 연하게 */
+.notice-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--notice-card-bg);
+  border: 1px solid var(--notice-card-border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.notice-card:hover {
+  border-color: var(--notice-card-hover-border);
+  box-shadow: 0 8px 24px var(--notice-card-shadow-hover);
+}
+.notice-card__image-wrap {
+  position: relative;
+  width: 100%;
+  height: clamp(160px, 22vw, 220px);
+  min-height: 160px;
+  max-height: 220px;
+  background: var(--notice-card-image-bg);
+  overflow: hidden;
+}
+.notice-card__image-wrap > .card-image-slider {
+  width: 100%;
+  height: 100%;
+}
+.notice-card__image-wrap > .card-image-slider > div:first-child {
+  height: 100%;
+}
+.notice-card__body {
+  flex: 1;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: var(--notice-card-body-bg);
+  border-top: 1px solid var(--notice-card-divider);
+}
+.notice-card__title {
+  color: var(--notice-card-title-color, var(--color-text-primary));
+  font-weight: 600;
+  font-size: 1.0625rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.notice-card__meta {
+  color: var(--notice-card-meta-color, var(--color-text-secondary));
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 /* 상세: 목록과 같은 .news-page 폭(최대 1440px)을 그대로 쓴다 */
 .notice-detail__title,
 .notice-article {

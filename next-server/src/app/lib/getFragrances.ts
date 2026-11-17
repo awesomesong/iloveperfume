@@ -1,4 +1,4 @@
-import { FragranceWithAuthor } from "@/src/app/types/fragrance";
+import { FragranceWithAuthor, isFragranceSource } from "@/src/app/types/fragrance";
 import prisma from "@/prisma/db";
 import { apiFetch } from "@/src/app/utils/apiFetch";
 
@@ -35,14 +35,19 @@ export const getFragranceBySlugServer = async (
 
 type FragranceListParam = {
     pageParam: string;
+    queryKey?: readonly unknown[];
 };
 
+/** queryKey: ["fragrances"](전체) 또는 ["fragrances", "source", 출처] — fragranceListKeyBySource 참고 */
 export const getFragrances = async (
-    { pageParam }: FragranceListParam
+    { pageParam, queryKey }: FragranceListParam
 ): Promise<FragranceWithAuthor[]> => {
-    const searchParams = '?cursor=' + encodeURIComponent(pageParam ?? '');
+    const params = new URLSearchParams({ cursor: pageParam ?? '' });
+    const source = queryKey?.[2];
+    if (isFragranceSource(source)) params.set('source', source);
+
     const { fragrances } = await apiFetch<{ fragrances: FragranceWithAuthor[] }>(
-        `/api/fragrance${searchParams}`,
+        `/api/fragrance?${params.toString()}`,
         { defaultErrorMessage: "향수 목록을 가져오는데 실패했습니다." },
     );
     return fragrances;

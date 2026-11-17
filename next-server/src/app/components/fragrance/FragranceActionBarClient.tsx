@@ -32,11 +32,11 @@ export default function FragranceActionBarClient({
   const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // 수집된 향수는 작성자가 없다(authorEmail null) — 그 경우에도 관리자는 수정·삭제할 수 있다
   const hasEditPermission = useMemo(() => {
-    if (!session?.user?.email || !authorEmail) return false;
-    const isAuthor = session.user.email === authorEmail;
-    const isAdmin = session.user.role === 'admin';
-    return isAuthor || isAdmin;
+    if (!session?.user?.email) return false;
+    if (session.user.role === 'admin') return true;
+    return !!authorEmail && session.user.email === authorEmail;
   }, [session?.user?.email, session?.user?.role, authorEmail]);
 
   const handleDelete = async () => {

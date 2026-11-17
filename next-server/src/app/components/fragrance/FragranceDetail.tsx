@@ -37,6 +37,8 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance, kor
   const shopKoreanName = fragrance.name === initialFragrance.name ? koreanName : null;
   const authorImage =
     fragrance.author?.profileImage ?? fragrance.author?.image ?? null;
+  // 수집된 향수(작성자 없음): 작성자 자리에 출처를 적고, 외부에서 온 글이므로 HTML로 해석하지 않고 글자 그대로 그린다
+  const isCollected = fragrance.source === 'AI_AGENT';
 
   return (
     <div className="fragrance-detail-layout">
@@ -56,7 +58,7 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance, kor
             </div>
 
             <div className="fragrance-form-right">
-              {(fragrance.brand || fragrance.author?.name) && (
+              {(fragrance.brand || fragrance.author?.name || isCollected) && (
                 <div className="flex flex-col">
                   {fragrance.brand && (
                     <h2 className="text-top">
@@ -73,14 +75,26 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance, kor
                       className="w-auto"
                     />
                   )}
+
+                  {isCollected && (
+                    <p className="meta-line">
+                      <span>브랜드 공식 사이트 정보를 바탕으로 자동 수집</span>
+                    </p>
+                  )}
                 </div>
               )}
 
               {fragrance.description && (
-                <div
-                  className="fragrance-info text-bottom text-[13px] md:text-[14px] leading-[1.8] text-[var(--color-text-secondary)] font-light tracking-wide"
-                  dangerouslySetInnerHTML={{ __html: fragrance.description }}
-                />
+                isCollected ? (
+                  <div className="fragrance-info text-bottom text-[13px] md:text-[14px] leading-[1.8] text-[var(--color-text-secondary)] font-light tracking-wide whitespace-pre-line">
+                    {fragrance.description}
+                  </div>
+                ) : (
+                  <div
+                    className="fragrance-info text-bottom text-[13px] md:text-[14px] leading-[1.8] text-[var(--color-text-secondary)] font-light tracking-wide"
+                    dangerouslySetInnerHTML={{ __html: fragrance.description }}
+                  />
+                )
               )}
 
               {fragrance.notes && (
@@ -89,21 +103,28 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance, kor
                     <h3 className="text-gradient-ilp text-sm font-bold tracking-[0.2em] uppercase text-[var(--color-text-secondary)] mb-4">
                       노트 상세 정보
                     </h3>
-                    <div
-                      className="text-[13px] md:text-[14px] leading-[1.7] text-[var(--color-text-secondary)] font-light whitespace-pre-wrap"
-                      dangerouslySetInnerHTML={{
-                        __html: fragrance.notes.replaceAll('\\n', '\n'),
-                      }}
-                    />
+                    {isCollected ? (
+                      <div className="text-[13px] md:text-[14px] leading-[1.7] text-[var(--color-text-secondary)] font-light whitespace-pre-wrap">
+                        {fragrance.notes.replaceAll('\\n', '\n')}
+                      </div>
+                    ) : (
+                      <div
+                        className="text-[13px] md:text-[14px] leading-[1.7] text-[var(--color-text-secondary)] font-light whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{
+                          __html: fragrance.notes.replaceAll('\\n', '\n'),
+                        }}
+                      />
+                    )}
                   </div>
                 </FragranceMotionWrapper>
               )}
 
-              {/* 구매처 — 네이버 쇼핑·쿠팡 검색 링크 (스캔 결과와 같은 컴포넌트) */}
+              {/* 구매처 — 공식 사이트(있으면) + 네이버 쇼핑·쿠팡 검색 링크 (스캔 결과와 같은 컴포넌트) */}
               <div className="pt-8 border-t border-[var(--color-card-border)]">
                 <ShopLinkCard
                   name={fragrance.name}
                   koreanName={shopKoreanName}
+                  officialUrl={fragrance.officialUrl}
                 />
               </div>
             </div>
@@ -115,3 +136,4 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance, kor
     </div>
   );
 }
+

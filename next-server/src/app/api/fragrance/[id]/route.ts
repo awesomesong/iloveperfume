@@ -124,9 +124,23 @@ export async function DELETE(req: Request, { params }: { params: Promise<IParams
         if (!auth.ok) return auth.response;
         const { record: existing } = auth;
 
+        // 수집된 향수는 지워도 공식 사이트에 제품이 남아 있으면 다음 수집 때 다시 올라온다.
+        // 같은 트랜잭션에서 공식 URL만 차단 목록에 남겨 재수집을 막는다 (내용은 남기지 않는다).
+        const blockOfficialUrl =
+            existing.source === 'AI_AGENT' && existing.officialUrl
+                ? [
+                    prisma.fragranceBlockedUrl.upsert({
+                        where: { officialUrl: existing.officialUrl },
+                        update: {},
+                        create: { officialUrl: existing.officialUrl },
+                    }),
+                ]
+                : [];
+
         const [, deletedFragrance] = await prisma.$transaction([
             prisma.fragranceReview.deleteMany({ where: { fragranceSlug: existing.slug } }),
             prisma.fragrance.delete({ where: { id: existing.id } }),
+            ...blockOfficialUrl,
         ]);
 
         // SSG로 미리 빌드된 정적 페이지가 삭제 후에도 남아있지 않도록 캐시 무효화

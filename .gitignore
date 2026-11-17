@@ -7,7 +7,6 @@ next-server/node_modules
 next-server/dist
 next-server/build/
 next-server/.turbo/
-next-server/prisma/migrations
 next-server/scripts/
 
 socket-server/node_modules
@@ -21,6 +20,8 @@ coverage/
 logs/
 *.log
 *.sql
+# Prisma 마이그레이션 이력은 버전 관리에 포함한다
+!next-server/prisma/migrations/**/*.sql
 
 # Claude Code
 .claude/

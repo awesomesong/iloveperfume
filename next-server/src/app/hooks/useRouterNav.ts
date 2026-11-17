@@ -15,6 +15,11 @@ const useRouteNav = () => {
             href: '/news',
             active: pathname?.startsWith('/news')
         },
+        {
+            label: 'Perfume',
+            href: '/fragrance',
+            active: pathname?.startsWith('/fragrance')
+        },
     ], [pathname]);
 
     return routerNav;
