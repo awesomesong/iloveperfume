@@ -9,8 +9,6 @@ export const SOCKET_EVENTS = {
   NOTICE_COMMENT_NEW: "notice:comment:new",
   NOTICE_COMMENT_UPDATED: "notice:comment:updated",
   NOTICE_COMMENT_DELETED: "notice:comment:deleted",
-  NOTICE_NEW: "notice:new",
-  NOTICE_UPDATED: "notice:updated",
   NOTICE_DELETED: "notice:deleted",
   FRAGRANCE_REVIEW_NEW: "fragrance:review:new",
   FRAGRANCE_REVIEW_UPDATED: "fragrance:review:updated",

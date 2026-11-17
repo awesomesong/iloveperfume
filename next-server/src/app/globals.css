@@ -84,17 +84,6 @@ blockquote{
   --unread-badge-text: #ffffff;
   /* CTA 그라데이션(라이트): 톤을 살짝 올려 연보라·아이보리·크림옐로우 구별되게 */
   --gradient-add-btn: linear-gradient(135deg, #ddd0f8 0%, #ebe2ff 28%, #fffcfa 52%, #fff0d8 78%, #ffecce 100%);
-  /* 공지 카드: 연보라 · 아이보리 · 연노랑 어울리게, 밝은 파스텔 */
-  --notice-card-bg: linear-gradient(145deg, #e8e0ff 0%, #f5f2ff 25%, #fffcfa 50%, #fff8f0 75%, #ffecce 100%);
-  --notice-card-border: rgba(200, 180, 255, 0.32);
-  --notice-card-image-bg: linear-gradient(145deg, #ebe2ff 0%, #fffcfa 40%, #fff4e4 100%);
-  --notice-card-hover-border: rgba(184, 148, 224, 0.5);
-  --notice-card-shadow-hover: rgba(200, 180, 255, 0.2);
-  /* 라이트: 본문(제목·정보) 영역 구분용 */
-  --notice-card-body-bg: rgba(255, 252, 250, 0.85);
-  --notice-card-divider: rgba(200, 180, 255, 0.35);
-  --notice-card-title-color: var(--color-text-primary);
-  --notice-card-meta-color: var(--color-text-secondary);
   /* 사이드바 hover/active — accent-pale(연한 인디고, 좌측 바와 계열 통일) */
   --color-sidebar-state-bg: var(--color-accent-pale);
   /* 로딩 ball: 왼쪽 진함 → 오른쪽 연함 (라이트) */
@@ -158,14 +147,6 @@ blockquote{
   --footer-line: linear-gradient(90deg, transparent 0%, rgba(200, 200, 200, 0.22) 35%, rgba(200, 200, 200, 0.18) 65%, transparent 100%);
   /* CTA 그라데이션(다크): 아이보리 — 뉴트럴 bg와 대비용 유지 */
   --gradient-add-btn: linear-gradient(135deg, rgba(255,252,248,0.75) 0%, rgba(240,235,225,0.82) 40%, rgba(255,250,240,0.88) 70%, rgba(255,248,235,0.8) 100%);
-  /* 공지 카드(다크) */
-  --notice-card-bg: linear-gradient(180deg, #252524 0%, #202020 50%, #1c1c1c 100%);
-  --notice-card-border: var(--color-accent-border);
-  --notice-card-image-bg: linear-gradient(145deg, rgba(180,180,180,0.2) 0%, rgba(160,160,160,0.1) 40%, rgba(160,160,160,0.05) 70%, rgba(180,180,180,0.12) 100%), #1a1a18;
-  --notice-card-hover-border: rgba(122, 128, 204, 0.70);
-  --notice-card-shadow-hover: rgba(0, 0, 0, 0.24);
-  --notice-card-body-bg: rgba(26, 26, 24, 0.7);
-  --notice-card-divider: rgba(200, 200, 200, 0.18);
   /* 사이드바 hover/active — 인디고 틴트(text 12.51:1 ✅) */
   --color-sidebar-state-bg: rgba(61, 61, 143, 0.30);
   /* 로딩 ball: 뉴트럴 */
@@ -709,20 +690,6 @@ h6 {
   flex-wrap: wrap;
 }
 
-/* 공지 공통: 메타 영역 아바타 래퍼 (카드/상세 공용) */
-.notice-meta__avatar {
-  flex-shrink: 0;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 9999px;
-  overflow: hidden;
-  background: var(--color-accent-pale);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
 /* 상세: 목록과 같은 .news-page 폭(최대 1440px)을 그대로 쓴다 */
 .notice-detail__title,
 .notice-article {
@@ -812,6 +779,20 @@ h6 {
   padding: 0.625rem 0.875rem;
   font-size: 0.8125rem;
   margin-bottom: 1rem;
+}
+
+/* 작성자 메타 아바타 래퍼 (향수 상세 작성자 표시에서 사용) */
+.notice-meta__avatar {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  background: var(--color-accent-pale);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .page-container {

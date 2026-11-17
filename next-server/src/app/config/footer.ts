@@ -33,7 +33,7 @@ export const FOOTER_LINK_GROUPS: FooterLinkGroup[] = [
             { label: '향수 갤러리', href: '/' },
             { label: '향수 컬렉션', href: '/fragrance' },
             { label: '향수 스캔', href: '/scan' },
-            { label: '향수 뉴스', href: '/notice' },
+            { label: '향수 뉴스', href: '/news' },
             { label: '채팅', href: '/chatMember' },
         ],
     },

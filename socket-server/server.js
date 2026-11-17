@@ -551,21 +551,7 @@ io.on("connection", (socket) => {
     io.to(userRoom(socket.data.userId)).except(socket.id).emit("read:state", readStateData);
   });
 
-  // 공지사항 신규 생성 브로드캐스트 (보낸 본인 제외 전체에 전송)
-  socket.on("notice:new", (payload) => {
-    try {
-      socket.broadcast.emit("notice:new", payload);
-    } catch (e) {}
-  });
-
-  // 공지사항 수정 브로드캐스트 (보낸 본인 제외 전체에 전송)
-  socket.on("notice:updated", (payload) => {
-    try {
-      socket.broadcast.emit("notice:updated", payload);
-    } catch (e) {}
-  });
-
-  // 공지사항 삭제 브로드캐스트 (보낸 본인 제외 전체에 전송)
+  // 향수 뉴스 내림(숨김) 브로드캐스트 (보낸 본인 제외 전체에 전송)
   socket.on("notice:deleted", (payload) => {
     try {
       socket.broadcast.emit("notice:deleted", payload);
