@@ -180,6 +180,11 @@ model FragranceReview {
   @@index([fragranceSlug])
 }
 
+enum FragranceSource {
+  USER // 사용자가 직접 등록
+  AI_AGENT // 신제품 수집 파이프라인이 등록
+}
+
 model Fragrance {
   id          String                       @id @default(cuid())
   brand       String
@@ -201,7 +206,20 @@ model Fragrance {
   embeddedAt  DateTime?
   // 네이버 쇼핑 판매 여부 캐시 (7일 TTL) — { available, item, fetchedAt, koreanName }
   naverCache  Json?
+  // 등록 경로 — USER: /fragrance/create, AI_AGENT: /api/cron/perfume-arrivals 파이프라인
+  source      FragranceSource              @default(USER)
+  // 브랜드 공식 제품 페이지. unique로 같은 제품의 중복 수집을 막는다 (사용자 등록 건은 null)
+  officialUrl String?                      @unique
   author      User?                        @relation(fields: [authorEmail], references: [email])
+
+  @@index([source, createdAt(sort: Desc)])
+}
+
+// 다시 수집하지 않을 공식 URL — 수집된 향수를 삭제할 때 기록한다 (틀린 내용은 남기지 않고 URL만 남긴다)
+model FragranceBlockedUrl {
+  id          String   @id @default(cuid())
+  officialUrl String   @unique
+  createdAt   DateTime @default(now())
 }
 
 model QuizSession {

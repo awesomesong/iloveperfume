@@ -581,6 +581,30 @@ h6 {
   color: var(--color-accent-light);
 }
 
+/* ===== 향수 목록 (/fragrance) — 머리는 뉴스 목록 공통 요소 재사용, 그리드만 전용 ===== */
+.fragrance-list-page {
+  width: 100%;
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem 1rem 1rem;
+}
+/* 카드 자체는 7절 .product-fragrance-card-layout 재사용 — 그리드 칸만 정의 */
+.fragrance-list {
+  list-style: none;
+  margin: 0;
+  padding: 1.25rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .fragrance-list {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+  }
+}
+
 /* 공지사항 그리드 — 테마 색상 기반 최신 카드 레이아웃 */
 .notice-grid {
   display: grid;

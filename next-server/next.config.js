@@ -102,6 +102,11 @@ const nextConfig = {
             protocol: 'http',
             hostname: 'img1.kakaocdn.net',
           },
+          // 수집된 향수(source = AI_AGENT)의 공식 사이트 제품 이미지 — 재호스팅 없이 그대로 링크한다
+          {
+            protocol: 'https',
+            hostname: 'cdn.shopify.com',
+          },
         ],
     },
     logging: {
