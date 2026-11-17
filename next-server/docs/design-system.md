@@ -303,6 +303,13 @@ function contrast(hex1, hex2) {
 | 라이트 `#eaeaf8` | page `#f7f5f2` | 1.10:1 | 장식 — 링크 식별은 글자가 담당 |
 | 다크 `#222228` | page `#111110` | 1.19:1 | 장식 — 링크 식별은 글자가 담당 |
 
+#### 안내 박스 (notice-detail__notice — 관리자 상태 안내)
+
+| 배경 | 텍스트 | 대비율 | 기준 |
+|------|--------|--------|------|
+| 라이트 `--color-accent-pale` `#eaeaf8` | primary `#1a1a2e` | 14.31:1 | ✅ AA |
+| 다크 `--color-accent-pale` `#222228` | primary `#f0ece6` | 14.81:1 | ✅ AA |
+
 #### 사이드바 활성 상태
 
 | 배경 | 대상 | 대비율 | 비고 |
@@ -386,7 +393,6 @@ function contrast(hex1, hex2) {
 | 페이지 컨테이너 | `max-w-[1440px] mx-auto w-full px-4 md:px-8` |
 | 페이지 헤더 | `.product-fragrance-header-layout` + `flex justify-between items-center` |
 | 카드 그리드 | `.layout-card` (1→2→3→4열) |
-| 공지 그리드 | `.notice-grid` |
 | 뉴스 목록 | `.news-list` (1열, 6-1 참고) |
 | 히어로 높이 | `calc(100dvh - var(--header-height))` — `--header-height: 56px` |
 | 섹션 패딩 | `py-16 md:py-24` |
@@ -433,7 +439,7 @@ shadow rest:    0 2px 12px var(--color-shadow-soft)
 shadow hover:   0 16px 40px var(--color-shadow-hover), 0 0 0 1px var(--color-accent-border)
 ```
 
-기존 클래스 그대로 재사용: `.notice-card` / `.product-fragrance-card`
+기존 클래스 그대로 재사용: `.product-fragrance-card`
 
 ---
 

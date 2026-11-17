@@ -11,9 +11,9 @@ const useRouteNav = () => {
             active: false
         },
         {
-            label: 'Notice',
-            href: '/notice',
-            active: pathname?.startsWith('/notice')
+            label: 'News',
+            href: '/news',
+            active: pathname?.startsWith('/news')
         },
     ], [pathname]);
 
