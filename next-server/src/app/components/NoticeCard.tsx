@@ -1,99 +1,58 @@
 "use client";
 import Link from "next/link";
-import { Notice } from "@/src/app/types/notice";
-import dayjs from "@/src/app/utils/day";
-import { formatNumber } from "@/src/app/utils/formatNumber";
-import FallbackNextImage from "./FallbackNextImage";
-import ImageSlider from "./ImageSlider";
 import { memo, useState } from "react";
-import ILPUserAvatar from "./ILPUserAvatar";
+import { Notice } from "@/src/app/types/notice";
+import { NEWS_CATEGORY_LABEL } from "@/src/app/lib/news/categories";
+import dayjs from "@/src/app/utils/day";
+import { formatNewsTime } from "@/src/app/utils/formatNewsTime";
+import { formatNumber } from "@/src/app/utils/formatNumber";
 
+/**
+ * 향수 뉴스 목록의 한 항목 — 썸네일(있으면) + (분류·매체 → 제목 → 요약 → 시간·조회·댓글).
+ * 구분선·그림자 없이 글자 위계와 여백만 쓴다. Notices의 <ul class="news-list"> 안에서 쓴다.
+ * 썸네일은 next/image가 아니라 평범한 <img>를 쓴다 — 매체 도메인이 매번 달라 next.config.js의
+ * remotePatterns 화이트리스트에 없고, 원문 이미지를 그대로 핫링크하므로 로드 실패를 정상 케이스로 다룬다.
+ */
 const NoticeCard = ({ notice }: { notice: Notice }) => {
-  const [sliderIndex, setSliderIndex] = useState(0);
-  const noticeImage = notice?.image ?? [];
+  const commentCount = notice._count.comments;
+  const thumbnail = notice.image?.[0];
+  const [imageFailed, setImageFailed] = useState(false);
 
   return (
-    <Link
-      href={`/notice/${notice.id}`}
-      className="notice-card"
-    >
-      {noticeImage?.length > 0 ? (
-        <div className="notice-card__image-wrap card-image-slider-box">
-          {noticeImage.length > 1 ? (
-            <ImageSlider
-              images={noticeImage}
-              currentIndex={sliderIndex}
-              onSelectIndex={setSliderIndex}
-              alt={notice.title + " 글의 대표 이미지"}
-              variant="compact"
-              aspectRatio="16/10"
-              fit="cover"
-              stopPropagation
-              sizes="(max-width: 580px) 100vw, (max-width: 1280px) 50vw, (max-width: 1536px) 33vw, 25vw"
+    <li className="news-item">
+      <Link href={`/news/${notice.id}`} className="news-item__link">
+        {thumbnail && !imageFailed && (
+          <div className="news-item__thumb">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={thumbnail}
+              alt=""
+              loading="lazy"
+              onError={() => setImageFailed(true)}
             />
-          ) : (
-            <FallbackNextImage
-              src={noticeImage[0]}
-              alt={notice.title + " 글의 대표 이미지"}
-              fill
-              sizes="(max-width: 580px) 100vw, (max-width: 1280px) 50vw, (max-width: 1536px) 33vw, 25vw"
-              unoptimized={false}
-              priority={true}
-              className="object-cover"
-            />
-          )}
-        </div>
-      ) : (
-        <div className="notice-card__image-wrap flex items-center justify-center">
-          <span
-            className="text-[2.5rem] opacity-40 text-[var(--color-accent-muted)]"
-            aria-hidden
-          >
-            📋
-          </span>
-        </div>
-      )}
-      <div className="notice-card__body">
-        <h2 className="notice-card__title">
-          <span className="text-gradient-ilp">{notice.title}</span>
-        </h2>
-        <div className="notice-card__meta">
-          <span className="notice-meta__avatar">
-            {notice.author?.image ? (
-              <FallbackNextImage
-                src={notice.author.image}
-                alt={notice.author?.name ?? "작성자"}
-                fill
-                sizes="28px"
-                unoptimized={false}
-                className="object-cover"
-              />
-            ) : (
-              <ILPUserAvatar className="drop-shadow-lg" />
+          </div>
+        )}
+        <div className="news-item__body">
+          <p className="meta-line">
+            <span>{NEWS_CATEGORY_LABEL[notice.category] ?? notice.category}</span>
+            <span>{notice.sourceName}</span>
+          </p>
+          <h3 className="news-item__title line-clamp-2">{notice.title}</h3>
+          <p className="news-item__summary line-clamp-3">{notice.summary}</p>
+          <p className="meta-line">
+            <time dateTime={dayjs(notice.publishedAt).toISOString()}>
+              {formatNewsTime(notice.publishedAt)}
+            </time>
+            <span>조회 {formatNumber({ count: notice.viewCount, type: "view" })}</span>
+            {commentCount > 0 && (
+              <span>댓글 {formatNumber({ count: commentCount })}</span>
             )}
-          </span>
-          <span>{notice.author?.name ?? "알 수 없음"}</span>
-          <span aria-hidden>·</span>
-          <span>{dayjs(notice.createdAt).fromNow()}</span>
-          <span aria-hidden>·</span>
-          <span>조회 {formatNumber({ count: notice.viewCount, type: "view" })}</span>
-          <span aria-hidden>·</span>
-          <span>댓글 {formatNumber({ count: notice._count.comments })}</span>
+          </p>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </li>
   );
 };
 
-export default memo(NoticeCard, (prevProps, nextProps) => {
-  return (
-    prevProps.notice.id === nextProps.notice.id &&
-    prevProps.notice.title === nextProps.notice.title &&
-    prevProps.notice.viewCount === nextProps.notice.viewCount &&
-    prevProps.notice._count.comments === nextProps.notice._count.comments &&
-    prevProps.notice.image === nextProps.notice.image &&
-    prevProps.notice.createdAt === nextProps.notice.createdAt &&
-    prevProps.notice.author?.name === nextProps.notice.author?.name &&
-    prevProps.notice.author?.image === nextProps.notice.author?.image
-  );
-});
+// 목록 캐시는 react-query가 바뀌지 않은 항목의 객체 참조를 유지하므로 기본 비교로 충분하다
+export default memo(NoticeCard);

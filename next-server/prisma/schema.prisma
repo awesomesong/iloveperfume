@@ -53,7 +53,6 @@ model User {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   accounts          Account[]
-  notice            Notice[]
   comments          Comment[]
   conversationReads ConversationRead[]
   fragranceReviews  FragranceReview[]
@@ -123,17 +122,39 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+enum NewsCategory {
+  RELEASE // 신제품·한정판 출시
+  BRAND // 브랜드 론칭·팝업·매장
+  TREND // 트렌드·시즌 추천
+  INTERVIEW // 조향사 인터뷰·브랜드 스토리
+}
+
+enum NoticeStatus {
+  PUBLISHED // 공개
+  HIDDEN // 관리자가 내린 글
+}
+
+// 향수 뉴스 — /api/cron/perfume-news 파이프라인만 생성한다 (사용자 작성 없음)
 model Notice {
-  id          String    @id @default(cuid())
+  id          String       @id @default(cuid())
   title       String
-  content     String
-  image       String[]
-  authorEmail String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  viewCount   Int       @default(0)
-  author      User?     @relation(fields: [authorEmail], references: [email])
+  // LLM 요약 (일반 텍스트 — HTML 저장 금지)
+  summary     String
+  category    NewsCategory
+  status      NoticeStatus @default(PUBLISHED)
+  // 원문 링크 — unique로 중복 게시 차단
+  sourceUrl   String       @unique
+  sourceName  String
+  // 기사 발행 시각
+  publishedAt DateTime
+  image       String[]     @default([])
+  viewCount   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   comments    Comment[]
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([category, status, publishedAt(sort: Desc)])
 }
 
 model Comment {

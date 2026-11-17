@@ -366,6 +366,221 @@ h6 {
   lg:gap-8;
 }
 
+/* ===== 공통: 목록형 페이지 머리 (PageIntro) =====
+   모바일은 왼쪽 정렬·제목만, 768px부터 가운데 정렬 + 한 줄 설명. */
+.page-intro {
+  padding: 0.5rem 0 1.25rem;
+}
+.page-intro__title {
+  color: var(--color-text-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+.page-intro__desc {
+  display: none;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-top: 0.5rem;
+  word-break: keep-all;
+}
+@media (min-width: 768px) {
+  .page-intro {
+    padding: 2.5rem 0 3.5rem;
+    text-align: center;
+  }
+  .page-intro__title {
+    font-size: 1.5rem;
+  }
+  .page-intro__desc {
+    display: block;
+  }
+}
+
+/* ===== 공통: 글자형 탭 (TextTabs) =====
+   밑줄·박스 없이 큰 굵은 글자만 나열한다. 선택된 탭만 진하게, 나머지는 흐리게. */
+.text-tabs {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* 모바일: 탭이 화면보다 길면 가장자리까지 가로 스크롤 */
+  margin-left: -1rem;
+  margin-right: -1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.text-tabs::-webkit-scrollbar {
+  display: none;
+}
+.text-tab {
+  flex-shrink: 0;
+  min-height: 44px; /* 터치 영역 */
+  color: color-mix(in srgb, var(--color-text-primary) 50%, transparent);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  background: none;
+  cursor: pointer;
+}
+.text-tab:hover {
+  color: var(--color-text-secondary);
+}
+.text-tab[aria-selected="true"] {
+  color: var(--color-text-primary);
+}
+.text-tab:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+@media (min-width: 768px) {
+  .text-tabs {
+    gap: 1.5rem;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .text-tab {
+    font-size: 1.125rem;
+  }
+}
+
+/* ===== 공통: 메타 줄 =====
+   "분류 · 매체", "3시간 전 · 조회 12"처럼 짧은 정보를 가운뎃점으로 잇는다. 구분점은 CSS가 넣는다. */
+.meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.meta-line > * + *::before {
+  content: "·";
+  margin: 0 0.375rem;
+}
+@media (min-width: 768px) {
+  .meta-line {
+    font-size: 0.875rem;
+  }
+}
+
+/* ===== 향수 뉴스 (/news) =====
+   카드·그림자·그라데이션 없이 글자 위계와 여백만 쓴다(구분선 대신 여백, 테두리 없음).
+   폭·여백은 다른 페이지(scan, fragrance 등)와 같다: 최대 1440px, 좌우 16px → 768px부터 32px. */
+.news-page {
+  width: 100%;
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem 1rem 1rem;
+}
+@media (min-width: 768px) {
+  .news-page {
+    padding: 2rem;
+  }
+}
+
+/* 목록 — 항상 1열. 항목 사이는 선 없이 여백으로 띄우고, 각 항목은 .news-page 폭을 그대로 쓴다 */
+.news-list {
+  list-style: none;
+  margin: 0;
+  padding: 1.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+.news-item {
+  width: 100%;
+}
+.news-item__link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+}
+.news-item__link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+/* 썸네일 — 원문 og:image를 그대로 쓴다(재호스팅 없음). 못 가져왔으면 영역 자체가 없다 */
+.news-item__thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-card-bg);
+  flex-shrink: 0;
+}
+.news-item__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.news-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+.news-item__title {
+  color: var(--color-text-primary);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  word-break: keep-all; /* 한글은 어절 단위로 줄바꿈 */
+  overflow-wrap: anywhere;
+}
+.news-item__link:hover .news-item__title {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.news-item__summary {
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+@media (min-width: 768px) {
+  .news-list {
+    padding-top: 2rem;
+    gap: 2.75rem;
+  }
+  /* 768px부터 썸네일(고정폭) + 본문(가변폭)을 가로로 배치한다 */
+  .news-item__link {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+  .news-item__thumb {
+    width: 18rem;
+    aspect-ratio: 16 / 10;
+  }
+  .news-item__body {
+    gap: 0.5rem;
+  }
+  .news-item__title {
+    font-size: 1.5rem;
+  }
+  .news-item__summary {
+    font-size: 1.0625rem;
+  }
+}
+
+/* 분류 표시 (상세) — 배지 대신 강조색 글자 */
+.news-category {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+.dark .news-category {
+  color: var(--color-accent-light);
+}
+
 /* 공지사항 그리드 — 테마 색상 기반 최신 카드 레이아웃 */
 .notice-grid {
   display: grid;
@@ -470,17 +685,6 @@ h6 {
   flex-wrap: wrap;
 }
 
-/* 상세 페이지 전용: 메타 하단 구분선 (다크 모드에서 인디고 포인트) */
-.notice-detail__meta {
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--color-card-border);
-}
-
-.dark .notice-detail__meta {
-  border-bottom-color: var(--color-accent-border);
-}
-
 /* 공지 공통: 메타 영역 아바타 래퍼 (카드/상세 공용) */
 .notice-meta__avatar {
   flex-shrink: 0;
@@ -495,12 +699,95 @@ h6 {
   position: relative;
 }
 
-/* 공지 상세 페이지 제목 (카드 제목과 톤 맞춤, 클램프 없음. 색은 내부 text-gradient-ilp 등으로 처리) */
-.notice-detail__title {
-  font-weight: 600;
-  font-size: 1.25rem;
-  line-height: 1.4;
+/* 상세: 목록과 같은 .news-page 폭(최대 1440px)을 그대로 쓴다 */
+.notice-detail__title,
+.notice-article {
+  width: 100%;
+}
+
+/* 상세: 원문 og:image(최선형) — 없으면 영역 자체가 없다.
+   목록 썸네일과 달리 16:9로 강제 크롭하지 않는다 — 원본 비율(가로·세로·정방형 등 제각각)을
+   그대로 살리고 높이만 상한을 둬서, 세로로 긴 사진이 전체 화면을 지배하지 않게 한다. */
+.notice-detail__thumb {
+  width: 100%;
+  max-height: 32rem;
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 1rem;
+}
+.notice-detail__thumb img {
+  width: 100%;
+  height: auto;
+  max-height: 32rem;
+  object-fit: contain;
+  display: block;
+  border-radius: 12px;
+}
+
+/* 상세: 매체명(제목 위) */
+.news-article__press {
+  color: var(--color-text-primary);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.5;
   margin-bottom: 0.5rem;
+}
+
+/* 상세: 제목 — 기사 제목처럼 단색 굵은 글자 (그라데이션 없음) */
+.notice-detail__title {
+  color: var(--color-text-primary);
+  font-weight: 700;
+  font-size: 1.375rem;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.5rem;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 768px) {
+  .notice-detail__title {
+    font-size: 1.75rem;
+  }
+}
+
+/* 상세: 메타 하단 구분선 */
+.notice-detail__meta {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-card-border);
+}
+.dark .notice-detail__meta {
+  border-bottom-color: var(--color-accent-border);
+}
+
+/* 상세: 요약 본문 · 안내문 · 관리자 상태 안내 */
+.notice-detail__summary {
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+@media (min-width: 768px) {
+  .notice-detail__summary {
+    font-size: 1.0625rem;
+  }
+}
+.notice-detail__disclaimer {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  margin-top: 1rem;
+}
+.notice-detail__notice {
+  color: var(--color-text-primary);
+  background: var(--color-accent-pale);
+  border: 1px solid var(--color-accent-border);
+  border-radius: 12px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  margin-bottom: 1rem;
 }
 
 .page-container {

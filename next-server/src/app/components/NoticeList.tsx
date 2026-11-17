@@ -4,7 +4,7 @@ import Link from 'next/link';
 const NoticeList = () => {
     return (
         <Link
-            href="/notice"
+            href="/news"
             className="action-btn"
         >
             목록

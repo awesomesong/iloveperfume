@@ -14,11 +14,11 @@ export async function POST(
     try {
         const notice = await prisma.notice.findUnique({
             where: { id },
-            select: { viewCount: true },
+            select: { viewCount: true, status: true },
         });
 
-        if (!notice) {
-            return NextResponse.json({ message: '해당 공지사항의 글을 찾지 못했습니다.' }, { status: 404 });
+        if (!notice || notice.status !== "PUBLISHED") {
+            return NextResponse.json({ message: '해당 글을 찾지 못했습니다.' }, { status: 404 });
         }
 
         const addedNoticeViewCount = await prisma.notice.update({

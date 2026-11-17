@@ -1,38 +1,26 @@
-"use client";
-
 /**
- * Single notice card skeleton — same structure & classes as NoticeCard
- * so layout is managed by one set of CSS (notice-card, notice-card__image-wrap, etc.).
- * Uses skeleton-bg / skeleton-bg-muted from FragranceSkeleton style.
+ * 향수 뉴스 목록 스켈레톤 — NoticeCard와 같은 구조·클래스(news-list / news-item / news-item__thumb /
+ * news-item__body)를 써서 레이아웃을 한 벌의 CSS로 관리한다. 색은 FragranceSkeleton과 동일(skeleton-bg / skeleton-bg-muted).
+ * 썸네일 영역도 항상 그려준다 — 지금은 대부분 기사에 이미지가 붙어서, 이미지 없는 항목보다 있는 쪽에 맞추는 게 자연스럽다.
  */
-const NoticeCardSkeletonItem = () => (
-  <div className="notice-card skeleton-pulse" aria-hidden>
-    <div className="notice-card__image-wrap card-image-slider-box flex items-center justify-center">
-      <div className="card-image-slider w-full h-full">
-        <div className="w-full h-full rounded-none skeleton-bg" />
-      </div>
-    </div>
-    <div className="notice-card__body">
-      <h2 className="notice-card__title">
-        <span className="block w-full h-4 rounded-full skeleton-bg" />
-      </h2>
-      <div className="notice-card__meta">
-        <span className="shrink-0 w-7 h-7 rounded-full skeleton-bg" />
-        <span className="h-3 w-16 rounded-full skeleton-bg-muted" />
-        <span className="h-3 w-14 rounded-full skeleton-bg-muted" />
-        <span className="h-3 w-12 rounded-full skeleton-bg-muted" />
-        <span className="h-3 w-10 rounded-full skeleton-bg-muted" />
-      </div>
-    </div>
-  </div>
-);
-
 const NoticeCardSkeleton = () => (
-  <div className="notice-grid notice-grid-skeleton">
-    {Array.from({ length: 8 }).map((_, i) => (
-      <NoticeCardSkeletonItem key={i} />
+  <ul className="news-list" aria-hidden>
+    {Array.from({ length: 5 }).map((_, i) => (
+      <li key={i} className="news-item skeleton-pulse">
+        <div className="news-item__link">
+          <div className="news-item__thumb skeleton-bg-muted" />
+          <div className="news-item__body">
+            <span className="block h-3 w-28 rounded skeleton-bg-muted" />
+            <span className="block h-6 w-3/4 rounded skeleton-bg" />
+            <span className="block h-4 w-full rounded skeleton-bg-muted" />
+            <span className="block h-4 w-5/6 rounded skeleton-bg-muted" />
+            <span className="block h-4 w-1/2 rounded skeleton-bg-muted" />
+            <span className="block h-3 w-24 rounded skeleton-bg-muted" />
+          </div>
+        </div>
+      </li>
     ))}
-  </div>
+  </ul>
 );
 
 export default NoticeCardSkeleton;

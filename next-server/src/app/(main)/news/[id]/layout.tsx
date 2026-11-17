@@ -10,7 +10,7 @@ const getParams = cache(async (params: Promise<{ id: string }>) => {
   return await params;
 });
 
-// 공지사항 데이터를 가져오는 함수 (캐시 적용)
+// 향수 뉴스 데이터를 가져오는 함수 (캐시 적용)
 const getNoticData = cache(async (id: string) => {
   try {
     const base = 'https://iloveperfume.co.kr';
@@ -33,55 +33,48 @@ const getNoticData = cache(async (id: string) => {
 const createMetadata = async (id: string) => {
   const base = 'https://iloveperfume.co.kr';
   
-  // 공지사항 데이터 가져오기
   const notice = await getNoticData(id);
   
   if (!notice) {
-    // 공지사항를 찾을 수 없는 경우 기본 메타데이터
+    // 글을 찾을 수 없는 경우 기본 메타데이터
     return {
-      title: `Notice ${id}`,
-      description: `Notice post with ID: ${id}`,
+      title: '향수 뉴스 | I Love Perfume',
+      description: '최신 향수 뉴스를 AI 요약으로 확인해 보세요.',
       openGraph: {
-        title: `Notice ${id}`,
-        description: `Notice post with ID: ${id}`,
-        url: `${base}/notice/${id}`,
+        title: '향수 뉴스 | I Love Perfume',
+        description: '최신 향수 뉴스를 AI 요약으로 확인해 보세요.',
+        url: `${base}/news/${id}`,
         type: 'article',
       },
     };
   }
   
-  // HTML 태그 제거하고 텍스트만 추출
-  const contentText = notice.content?.replace(/<[^>]*>/g, '') || '';
-  const description = contentText.slice(0, 150) + (contentText.length > 150 ? '...' : '');
+  const summary: string = notice.summary || '';
+  const description = summary.slice(0, 150) + (summary.length > 150 ? '...' : '');
   
-  // 이미지 URL 추출 (저장된 첫 번째 이미지 사용, 없으면 기본 OG 이미지 사용)
+  // 썸네일이 없으면 기본 OG 이미지 사용
   const imageUrl = notice.image?.[0] || '/image/metadata/notice.png';
   
   const metadata = {
-    title: notice.title || `Notice ${id}`,
+    title: `${notice.title} | I Love Perfume`,
     description,
     keywords: [
-      '공지사항',
-      'I Love Perfume 공지사항',
-      '사용안내',
-      '서비스 소개',
+      '향수 뉴스',
+      'I Love Perfume',
       notice.title,
-      ...(notice.author?.name ? [notice.author.name] : [])
+      ...(notice.sourceName ? [notice.sourceName] : []),
     ],
-    authors: notice.author?.name ? [{ name: notice.author.name }] : undefined,
     openGraph: {
-      title: notice.title || `Notice ${id}`,
+      title: notice.title,
       description,
-      url: `${base}/notice/${id}`,
+      url: `${base}/news/${id}`,
       type: 'article',
       images: [{ url: imageUrl, width: 1200, height: 700 }],
-      ...(notice.author?.name && { authors: [notice.author.name] }),
-      publishedTime: notice.createdAt,
-      modifiedTime: notice.updatedAt,
+      publishedTime: notice.publishedAt,
     },
     twitter: {
       card: 'summary_large_image',
-      title: notice.title || `Notice ${id}`,
+      title: notice.title,
       description,
       images: [imageUrl],
     },
