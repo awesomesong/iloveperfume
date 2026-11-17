@@ -1027,11 +1027,20 @@ const SocketState = () => {
 
     return () => {
       // ✅ 진행 중인 쿼리 취소만 유지
+      // 단, 데이터가 아직 없는 첫 조회는 취소하지 않는다. 취소되면 쿼리가 데이터 없이
+      // pending/idle로 돌아가고, 이미 구독 중인 useQuery는 다시 조회하지 않아 스켈레톤에 멈춘다.
+      // (SocketState는 dynamic import로 늦게 마운트되므로, dev StrictMode의 effect 이중 실행이
+      //  목록·메시지 첫 조회 도중 이 정리 함수를 돌린다.)
       try {
-        queryClientRef.current.cancelQueries({ queryKey: conversationListKey, exact: true });
+        const qc = queryClientRef.current;
+        const cancelIfHasData = (queryKey: readonly unknown[]) => {
+          if (qc.getQueryState(queryKey)?.data === undefined) return;
+          qc.cancelQueries({ queryKey, exact: true });
+        };
+        cancelIfHasData(conversationListKey);
         const activeId = String(conversationIdRef.current ?? "");
         if (activeId) {
-          queryClientRef.current.cancelQueries({ queryKey: messagesKey(activeId), exact: true });
+          cancelIfHasData(messagesKey(activeId));
         }
       } catch {
         // 에러 무시
