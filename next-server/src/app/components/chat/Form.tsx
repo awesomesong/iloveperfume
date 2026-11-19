@@ -10,7 +10,6 @@ import {
 import { sendMessage } from "@/src/app/lib/sendMessage";
 import toast from "react-hot-toast";
 import { useCallback, useLayoutEffect, useRef, memo } from "react";
-import { useSocket } from "../../context/socketContext";
 import { FullMessageType, normalizePreviewType } from "../../types/conversation";
 import { useSession } from "next-auth/react";
 import {
@@ -55,7 +54,6 @@ type MutationContext = {
 };
 
 const Form = () => {
-  const socket = useSocket();
   const { conversationId } = useConversation();
   const { conversationUsers } = useConversationUserList();
   const queryClient = useQueryClient();
@@ -206,27 +204,8 @@ const Form = () => {
         });
       }
 
-      // 소켓으로 메시지 브로드캐스트 (소켓 서버가 기대하는 구조로 전송)
-      if (socket && data.newMessage) {
-        // ✅ conversationUsers에서 참여자 정보 가져오기
-        const currentConversationUsers = conversationUsers.find((item) => item.conversationId === conversationId);
-        const userIds = currentConversationUsers?.userIds || [];
-
-        // 소켓 전송용 메시지 정규화 (FullMessageType 구조 보장)
-        // clientMessageId 포함: 수신 측에서 낙관 메시지와 정확히 매칭 → 중복 삽입 방지
-        const socketMessage = normalizeMessage({
-          ...data.newMessage,
-          clientMessageId: context.messageId,
-          conversation: {
-            isGroup: userIds.length > 2,
-            userIds: userIds,
-          },
-        });
-
-        socket.emit("send:message", {
-          newMessage: socketMessage,
-        });
-      }
+      // 실시간 전달은 /api/messages가 저장 직후 소켓 서버로 직접 보낸다 (참여자는 DB 기준).
+      // 이 탭도 같은 메시지를 받지만 id(= 낙관적 메시지 id)가 같아 중복 삽입되지 않는다.
 
       // ✅ 초기 로딩을 취소한 경우: 서버 메시지를 캐시에 보장하고 이전 대화 리패치
       if (context?.wasFetching && data.newMessage) {

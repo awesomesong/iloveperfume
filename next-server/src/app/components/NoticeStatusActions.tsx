@@ -2,14 +2,12 @@
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { useSocket } from "../context/socketContext";
 import { updateNoticeStatus } from "@/src/app/lib/updateNoticeStatus";
 import {
   NOTICE_LIST_KEY,
   noticeDetailKey,
   removeNoticeCardById,
 } from "@/src/app/lib/react-query/noticeCache";
-import { SOCKET_EVENTS } from "@/src/app/lib/react-query/utils";
 import type { NoticeStatus } from "@/src/app/lib/news/categories";
 import type { NoticeDetailQueryData, NoticeIdProps } from "@/src/app/types/notice";
 
@@ -21,7 +19,6 @@ type Props = NoticeIdProps & {
 /** 관리자 전용: 잘못 올라온 글 내리기 / 내린 글 다시 게시 (사전 검수 아님) */
 const NoticeStatusActions = ({ noticeId, status, noticeTitle }: Props) => {
   const queryClient = useQueryClient();
-  const socket = useSocket();
   const [isLoading, setIsLoading] = useState(false);
 
   const changeStatus = useCallback(
@@ -38,9 +35,8 @@ const NoticeStatusActions = ({ noticeId, status, noticeTitle }: Props) => {
         });
 
         if (next === "HIDDEN") {
-          // 다른 접속자의 목록에서도 즉시 제거
+          // 내 목록에서 즉시 제거 (다른 접속자에게는 API가 소켓 서버로 notice:deleted를 보낸다)
           removeNoticeCardById(queryClient, noticeId);
-          socket?.emit(SOCKET_EVENTS.NOTICE_DELETED, { noticeId });
         }
         await queryClient.invalidateQueries({ queryKey: NOTICE_LIST_KEY });
 
@@ -51,7 +47,7 @@ const NoticeStatusActions = ({ noticeId, status, noticeTitle }: Props) => {
         setIsLoading(false);
       }
     },
-    [noticeId, noticeTitle, queryClient, socket],
+    [noticeId, noticeTitle, queryClient],
   );
 
   return (

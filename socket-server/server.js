@@ -1,11 +1,13 @@
 const express = require("express");
 const http = require("http");
 const { verifySocketToken } = require("./socketAuth");
+const {
+  checkWebhookSecret,
+  validateEmitRequest,
+  nextRoomRev,
+  buildRoomEventPayload,
+} = require("./internalEmit");
 const { Server } = require("socket.io");
-
-// ✅ UTF-8 인코딩 설정 (한글 깨짐 방지)
-process.stdout.setEncoding('utf8');
-process.stderr.setEncoding('utf8');
 
 // ✅ 메시지 큐 저장소 (Connection State Recovery 대신)
 const messageQueue = new Map(); // userId -> [{ message, timestamp, conversationId }]
@@ -67,12 +69,10 @@ function getOnlineSnapshot() {
 // ✅ 프로세스 전역 리비전 Map (다중 탭/인스턴스 대비)
 const globalRoomRev = new Map();
 
-// ✅ 방별 멤버 캐시 (권한 체크용) - 유저당 소켓 여러 개 고려
+// ✅ 방별 소켓 캐시 (member.left 때 나간 사용자의 소켓을 방에서 빼기 위함) - 유저당 소켓 여러 개 고려
 // roomId -> (userId -> Set<socketId>)
+// 대화방 룸으로는 더 이상 메시지를 보내지 않는다 (receive:message도 개인 룸으로 보냄).
 const roomMembers = new Map();
-
-// ✅ room.event 레이트 리밋용 (per-socket window)
-const lastEvtAt = new WeakMap();
 
 /** 헬퍼 함수들 */
 // 유저 고정 룸 이름 생성 (개인 알림용)
@@ -96,9 +96,14 @@ function leaveRoomMember(roomId, userId, socketId) {
   if (byUser.size === 0) roomMembers.delete(roomId);
 }
 
-function isMember(roomId, userId) {
-  const byUser = roomMembers.get(roomId);
-  return !!byUser && byUser.has(userId) && byUser.get(userId).size > 0;
+// join:room/leave:room으로 다룰 수 있는 방 이름 (개인 룸 user:<id>는 제외)
+function isConversationRoomId(roomId) {
+  return typeof roomId === "string" && roomId.length > 0 && roomId.length <= 200 && !roomId.startsWith("user:");
+}
+
+function isUserOnline(userId) {
+  const set = userIdToSocketsMap.get(userId);
+  return !!set && set.size > 0;
 }
 
 /**
@@ -259,17 +264,16 @@ app.get("/", (req, res) => {
 
   // ✅ HTTP POST로 새 사용자 등록 알림 받기 (웹훅 보안 포함)
   app.post('/api/user-registered', express.json(), (req, res) => {
-    // 웹훅 보안 체크
-    const webhookSecret = req.get('x-webhook-secret');
-    const expectedSecret = process.env.WEBHOOK_SECRET;
-    
-    if (!expectedSecret) {
+    // 웹훅 보안 체크 (받은 값은 로그에 남기지 않는다)
+    const secretCheck = checkWebhookSecret(req.get('x-webhook-secret'), process.env.WEBHOOK_SECRET);
+
+    if (secretCheck === 'misconfigured') {
       console.warn('[Socket Server] WEBHOOK_SECRET 환경변수가 설정되지 않음');
       return res.status(500).json({ ok: false, message: '서버 설정 오류' });
     }
-    
-    if (webhookSecret !== expectedSecret) {
-      console.warn(`[Socket Server] 잘못된 웹훅 시크릿: ${webhookSecret}`);
+
+    if (secretCheck !== 'ok') {
+      console.warn('[Socket Server] 웹훅 인증 실패 (/api/user-registered)');
       return res.status(401).json({ ok: false, message: '인증 실패' });
     }
     
@@ -294,6 +298,117 @@ app.get("/", (req, res) => {
     console.log(`[Socket Server] 새 사용자 등록 알림 전송 완료: ${name}`);
     
     res.status(200).json({ ok: true, message: '알림 전송 완료' });
+});
+
+// ✅ 내부 전달 엔드포인트 — Next API가 DB에 저장한 뒤 호출한다 (브라우저는 호출하지 않음)
+// 수신자·내용은 요청 본문(Next가 DB에서 계산한 값)으로만 정한다. 형식: internalEmit.js
+// 로그에는 이벤트 종류와 수신자 수만 남긴다 (본문·시크릿 제외).
+function deliverInternalEvent(evt) {
+  switch (evt.kind) {
+    case "message": {
+      const { message, userIds } = evt;
+      const onlineRooms = [];
+      let queued = 0;
+      for (const uid of userIds) {
+        if (isUserOnline(uid)) {
+          onlineRooms.push(userRoom(uid));
+        } else {
+          // 오프라인: 재접속(online:user) 때 전달할 큐에 저장
+          addToQueue(uid, message, message.conversationId);
+          queued++;
+        }
+      }
+      // 대화방 리스트 갱신용 — 보낸 사람의 모든 탭 포함 (보낸 탭은 클라이언트가 id로 중복 제거)
+      if (onlineRooms.length) io.to(onlineRooms).emit("receive:conversation", message);
+      // 실시간 메시지(읽음 처리 트리거) — 개인 룸으로 보내고 클라이언트가 conversationId로 거른다
+      if (message.type !== "system") io.to(userIds.map(userRoom)).emit("receive:message", message);
+      return `message conv=${message.conversationId} to=${userIds.length} queued=${queued}`;
+    }
+    case "room.event": {
+      const { conversationId, type, userId, userIds } = evt;
+      const rev = nextRoomRev(globalRoomRev.get(conversationId));
+      globalRoomRev.set(conversationId, rev);
+      io.to(userIds.map(userRoom)).emit("room.event", buildRoomEventPayload(evt, rev));
+
+      // 이벤트 타입별 서버 주도 정리
+      if (type === "member.left") {
+        // 나간 사용자의 소켓만 방에서 퇴장
+        const byUser = roomMembers.get(conversationId);
+        const socketIds = byUser?.get(userId);
+        if (socketIds && socketIds.size) {
+          for (const sid of socketIds) {
+            const s = io.sockets.sockets.get(sid);
+            if (s) {
+              try { s.leave(conversationId); } catch {}
+              s.data.joinedRooms?.delete(conversationId);
+            }
+          }
+          byUser.delete(userId);
+          if (byUser.size === 0) roomMembers.delete(conversationId);
+        }
+      } else if (type === "room.deleted") {
+        // 모든 소켓을 해당 방에서 퇴장시키고 캐시도 삭제
+        io.in(conversationId).socketsLeave(conversationId);
+        roomMembers.delete(conversationId);
+        globalRoomRev.delete(conversationId);
+      }
+      return `room.event ${type} conv=${conversationId} to=${userIds.length}`;
+    }
+    case "users": {
+      io.to(evt.userIds.map(userRoom)).emit(evt.event, evt.payload);
+      return `${evt.event} to=${evt.userIds.length}`;
+    }
+    case "broadcast": {
+      const target = evt.exceptUserIds.length ? io.except(evt.exceptUserIds.map(userRoom)) : io;
+      target.emit(evt.event, evt.payload);
+      return `${evt.event} broadcast`;
+    }
+    default:
+      return null;
+  }
+}
+
+// 본문을 읽기 전에 시크릿부터 확인한다
+function requireInternalSecret(req, res, next) {
+  const secretCheck = checkWebhookSecret(req.get('x-webhook-secret'), process.env.WEBHOOK_SECRET);
+  if (secretCheck === 'misconfigured') {
+    console.error('[internal/emit] WEBHOOK_SECRET 미설정 — 요청 거부');
+    return res.status(500).json({ ok: false, message: '서버 설정 오류' });
+  }
+  if (secretCheck !== 'ok') {
+    console.warn('[internal/emit] 인증 실패');
+    return res.status(401).json({ ok: false, message: '인증 실패' });
+  }
+  return next();
+}
+
+app.post('/internal/emit', requireInternalSecret, express.json({ limit: '1mb' }), (req, res) => {
+  const parsed = validateEmitRequest(req.body);
+  if (!parsed.ok) {
+    console.warn(`[internal/emit] 잘못된 요청: ${parsed.error}`);
+    return res.status(400).json({ ok: false, message: parsed.error });
+  }
+
+  // 요청 안의 순서대로 보낸다 (예: conversation:new → 첫 메시지)
+  const summary = [];
+  for (const evt of parsed.events) {
+    try {
+      const line = deliverInternalEvent(evt);
+      if (line) summary.push(line);
+    } catch (e) {
+      console.error(`[internal/emit] 전달 실패 (${evt.kind}):`, e?.message || e);
+    }
+  }
+  console.log(`[internal/emit] ${summary.join(' | ')}`);
+  return res.status(200).json({ ok: true, delivered: summary.length });
+});
+
+// express.json 파싱 실패(깨진 JSON·용량 초과)는 본문 없이 400으로 응답한다
+app.use((err, req, res, next) => {
+  if (err && (err.type === 'entity.parse.failed' || err.type === 'entity.too.large')) {
+    return res.status(400).json({ ok: false, message: '잘못된 요청 본문' });
+  }
+  return next(err);
 });
 
 // CORS preflight OPTIONS 요청 처리
@@ -463,19 +578,15 @@ io.on("connection", (socket) => {
     }
   });
 
-  // 새 대화방이 생성되었을 때 관련 사용자들에게 알림
-  socket.on("conversation:new", (data = {}) => {
-    if (!Array.isArray(data.users)) return;
-    
-    data.users.forEach((user) => {
-      if (!user?.id) return;
-      io.to(userRoom(String(user.id))).emit("conversation:new", data);
-    });
-  });
+  // 🚫 클라이언트가 보내던 중계 이벤트(send:message, conversation:new, read:state, room.event,
+  //    notice:*, fragrance:review:*)는 받지 않는다. 각 API가 저장 후 /internal/emit으로 보낸다.
 
   // 사용자가 채팅방에 입장할 때 (room에 join)
+  // 대화방 룸으로는 아무 이벤트도 보내지 않으므로(메시지·읽음·방 이벤트는 개인 룸으로 보냄) 멤버 확인은 하지 않는다.
+  // join:success는 클라이언트의 입장 시 읽음 처리 신호로만 쓰인다.
+  // 개인 룸(user:<id>)은 인증된 본인만 들어가야 하므로 이름으로 막는다.
   socket.on("join:room", (roomId) => {
-    if (!roomId) return;
+    if (!isConversationRoomId(roomId)) return;
     // 🧱 필수 가드: userId가 없으면 join 무시
     if (!socket.data?.userId) {
       console.log(`[join:room] missing userId for socket ${socket.id}, ignoring.`);
@@ -497,7 +608,7 @@ io.on("connection", (socket) => {
 
   // 사용자가 채팅방에서 나갈 때 (room에서 leave)
   socket.on("leave:room", (roomId) => {
-    if (!roomId) return;
+    if (!isConversationRoomId(roomId)) return;
     if (!socket.data?.userId) return;        // ← 가드 추가
     socket.leave(roomId);
     
@@ -506,146 +617,6 @@ io.on("connection", (socket) => {
     socket.data.joinedRooms.delete(roomId);
     
     console.log(`User ${socket.data.userId} (Socket: ${socket.id}) left room: ${roomId}`);
-  });
-
-
-  // 메시지 전송 시
-  socket.on("send:message", (data) => {
-    console.log("📨 send:message received:", {
-      hasData: !!data,
-      hasNewMessage: !!data?.newMessage,
-      conversationId: data?.newMessage?.conversationId,
-      socketUserId: socket.data?.userId
-    });
-    
-    const { newMessage } = data || {};
-    const roomId = newMessage?.conversationId;
-    if (!roomId) {
-      console.log("❌ No roomId found");
-      return;
-    }
-    if (!socket.data?.userId) {
-      console.log("❌ No socket.data.userId found");
-      return;
-    }
-    
-    // ✅ 멤버십 가드: newMessage.conversation.userIds 사용 (시스템 메시지는 예외)
-    const isSystemMessage = newMessage?.type === "system";
-    if (!isSystemMessage) {
-      const allowedUserIds = newMessage?.conversation?.userIds || [];
-      if (!allowedUserIds.includes(socket.data.userId)) {
-        console.log(`❌ User ${socket.data.userId} not authorized for room ${roomId}`);
-        return;
-      }
-    }
-
-    // ✅ 한글 이름 로깅 (디버깅용)
-    console.log(`📤 Message sender name: ${newMessage?.sender?.name || 'undefined'}`);
-    console.log(`📤 Message body: ${newMessage?.body || 'undefined'}`);
-
-    // ✅ 대화방 참여자들에게 실시간 메시지 전송 (유저 룸 기반 + 큐잉)
-    const participantUserIds = newMessage?.conversation?.userIds || [];
-
-    participantUserIds.forEach((userId) => {
-      // 보낸 본인 제외 (다른 브라우저는 아래에서 별도 처리)
-      if (userId === socket.data.userId) return;
-
-      // ✅ 온라인 사용자 확인 (O(1))
-      const isOnline = userIdToSocketsMap.has(userId) && userIdToSocketsMap.get(userId).size > 0;
-
-      if (isOnline) {
-        // ✅ receive:conversation - 모든 대화방 리스트 업데이트용 (항상 전송, 개인 룸)
-        io.to(userRoom(userId)).emit("receive:conversation", newMessage);
-      } else {
-        // 오프라인: 큐에 저장
-        addToQueue(userId, newMessage, roomId);
-      }
-    });
-
-    // ✅ 발신자의 다른 브라우저/탭에도 conversation list 업데이트 (현재 소켓 제외)
-    io.to(userRoom(socket.data.userId)).except(socket.id).emit("receive:conversation", newMessage);
-
-    // ✅ receive:message - 같은 방에 join된 모든 다른 소켓에 전송 (다른 브라우저 포함)
-    if (newMessage?.type !== "system") {
-      socket.to(roomId).emit("receive:message", newMessage);
-    }
-
-    console.log(`Message sent to conversation participants: ${participantUserIds.join(', ')}`);
-  });
-
-
-  // ✅ 통합 읽음 상태 처리 (단 한 줄짜리 델타만)
-  socket.on("read:state", ({ conversationId, lastMessageId, readerId, seenUsers, messageSenderId } = {}) => {
-    if (!conversationId) return;
-    if (!socket.data?.userId) return;
-    if (!isMember(conversationId, socket.data.userId)) return;
-
-    // ✅ read:state 이벤트 데이터 준비
-    const readStateData = {
-      conversationId,        // 방
-      lastMessageId,         // 어떤 메시지 기준인지
-      readerId: readerId || socket.data.userId,      // 누가 읽었는지 (단일 ID만!)
-      seenUsers: seenUsers,  // ✅ 읽은 사용자 정보 포함 (클라이언트에서 전달받은 데이터)
-    };
-
-    // ✅ 메시지 발신자에게만 전송 (읽음 상태는 발신자만 확인하면 됨)
-    if (messageSenderId) {
-      // 개인 룸으로 전송 (발신자만 수신)
-      io.to(userRoom(messageSenderId)).emit("read:state", readStateData);
-      console.log(`[targeted] read:state sent to message sender ${messageSenderId} for room=${conversationId} lastMessageId=${lastMessageId} readerId=${readerId || socket.data.userId} seenUsers=${seenUsers?.length || 0}`);
-    } else {
-      // messageSenderId가 없으면 기존 방식으로 폴백 (호환성)
-      socket.to(conversationId).emit("read:state", readStateData);
-      console.log(`[fallback] read:state broadcast to room=${conversationId} lastMessageId=${lastMessageId} readerId=${readerId || socket.data.userId} seenUsers=${seenUsers?.length || 0}`);
-    }
-
-    // ✅ 읽은 사람의 다른 브라우저/탭에도 읽음 상태 전파 (unread count 동기화)
-    io.to(userRoom(socket.data.userId)).except(socket.id).emit("read:state", readStateData);
-  });
-
-  // 향수 뉴스 내림(숨김) 브로드캐스트 (보낸 본인 제외 전체에 전송)
-  socket.on("notice:deleted", (payload) => {
-    try {
-      socket.broadcast.emit("notice:deleted", payload);
-    } catch (e) {}
-  });
-
-  // 공지사항 댓글 신규 생성 브로드캐스트 (보낸 본인 제외 전체에 전송)
-  socket.on("notice:comment:new", (payload) => {
-    try {
-      socket.broadcast.emit("notice:comment:new", payload);
-    } catch (e) {}
-  });
-
-  // 공지사항 댓글 수정 브로드캐스트 (보낸 본인 제외 전체에 전송)
-  socket.on("notice:comment:updated", (payload) => {
-    try {
-      socket.broadcast.emit("notice:comment:updated", payload);
-    } catch (e) {}
-  });
-
-  // 공지사항 댓글 삭제 브로드캐스트 (보낸 본인 제외 전체에 전송)
-  socket.on("notice:comment:deleted", (payload) => {
-    try {
-      socket.broadcast.emit("notice:comment:deleted", payload);
-    } catch (e) {}
-  });
-
-  // 향수 리뷰: 생성/수정/삭제 브로드캐스트 (보낸 본인 제외 전체)
-  socket.on("fragrance:review:new", (payload) => {
-    try {
-      socket.broadcast.emit("fragrance:review:new", payload);
-    } catch (e) {}
-  });
-  socket.on("fragrance:review:updated", (payload) => {
-    try {
-      socket.broadcast.emit("fragrance:review:updated", payload);
-    } catch (e) {}
-  });
-  socket.on("fragrance:review:deleted", (payload) => {
-    try {
-      socket.broadcast.emit("fragrance:review:deleted", payload);
-    } catch (e) {}
   });
 
 
@@ -689,81 +660,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ✅ room.event 핸들러 추가 (보안 강화된 델타 이벤트)
-  socket.on("room.event", (evt) => {
-    const { conversationId, type, userId, ts, rev, recipients } = evt || {};
-    
-    // 0) 간단 레이트 리밋 (200ms window)
-    const now = Date.now();
-    const lastEvent = lastEvtAt.get(socket) || 0;
-    if (now - lastEvent < 200) return; // 200ms window
-    lastEvtAt.set(socket, now);
-    
-    // 1) 기본 유효성 검사
-    if (!conversationId || !type) return;
-    
-    // 2) 권한/형식 체크
-    if (!socket.data.userId) return;
-    if (!["member.left", "room.deleted"].includes(type)) return;
-    // member.left만 자신만 보낼 수 있도록 제한 (room.deleted는 누가 보내든 상관없음)
-    if (type === "member.left" && userId !== socket.data.userId) return;
-    
-    // 3) 리비전 가드 (프로세스 전역 Map) - 서버가 rev 산출
-    const last = globalRoomRev.get(conversationId) ?? 0;
-    const nextRev = Math.max(last + 1, Date.now()); // 단조 증가 + 대략적 시간 반영
-    globalRoomRev.set(conversationId, nextRev);
-
-    const eventPayload = {
-      conversationId,
-      type,
-      userId,
-      ts: Date.now(),
-      rev: nextRev,
-      ...(type === "member.left" && recipients && Array.isArray(recipients) && { recipients }),
-    };
-
-    // 4) 알림 대상 사용자들 (남은 사용자들 + 나간 사용자)
-    const notifyUserIds = new Set();
-    
-    // 남은 사용자들 추가
-    if (recipients && Array.isArray(recipients)) {
-      recipients.forEach(id => notifyUserIds.add(id));
-    }
-    
-    // 나간 사용자 추가 (캐시 정리용)
-    if (type === "member.left" && userId) {
-      notifyUserIds.add(userId);
-    }
-    
-    // 모든 대상 사용자들에게 알림 (userRoom 기반)
-    for (const recipientId of notifyUserIds) {
-      io.to(userRoom(String(recipientId))).emit("room.event", eventPayload);
-    }
-    
-    // 5) 이벤트 타입별 서버 주도 정리
-    if (type === "member.left") {
-      // 해당 userId의 소켓만 방에서 퇴장
-      const byUser = roomMembers.get(conversationId);
-      const socketIds = byUser?.get(userId);
-      if (socketIds && socketIds.size) {
-        for (const sid of socketIds) {
-          const s = io.sockets.sockets.get(sid);
-          if (s) {
-            try { s.leave(conversationId); } catch {}
-          }
-        }
-        byUser.delete(userId);
-        if (byUser.size === 0) roomMembers.delete(conversationId);
-      }
-    } else if (type === "room.deleted") {
-      // 모든 소켓을 해당 방에서 퇴장시키고 캐시도 삭제
-      io.in(conversationId).socketsLeave(conversationId);
-      roomMembers.delete(conversationId);
-      globalRoomRev.delete(conversationId);
-    }
-    
-    console.log(`[room.event] ${type} room=${conversationId} user=${userId} rev=${nextRev}`);
-  });
 });
 
 const PORT = process.env.PORT || 3001;
