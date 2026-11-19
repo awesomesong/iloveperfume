@@ -1,3 +1,5 @@
+import { OPENAI_TEXT_MODEL } from "@/src/app/lib/ai/models";
+
 /**
  * 향수 뉴스 파이프라인 설정.
  * 운영하면서 가장 자주 손보는 값(검색어·제외 키워드·기준 점수)은 모두 여기에 모은다.
@@ -214,12 +216,32 @@ export const MIN_RELEVANCE = 70;
 export const MAX_PUBLISH_PER_RUN = 5;
 
 export const TITLE_MAX_LENGTH = 60;
-export const SUMMARY_MIN_LENGTH = 80;
+/** 요약 최소 길이. 상투어 없이 사실만 쓰면 두 문장 60~120자가 나온다(2026-11 실측) — 이보다 짧으면 소식을 전하기에 부족하다 */
+export const SUMMARY_MIN_LENGTH = 60;
 export const SUMMARY_MAX_LENGTH = 750;
 
-export const OPENAI_MODEL = "gpt-4o-mini";
+/**
+ * 선별·요약 모델 — AI 채팅·신제품 수집과 같은 모델을 쓴다(교체는 lib/ai/models.ts 한 곳에서).
+ * 2026-11 같은 후보 29건 비교: gpt-4o-mini는 잘린 발췌문의 이름을 그대로 옮기고("디즈니 영화 '팀'"),
+ * 한 기사에 나온 다른 브랜드의 사은품을 섞고, 이름 없이 "한 30대 사업가"로 쓰고,
+ * 기사에 없는 전망("~경험을 제공할 것으로 기대됩니다")을 덧붙였다. gpt-4o-mini는 2027-01-14에 종료된다.
+ */
+export const OPENAI_MODEL = OPENAI_TEXT_MODEL;
 export const NAVER_TIMEOUT_MS = 8_000;
-export const OPENAI_TIMEOUT_MS = 40_000;
+export const OPENAI_TIMEOUT_MS = 45_000;
+
+/**
+ * 요약에서 지우는 문장 — 기사에 없는 전망·평가로 문장을 채우는 상투어, 독자에게 의미 없는 "발췌문에서 ~는 확인할 수 없습니다" 같은 작성 과정 언급.
+ * 프롬프트로 금지해도 가끔 나오므로, 이 패턴이 든 문장은 코드에서 지운다(남은 요약이 너무 짧으면 그 글은 싣지 않는다).
+ */
+export const FILLER_SENTENCE_PATTERNS: readonly RegExp[] = [
+  /경험을\s*(제공|선사|선보)/,
+  /(것으로|것이라고)\s*(기대|보입니다|예상|전망)/,
+  /(주목|관심|기대)(을|를)?\s*(받고|모으고)\s*있습니다/,
+  /긍정적인\s*영향/,
+  /발췌문|원문에서|기사에서는|확인할\s*수\s*없/,
+  /(입지|위상)를?\s*(더욱\s*)?(강화|다질)/,
+];
 
 /** 원문 도메인 → 매체명. 없으면 도메인을 그대로 표시한다 */
 export const SOURCE_NAME_BY_DOMAIN: Record<string, string> = {
