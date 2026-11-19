@@ -10,7 +10,7 @@ const ON_THIS_PAGE = [
   { href: '#overview', label: 'I Love Perfume란?' },
   { href: '#features', label: '주요 기능' },
   { href: '#preview', label: '반응형 레이아웃' },
-  { href: '#howto', label: '로그인 · 데모 계정 안내' },
+  { href: '#howto', label: '로그인 안내' },
   { href: '#main-gallery', label: '메인 화면 & 시그니처 향수 갤러리' },
   { href: '#fragrance-guide', label: '향수 등록 안내' },
   { href: '#fragrance-detail', label: '향수 상세 페이지 & 리뷰' },
@@ -866,11 +866,9 @@ export default function GuideContent({
             </section>
 
             <section id="howto" className="scroll-mt-[var(--guide-scroll-offset)]">
-              <SectionLabel index="04" title="로그인 · 데모 계정 안내" />
+              <SectionLabel index="04" title="로그인 안내" />
               <p className="guide-section-intro">
                 회원가입 없이도 향수 목록과 공지사항을 자유롭게 열람할 수 있으며, 향수 등록 및 채팅 기능을 이용하려면 로그인이 필요합니다.
-                <br/>
-                별도 회원가입 없이 바로 체험할 수 있는 데모 계정을 제공합니다.
               </p>
               <ol className="relative space-y-0">
                 {steps.map(({ step, title, desc, image }, i) => (
