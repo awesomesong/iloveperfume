@@ -3,7 +3,7 @@ import { memo, useCallback } from "react";
 import toast from "react-hot-toast";
 import { HiArrowUpOnSquare } from "react-icons/hi2";
 import Button from "@/src/app/components/Button";
-import { blendResultTitle, toBlendSearch } from "@/src/app/lib/blend/blendParams";
+import { BLEND_PATH, blendResultTitle, toBlendSearch } from "@/src/app/lib/blend/blendParams";
 
 type Props = {
     bottleId: string;
@@ -48,7 +48,7 @@ async function copyLink(url: string) {
  */
 const BlendShareButton = ({ bottleId, noteIds }: Props) => {
     const handleShare = useCallback(async () => {
-        const url = `${window.location.origin}${window.location.pathname}${toBlendSearch({ step: "result", bottleId, noteIds })}`;
+        const url = `${window.location.origin}${BLEND_PATH}${toBlendSearch({ step: "result", bottleId, noteIds })}`;
         if (typeof navigator.share !== "function") {
             await copyLink(url);
             return;

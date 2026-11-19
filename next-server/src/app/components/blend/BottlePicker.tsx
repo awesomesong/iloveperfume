@@ -1,9 +1,9 @@
 'use client';
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import BottleOption from "./BottleOption";
-import BottleSvg from "./BottleSvg";
+import BottlePreview from "./BottlePreview";
 import BlendStepActions from "./BlendStepActions";
-import { BOTTLE_SHAPES, getBottleShape, pickOtherBottleId } from "@/src/app/lib/blend/bottleShapes";
+import { BOTTLE_SHAPES, pickOtherBottleId } from "@/src/app/lib/blend/bottleShapes";
 
 type Props = {
     initialBottleId: string;
@@ -44,9 +44,7 @@ const BottlePicker = ({ initialBottleId, onSelect, onNext, children }: Props) =>
     return (
         <section className="blend-picker">
             {children}
-            <div className="blend-preview">
-                <BottleSvg shape={getBottleShape(selectedId)} filled />
-            </div>
+            <BottlePreview bottleId={selectedId} />
             <fieldset ref={optionsRef} className="blend-options">
                 <legend className="sr-only">병 모양</legend>
                 {BOTTLE_SHAPES.map((shape) => (

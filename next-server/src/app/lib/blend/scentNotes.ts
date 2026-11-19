@@ -1,5 +1,13 @@
-/** 병 하나에 섞을 수 있는 향의 최대 개수 */
-export const MAX_SCENT_NOTES = 6;
+/**
+ * 향의 층 — 실제 향수처럼 처음 향(탑) → 중심 향(미들) → 남는 향(베이스) 순서로 하나씩 고른다.
+ * 탑은 뿌린 직후 날아가는 가벼운 향, 미들은 몇 시간 이어지는 중심, 베이스는 가장 오래 남는 향이다.
+ */
+export type ScentLayerId = "top" | "middle" | "base";
+
+/** 한 층에 고를 수 있는 향의 최대 개수 — 향수 공방에서도 층마다 1~2가지만 고른다 */
+export const MAX_LAYER_NOTES = 2;
+/** 병 하나에 섞을 수 있는 향의 최대 개수 (세 층 × 2) */
+export const MAX_SCENT_NOTES = MAX_LAYER_NOTES * 3;
 
 export type ScentNote = {
     id: string;
@@ -265,13 +273,81 @@ const SEARCH_TEXT_BY_ID = new Map(
 );
 
 /** 검색어에 맞는 향만 남긴 계열 목록. 검색어가 없으면 원래 목록을 그대로 돌려준다 */
+const FAMILY_NAME_BY_ID: ReadonlyMap<string, string> = new Map(
+    SCENT_FAMILIES.map((family) => [family.id, family.name]),
+);
+
+/** 계열 id → 보여줄 이름(모르는 id면 그대로) */
+export const scentFamilyName = (id: string) => FAMILY_NAME_BY_ID.get(id) ?? id;
+
 /** 향 id → 보여줄 이름(모르는 id면 그대로) */
 export const scentNoteName = (id: string) => SCENT_NOTE_BY_ID.get(id)?.name ?? id;
 
-export function filterScentFamilies(query: string): readonly ScentFamily[] {
+/** 계열의 기본 층 — 향수 노트 분류에서 흔히 쓰는 기준(시트러스·그린은 탑, 플로럴은 미들, 우디·머스크는 베이스) */
+const FAMILY_LAYER: Record<string, ScentLayerId> = {
+    citrus: "top",
+    fruity: "top",
+    green: "top",
+    aquatic: "top",
+    floral: "middle",
+    spicy: "middle",
+    woody: "base",
+    sweet: "base",
+    musk: "base",
+    resin: "base",
+};
+
+/** 계열과 층이 다른 향 — 후추·생강은 처음에 톡 쏘는 탑 노트로 쓴다 */
+const LAYER_OVERRIDES: Record<string, ScentLayerId> = {
+    "black-pepper": "top",
+    "pink-pepper": "top",
+    "white-pepper": "top",
+    ginger: "top",
+};
+
+/** 향 id → 층 */
+export const LAYER_BY_NOTE_ID: ReadonlyMap<string, ScentLayerId> = new Map(
+    SCENT_FAMILIES.flatMap((family) =>
+        family.notes.map((scent) => [scent.id, LAYER_OVERRIDES[scent.id] ?? FAMILY_LAYER[family.id]] as const),
+    ),
+);
+
+export type ScentLayer = {
+    id: ScentLayerId;
+    /** 화면에 보이는 이름 */
+    name: string;
+    /** 이 층의 향만 담은 계열들 (계열 순서는 SCENT_FAMILIES와 같다) */
+    families: readonly ScentFamily[];
+};
+
+/** 고르는 순서대로 */
+export const SCENT_LAYERS: readonly ScentLayer[] = (
+    [
+        { id: "top", name: "처음 향" },
+        { id: "middle", name: "중심 향" },
+        { id: "base", name: "남는 향" },
+    ] as const
+).map((layer) => ({
+    ...layer,
+    families: SCENT_FAMILIES.map((family) => ({
+        ...family,
+        notes: family.notes.filter((scent) => LAYER_BY_NOTE_ID.get(scent.id) === layer.id),
+    })).filter((family) => family.notes.length > 0),
+}));
+
+const LAYER_BY_ID: ReadonlyMap<string, ScentLayer> = new Map(SCENT_LAYERS.map((layer) => [layer.id, layer]));
+export const getScentLayer = (id: ScentLayerId): ScentLayer => LAYER_BY_ID.get(id) ?? SCENT_LAYERS[0];
+export const isScentLayerId = (id: string): id is ScentLayerId => LAYER_BY_ID.has(id);
+
+/** 고른 향 중 한 층의 향만 (고른 순서 유지) */
+export const notesInLayer = (noteIds: readonly string[], layerId: ScentLayerId) =>
+    noteIds.filter((id) => LAYER_BY_NOTE_ID.get(id) === layerId);
+
+/** 한 층의 계열을 검색어로 거른다. 검색어가 없으면 받은 배열을 그대로 돌려준다(다시 그리지 않게) */
+export function filterScentFamilies(families: readonly ScentFamily[], query: string): readonly ScentFamily[] {
     const keyword = normalize(query);
-    if (!keyword) return SCENT_FAMILIES;
-    return SCENT_FAMILIES.map((family) => ({
+    if (!keyword) return families;
+    return families.map((family) => ({
         ...family,
         notes: family.notes.filter((scent) => SEARCH_TEXT_BY_ID.get(scent.id)?.includes(keyword)),
     })).filter((family) => family.notes.length > 0);

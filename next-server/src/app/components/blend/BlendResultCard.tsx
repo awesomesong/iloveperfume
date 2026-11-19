@@ -1,9 +1,7 @@
 import { memo } from "react";
 import FragranceCard from "@/src/app/components/fragrance/FragranceCard";
 import type { BlendRecommendation } from "@/src/app/lib/blend/blendRecommendation";
-import { SCENT_FAMILIES, SCENT_NOTE_BY_ID } from "@/src/app/lib/blend/scentNotes";
-
-const FAMILY_NAME_BY_ID = new Map(SCENT_FAMILIES.map((family) => [family.id, family.name]));
+import { scentFamilyName, scentNoteName } from "@/src/app/lib/blend/scentNotes";
 
 /**
  * 추천 향수 카드 — 목록 카드에 왜 골랐는지 한 줄을 더한다.
@@ -13,8 +11,8 @@ const BlendResultCard = ({ recommendation }: { recommendation: BlendRecommendati
     const { slug, brand, name, image, matchedNoteIds, matchedFamilyIds } = recommendation;
     const reasons =
         matchedNoteIds.length > 0
-            ? matchedNoteIds.map((id) => SCENT_NOTE_BY_ID.get(id)?.name ?? id)
-            : matchedFamilyIds.map((id) => `${FAMILY_NAME_BY_ID.get(id) ?? id} 계열`);
+            ? matchedNoteIds.map(scentNoteName)
+            : matchedFamilyIds.map((id) => `${scentFamilyName(id)} 계열`);
 
     return (
         <FragranceCard slug={slug} brand={brand} name={name} image={image}>

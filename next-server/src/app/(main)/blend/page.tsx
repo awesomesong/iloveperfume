@@ -1,18 +1,17 @@
 import type { Metadata, ResolvingMetadata } from 'next';
 import BlendGame from '@/src/app/components/blend/BlendGame';
-import { blendResultTitle, parseBlendParams, type BlendSearchParams } from '@/src/app/lib/blend/blendParams';
+import { BLEND_PAGE_TITLE, blendPageTitle, parseBlendParams, type BlendSearchParams } from '@/src/app/lib/blend/blendParams';
 
 type Props = { searchParams: Promise<BlendSearchParams> };
 
-const TITLE = '나만의 향수 만들기';
 const DESCRIPTION = '병을 고르고 향을 섞어 나만의 향수를 만들어 보세요.';
 
 // 공유받은 결과 링크는 미리보기(카카오톡 등)에 고른 향이 보이게 한다
 export async function generateMetadata({ searchParams }: Props, parent: ResolvingMetadata): Promise<Metadata> {
-  const { step, noteIds } = parseBlendParams(await searchParams);
-  if (step !== 'result') return { title: TITLE, description: DESCRIPTION };
+  const state = parseBlendParams(await searchParams);
+  if (state.step !== 'result') return { title: BLEND_PAGE_TITLE, description: DESCRIPTION };
 
-  const title = blendResultTitle(noteIds);
+  const title = blendPageTitle(state);
   const description = '이 향과 비슷한 실제 향수를 확인하고, 나만의 향수도 만들어 보세요.';
   // openGraph는 통째로 바뀌므로 사이트 이름·이미지는 상위(layout) 값을 이어 쓴다
   const { openGraph } = await parent;

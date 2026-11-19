@@ -1,16 +1,15 @@
 'use client';
 import { memo, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import BottleSvg from "./BottleSvg";
+import BottlePreview from "./BottlePreview";
 import BlendResultCard from "./BlendResultCard";
 import BlendShareButton from "./BlendShareButton";
+import ScentPyramid from "./ScentPyramid";
 import BlendStepActions from "./BlendStepActions";
 import { FragranceCardSkeleton } from "@/src/app/components/FragranceSkeleton";
 import StatusMessage from "@/src/app/components/StatusMessage";
-import { getBottleShape } from "@/src/app/lib/blend/bottleShapes";
 import { fetchBlendRecommendations } from "@/src/app/lib/blend/fetchBlendRecommendations";
 import { BLEND_RECOMMENDATION_LIMIT } from "@/src/app/lib/blend/blendRecommendation";
-import { scentNoteName } from "@/src/app/lib/blend/scentNotes";
 
 type Props = {
     bottleId: string;
@@ -37,18 +36,9 @@ const BlendResult = ({ bottleId, noteIds, onBack, onRestart, children }: Props) 
             {children}
             <div className="blend-result__aside">
                 <div className="blend-result__summary">
-                    <div className="blend-preview">
-                        <BottleSvg shape={getBottleShape(bottleId)} filled />
-                    </div>
+                    <BottlePreview bottleId={bottleId} />
                     <div className="blend-result__notes">
-                        <p className="blend-scent__count">고른 향</p>
-                        <ul className="blend-chips">
-                            {noteIds.map((id) => (
-                                <li key={id} className="blend-chip blend-chip--static">
-                                    {scentNoteName(id)}
-                                </li>
-                            ))}
-                        </ul>
+                        <ScentPyramid noteIds={noteIds} />
                     </div>
                 </div>
                 <div className="blend-result__actions">

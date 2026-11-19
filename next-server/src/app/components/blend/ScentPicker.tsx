@@ -6,20 +6,25 @@ import {
     useRef,
     useState,
     type ChangeEvent,
-    type MouseEvent,
     type ReactNode,
 } from "react";
 import toast from "react-hot-toast";
 import { HiMagnifyingGlass } from "react-icons/hi2";
-import BottleSvg from "./BottleSvg";
+import BottlePreview from "./BottlePreview";
 import BlendStepActions from "./BlendStepActions";
 import ScentFamilyNav, { familySectionId } from "./ScentFamilyNav";
 import ScentOption from "./ScentOption";
-import SelectedScents from "./SelectedScents";
-import { getBottleShape } from "@/src/app/lib/blend/bottleShapes";
-import { MAX_SCENT_NOTES, filterScentFamilies } from "@/src/app/lib/blend/scentNotes";
+import ScentPyramid from "./ScentPyramid";
+import {
+    MAX_LAYER_NOTES,
+    filterScentFamilies,
+    notesInLayer,
+    type ScentLayer,
+} from "@/src/app/lib/blend/scentNotes";
 
 type Props = {
+    /** 지금 고르는 층 — 이 층의 향만 보여주고, 층마다 MAX_LAYER_NOTES개까지 고른다 */
+    layer: ScentLayer;
     bottleId: string;
     initialNoteIds: readonly string[];
     /** 향을 고르거나 뺄 때마다 — 주소(쿼리스트링)에 남긴다 */
@@ -31,10 +36,10 @@ type Props = {
 };
 
 /**
- * 향 고르기 — 모든 향을 계열별로 한 화면에 펼쳐 두고 바로 고른다(최대 6개).
+ * 향 고르기 — 한 층(처음·중심·남는 향)의 향을 계열별로 펼쳐 두고 바로 고른다(층마다 1~2개).
  * 향을 고르면 바뀐 칸과 고른 향 칩만 다시 그린다. 스타일은 globals.css의 .blend-scent*.
  */
-const ScentPicker = ({ bottleId, initialNoteIds, onSelect, onBack, onNext, children }: Props) => {
+const ScentPicker = ({ layer, bottleId, initialNoteIds, onSelect, onBack, onNext, children }: Props) => {
     const [noteIds, setNoteIds] = useState(initialNoteIds);
     const [query, setQuery] = useState("");
     // 최신 선택은 ref로 읽어, 핸들러를 한 번만 만든다 — 165칸이 고를 때마다 다시 그려지지 않는다
@@ -46,35 +51,31 @@ const ScentPicker = ({ bottleId, initialNoteIds, onSelect, onBack, onNext, child
     }, [noteIds, onSelect]);
 
     const selected = useMemo(() => new Set(noteIds), [noteIds]);
-    const families = useMemo(() => filterScentFamilies(query), [query]);
+    const families = useMemo(() => filterScentFamilies(layer.families, query), [layer, query]);
 
     const handleToggle = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         const { value, checked } = event.target;
-        if (checked && noteIdsRef.current.length >= MAX_SCENT_NOTES) {
-            toast(`향은 ${MAX_SCENT_NOTES}가지까지 고를 수 있어요.`);
+        if (checked && notesInLayer(noteIdsRef.current, layer.id).length >= MAX_LAYER_NOTES) {
+            toast(`${layer.name}은 ${MAX_LAYER_NOTES}가지까지 고를 수 있어요.`);
             return;
         }
         setNoteIds((current) =>
             checked ? (current.includes(value) ? current : [...current, value]) : current.filter((id) => id !== value),
         );
-    }, []);
+    }, [layer]);
 
-    const handleRemove = useCallback((event: MouseEvent<HTMLButtonElement>) => {
-        const { id } = event.currentTarget.dataset;
-        setNoteIds((current) => current.filter((noteId) => noteId !== id));
-    }, []);
 
     const handleQueryChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setQuery(event.target.value);
     }, []);
 
     const handleNext = useCallback(() => {
-        if (noteIdsRef.current.length === 0) {
-            toast("향을 한 가지 이상 골라 주세요.");
+        if (notesInLayer(noteIdsRef.current, layer.id).length === 0) {
+            toast(`${layer.name}을 한 가지 이상 골라 주세요.`);
             return;
         }
         onNext();
-    }, [onNext]);
+    }, [layer, onNext]);
 
     return (
         <section className="blend-scent">
@@ -120,10 +121,8 @@ const ScentPicker = ({ bottleId, initialNoteIds, onSelect, onBack, onNext, child
                 ))}
             </div>
             <aside className="blend-scent__aside" aria-label="고른 향">
-                <div className="blend-preview">
-                    <BottleSvg shape={getBottleShape(bottleId)} filled />
-                </div>
-                <SelectedScents noteIds={noteIds} onRemove={handleRemove} />
+                <BottlePreview bottleId={bottleId} />
+                <ScentPyramid noteIds={noteIds} />
                 <BlendStepActions secondaryLabel="이전" onSecondary={onBack} onNext={handleNext} />
             </aside>
         </section>
