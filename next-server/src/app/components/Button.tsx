@@ -4,7 +4,7 @@ import { Button as Btn } from "@heroui/react";
 
 /** 제출용 그라데이션 버튼 공통 핵심 스타일 (배경 그라데이션, 텍스트 효과, 호버 애니메이션, 그림자 없음) */
 export const submitButtonBaseClassName =
-  "rounded-full bg-[var(--color-accent)] dark:bg-[#4466cc] text-white uppercase shadow-none hover:shadow-none hover:opacity-85 transition-all duration-300";
+  "rounded-full bg-[var(--color-accent-solid)] text-white uppercase shadow-none hover:shadow-none hover:opacity-85 transition-all duration-300";
 
 /** 공통 제출 버튼 스타일 (FormFragrance, RegisterForm, SignInForm 등에서 사용) */
 export const submitButtonClassName =
@@ -34,7 +34,7 @@ export const ghostSmallButtonClassName =
 export const ghostMediumButtonClassName =
   clsx("h-8 min-h-0 text-[0.75rem] font-semibold uppercase px-5 shadow-none hover:shadow-none", ghostLavenderBaseClassName);
 
-/** 폼 하단 제출/취소 버튼 영역 (FormFragrance, FormNotice 등 공통) */
+/** 폼 하단 제출/취소 버튼 영역 (FormFragrance 등 공통) */
 export type FormSubmitActionsProps = {
   submitLabel: React.ReactNode;
   cancelLabel?: string;

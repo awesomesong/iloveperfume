@@ -67,34 +67,36 @@ const gowunDodum = Gowun_Dodum({
 export const metadata: Metadata = {
   metadataBase: new URL("https://iloveperfume.co.kr"),
   title: {
-    default: "I Love Perfume | 강송희 프론트엔드 포트폴리오",
+    default: "I Love Perfume | 향수 정보·리뷰·최저가 비교",
     template: "%s | I Love Perfume",
   },
   description:
-    "I Love Perfume는 향수를 수집하고 기록하는 프론트엔드 포트폴리오 사이트입니다. Next.js 15, React 19, Socket.io, OpenAI Vision 등을 활용하여 향수 갤러리, AI 이미지 분석, 실시간 채팅을 구현하였습니다.",
+    "향수 사진 한 장으로 어떤 향수인지 찾고, 노트와 리뷰를 확인한 뒤 판매처별 최저가까지 비교해 보세요. AI 향수 추천과 시향 기록 커뮤니티를 함께 제공합니다.",
   keywords: [
+    "향수",
+    "향수 추천",
+    "향수 최저가",
+    "향수 가격 비교",
+    "향수 리뷰",
+    "향수 노트",
+    "향수 스캔",
+    "아이러브퍼퓸",
     "I Love Perfume",
-    "강송희",
-    "프론트엔드 포트폴리오",
-    "Next.js",
-    "React",
-    "Socket.io",
-    "OpenAI Vision",
-    "Prisma",
-    "웹 개발자 포트폴리오",
-    "프론트엔드 개발자",
   ],
+  // 제작자 정보는 제목·설명 대신 authors/creator 메타로 유지
+  authors: [{ name: "강송희" }],
+  creator: "강송희",
   openGraph: {
-    title: "I Love Perfume | 강송희 프론트엔드 포트폴리오",
+    title: "I Love Perfume | 향수 정보·리뷰·최저가 비교",
     description:
-      "I Love Perfume는 향수를 수집하고 기록하는 공간입니다. Next.js와 다양한 기술을 사용하여 갤러리, 채팅 등을 구현한 포트폴리오입니다.",
+      "향수 사진 한 장으로 향수를 찾고, 노트·리뷰 확인부터 판매처별 최저가 비교까지 한 번에.",
     siteName: "I Love Perfume",
     images: [
       {
         url: "/image/metadata/main_web.png", // og:image 경로
         width: 1200,
         height: 627,
-        alt: "I Love Perfume 포트폴리오 썸네일",
+        alt: "I Love Perfume 향수 정보·최저가 비교",
       },
     ],
     type: "website",

@@ -8,12 +8,12 @@ import GuideContent, {
 export const metadata: Metadata = {
   title: 'I Love Perfume 소개 및 이용 안내',
   description:
-    'I Love Perfume는 향수를 수집하고 기록하는 프론트엔드 포트폴리오 사이트입니다. 서비스 소개와 이용 방법을 안내합니다.',
+    'I Love Perfume는 향수 정보와 리뷰, 판매처별 최저가를 한곳에서 확인하는 서비스입니다. 서비스 소개와 이용 방법을 안내합니다.',
   openGraph: {
     title: 'I Love Perfume 소개 및 이용 안내',
     description:
-      'I Love Perfume는 향수를 수집하고 기록하는 프론트엔드 포트폴리오 사이트입니다. 서비스 소개와 이용 방법을 안내합니다.',
-    url: "/notice",
+      'I Love Perfume는 향수 정보와 리뷰, 판매처별 최저가를 한곳에서 확인하는 서비스입니다. 서비스 소개와 이용 방법을 안내합니다.',
+    url: "/guide",
     images: [
       {
         url: '/image/metadata/guide.png',

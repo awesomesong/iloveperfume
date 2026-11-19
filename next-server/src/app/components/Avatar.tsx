@@ -33,7 +33,7 @@ const Avatar= ({user, isOwn, isAIChat} :AvatarProps) => {
         )}
       >
         {isAIChat ? (
-          <div className="w-full h-full bg-gradient-to-br from-blue-700 to-sky-400 rounded-full flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-ilp-avatar rounded-full flex items-center justify-center">
             <span className="text-white font-bold text-sm">AI</span>
           </div>
         ) : user?.image && user.image !== 'None' ? (
