@@ -4,7 +4,13 @@ import { runNewsPipeline } from "@/src/app/lib/news/runPipeline";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+/**
+ * 실행 시간 상한(초). 넘으면 Vercel이 함수를 강제 종료한다 — 무한정 걸리는 실행을 끊는 안전장치다.
+ * 평소 실행: 네이버 수집 ~10초 + OpenAI 최대 40초 + og:image 최대 5초 + DB 저장 ≈ 최악 55초.
+ * 60초는 네이버 재시도·타임아웃이 겹치면 넘을 수 있어 여유를 두고 120초로 잡았다.
+ * Fluid compute 기준 Hobby 최대 300초, Pro 최대 800초 (vercel.com/docs/functions/configuring-functions/duration).
+ */
+export const maxDuration = 120;
 
 /**
  * 향수 뉴스 수집 크론 엔드포인트.
