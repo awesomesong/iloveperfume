@@ -222,6 +222,87 @@ model FragranceBlockedUrl {
   createdAt   DateTime @default(now())
 }
 
+enum ArrivalSourceKind {
+  SHOPIFY // 상품 목록(/products.json)
+  SITEMAP // 사이트맵 + 상품 페이지의 구조화 데이터
+}
+
+enum ArrivalSourceStatus {
+  ACTIVE // 수집 중
+  INACTIVE // 판정 전이거나 수집하지 않음 (reason에 사유)
+}
+
+enum ArrivalLeadStatus {
+  PENDING // 공식 사이트를 아직 찾지 않음
+  RESOLVED // 공식 사이트 후보를 ArrivalSource에 등록함
+  UNRESOLVED // 공식 사이트를 찾지 못함
+}
+
+// 향수 신제품 수집 대상(브랜드 공식 사이트). 사람이 등록하지 않는다 — 파이프라인이 브랜드를 찾고(ArrivalBrandLead),
+// 공식 사이트를 찾아 등록하고, 읽을 수 있는지 판정해 켜고 끈다. 한 브랜드에 후보 사이트가 여럿일 수 있고 그중 하나만 ACTIVE다.
+model ArrivalSource {
+  id              String              @id @default(cuid())
+  // Fragrance.brand에 저장할 표기 (영문 대문자)
+  brand           String
+  // 표기 차이를 무시한 브랜드 키 — 같은 브랜드의 후보 사이트를 묶는다
+  brandKey        String
+  // 판매처에 적힌 다른 표기(한글 등) — 상품 이름 앞의 브랜드명을 떼는 데 쓴다
+  aliases         String[]
+  host            String              @unique
+  // 상품을 읽는 방식. 판정 전에는 null
+  kind            ArrivalSourceKind?
+  status          ArrivalSourceStatus @default(INACTIVE)
+  // 같은 브랜드의 후보 순서 — 0: 한국 공식몰, 1: 향수 전용 사이트, 2: 글로벌
+  rank            Int                 @default(2)
+  // 한국에서 살 수 있다고 본 근거 — 입점 판매처 이름 또는 "회원 등록"
+  koreaBasis      String
+  // 최근 판정·수집 결과 (왜 켜졌거나 꺼졌는지)
+  reason          String?
+  nextProbeAt     DateTime            @default(now())
+  // 수집 연속 실패 횟수
+  failCount       Int                 @default(0)
+  // SITEMAP: 기존 상품 주소를 기준선으로 기록한 시각
+  baselineAt      DateTime?
+  lastCollectedAt DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  seenUrls        ArrivalSeenUrl[]
+
+  @@index([status, lastCollectedAt])
+  @@index([nextProbeAt])
+  @@index([brandKey])
+}
+
+// 사이트맵에서 본 상품 주소 — 게시일이 없는 사이트에서 "처음 본 날"로 신제품을 가린다
+model ArrivalSeenUrl {
+  sourceId    String
+  url         String
+  // 향수 단품인지. null이면 아직 열어 보지 않음
+  perfume     Boolean?
+  firstSeenAt DateTime
+  source      ArrivalSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([sourceId, url])
+}
+
+// 수집 대상 후보 브랜드 — 국내 판매처 입점 브랜드와 회원이 등록한 향수의 브랜드
+model ArrivalBrandLead {
+  // 표기 차이를 무시한 브랜드 키
+  key       String            @id
+  name      String
+  // 후보가 나온 곳 — 판매처 이름 또는 "회원 등록"
+  origin    String
+  examples  String[]
+  status    ArrivalLeadStatus @default(PENDING)
+  attempts  Int               @default(0)
+  // 찾은 사이트 또는 찾지 못한 사유
+  note      String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([status, attempts, createdAt])
+}
+
 model QuizSession {
   id               String   @id @default(cuid())
   shareCode        String   @unique
