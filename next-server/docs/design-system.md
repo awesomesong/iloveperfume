@@ -439,7 +439,7 @@ function contrast(hex1, hex2) {
 | 페이지 | `.fragrance-list-page` | `.news-page`와 같은 폭·여백(최대 1440px, 좌우 16px → 32px) |
 | 탭 | `TextTabs` | 전체 / 신제품 / 직접 등록. 탭 값이 `GET /api/fragrance?source=`로 이어진다(신제품 = `AI_AGENT`, 직접 등록 = `USER`) |
 | 그리드 | `ul.fragrance-list` | `auto-fill` 그리드. 카드 최소 폭 150px·간격 12px → 768px부터 180px·20px |
-| 카드 | `FragranceListCard` (`.fragrance-list-card` + `.product-fragrance-card` + `.product-fragrance-card-layout`) | 첫 이미지(3:4, `object-contain`) → 브랜드(`.product-fragrance-brand`) → 이름(`.product-fragrance-name`) → 수집된 향수만 `.meta-line` "신제품". hover는 그림자만(이동 없음), 포커스는 액센트 외곽선 |
+| 카드 | `FragranceCard` (`.fragrance-list-card` + `.product-fragrance-card` + `.product-fragrance-card-layout`) — 향수 만들기 결과도 같은 카드를 쓴다 | 첫 이미지(3:4, `object-contain`) → 브랜드(`.product-fragrance-brand`) → 이름(`.product-fragrance-name`) → 수집된 향수만 `.meta-line` "신제품". hover는 그림자만(이동 없음), 포커스는 액센트 외곽선 |
 | 이미지 | `FallbackNextImage` | 수집된 향수는 공식 사이트 이미지를 재호스팅 없이 링크한다 — 호스트는 `next.config.js` `remotePatterns`에 등록(`cdn.shopify.com`) |
 | 스켈레톤 | `FragranceCardSkeleton` × 12 | 같은 `.fragrance-list` 그리드 안에 그린다 |
 
@@ -448,6 +448,83 @@ function contrast(hex1, hex2) {
 - 작성자 자리에 `.meta-line`으로 "브랜드 공식 사이트 정보를 바탕으로 자동 수집"을 적는다.
 - 설명·노트를 HTML로 해석하지 않고 글자 그대로 그린다(`dangerouslySetInnerHTML` 금지 — 외부에서 온 글).
 - 구매처(`ShopLinkCard`) 맨 위에 "공식 사이트에서 보기" 행을 둔다. 행 스타일·대비는 4-1 "구매처 행"과 같다.
+
+---
+
+## 6-3. 나만의 향수 만들기 패턴 (`/blend`)
+
+> 병 고르기: 큰 미리보기 하나 + 선택지 한 줄. 향 고르기는 아래 "향 고르기" 참고.
+> 새 색은 없다 — 병 그림은 기존 토큰을 `color-mix`로 섞어 칠한다.
+
+| 요소 | 클래스 / 컴포넌트 | 규칙 |
+|------|-------------------|------|
+| 배치 | `.blend-picker` (`BottlePicker`) | 모바일: 제목 → 미리보기 → 선택지 → 버튼. 768px부터 왼쪽 미리보기 / 오른쪽 제목·선택지·버튼 |
+| 제목 | `PageIntro` + `.blend-picker__head` | 한 문장으로 쓴다("…골라 주세요."). 항상 왼쪽 정렬 |
+| 미리보기 | `.blend-preview` | 7절 카드 토큰(18px, 카드 배경·보더). 병 속 액체까지 그린다(`BottleSvg filled`) |
+| 선택지 | `fieldset.blend-options` > `BottleOption` | 라디오 버튼 묶음. 모바일은 가로로 넘기고 오른쪽 끝 칸이 잘려 보인다. 768px부터 4열 격자 |
+| 선택지 칸 | `.blend-option__card` | 병 그림 + 이름 전체(자르지 않는다). 선택: 액센트 보더 + 굵은 이름. 포커스: 액센트 외곽선 |
+| 버튼 | `BlendStepActions` | `ghostLavender`(랜덤) + `ilp`(다음, `flex-1`) |
+
+병 그림 색 (`.blend-bottle__*`):
+
+| 부분 | 값 |
+|------|-----|
+| 유리 | `color-mix(in srgb, var(--color-accent) 8%, transparent)` |
+| 액체 | `color-mix(in srgb, var(--color-accent) 38%, transparent)` |
+| 윤곽선 | `var(--color-accent-muted)` — 카드 배경 대비 라이트 5.2:1 / 다크 3.2:1 (그래픽 3:1 이상 ✅) |
+| 뚜껑 | `var(--color-text-primary)` |
+| 하이라이트 | `var(--color-ivory)` 55% (다크 20%) — 장식 |
+
+병 모양은 이미지가 아니라 숫자(목·어깨·허리·바닥 너비)로 정의한다 — `src/app/lib/blend/bottleShapes.ts`의 `SPECS`에 한 줄을 더하면 모양이 추가된다.
+
+### 향 고르기 (`ScentPicker`)
+
+> 모든 향을 계열별로 한 화면에 펼쳐 두고 바로 고른다(Fragrantica 노트 목록 근거). 따로 여는 창은 없다.
+> 계열 설명·개수 같은 부가 문구는 쓰지 않는다. 새 색은 없다.
+
+| 요소 | 클래스 / 컴포넌트 | 규칙 |
+|------|-------------------|------|
+| 배치 | `.blend-scent` | 모바일: 제목 → 검색·계열 줄 → 향 목록 → 아래에 붙는 고른 향 막대. 768px부터 왼쪽(병·고른 향·버튼, 화면에 붙어 따라옴) / 오른쪽(제목·검색·향 목록) |
+| 검색 | `.blend-search` | 이름·다른 표기·영문 id로 거른다. 띄어쓰기 무시. 글자 16px(iOS 확대 방지). 맞는 향이 없으면 "‘검색어’에 맞는 향이 없어요." |
+| 계열 줄 | `ScentFamilyNav` (`.blend-family-nav__link`) | 누르면 그 계열로 내려간다(주소 `#`를 바꾸지 않는다). 모바일은 옆으로 밀고, 768px부터 줄바꿈 |
+| 계열 | `.blend-family` > `h3.blend-family__title` + `.blend-family__notes` | 소제목 아래 열 맞춘 칸. 3열 → 768px부터 4열 |
+| 향 칸 | `ScentOption` (`.blend-scent-option__label`) | 체크박스. 이름 전체(칸 안에서 어절 단위 줄바꿈). 선택: `.action-btn`과 같은 반전(배경 `--color-text-primary`, 글자 `--bg-page`, 15:1) + 굵게 |
+| 고른 향 | `SelectedScents` (`.blend-scent__count` + `.blend-chip`) | "고른 향 n/6" + 칩. 칩을 누르면 뺀다. 칩 색은 4-1 "구매처 행"과 같은 `--color-accent-pale` + primary |
+| 버튼 | `BlendStepActions` | `ghostLavender` "이전" + `ilp` "다음". 0개에서 다음, 7번째 선택은 토스트로 알린다(칸을 비활성으로 만들지 않는다) |
+
+모바일 고른 향 막대와 겹치지 않게 이 화면에서만 떠 있는 채팅 버튼(`.chat-fab`)을 숨긴다.
+향 목록은 `src/app/lib/blend/scentNotes.ts`의 `SCENT_FAMILIES`에 있다.
+
+### 결과 (`BlendResult`)
+
+> 고른 향과 비슷한 실제 향수를 보여준다(Parfumo ScentMix 결과 목록 근거). 새 색·새 카드 스타일은 없다.
+
+| 요소 | 클래스 / 컴포넌트 | 규칙 |
+|------|-------------------|------|
+| 배치 | `.blend-result` | 모바일: 제목 → 작은 병·고른 향 한 줄 → 추천 향수 → 공유 → 버튼. 768px부터 왼쪽(병·고른 향·버튼, 화면에 붙어 따라옴) / 오른쪽(제목·추천 향수) |
+| 제목 | `PageIntro` + `.blend-result__head` | "고른 향과 비슷한 향수를 찾았어요." |
+| 고른 향 | `.blend-chip.blend-chip--static` | 향 단계 칩과 같은 색, 누를 수 없다(× 없음) |
+| 추천 향수 | `ul.fragrance-list` > `BlendResultCard` | 6-2 카드(`FragranceCard`)를 그대로 쓰고 이름 아래 이유 한 줄(`.blend-result-card__reason`, 13px 보조색) — 겹친 향 이름을 쉼표로 잇고, 겹친 향이 없으면 "○○ 계열". 가운뎃점(`.meta-line`)은 좁은 칸에서 줄 앞에 걸려 쓰지 않는다. 최대 4개, 모바일 2열 → 768px부터 4열 |
+| 불러오는 중 / 실패 / 없음 | `FragranceCardSkeleton` × 4 / `StatusMessage` | 없음: "비슷한 향수를 찾지 못했어요." |
+| 공유 | `BlendShareButton` (`.blend-result__actions` 첫 줄) | 이 화면의 주요 버튼이라 `ilp` 전체 폭 "결과 공유하기" + `HiArrowUpOnSquare`. 기기 공유 시트(`navigator.share`)가 있으면 띄우고, 없거나 실패하면 링크 복사 → "링크를 복사했어요." 시트를 닫은 것은 실패로 보지 않는다 |
+| 버튼 | `BlendStepActions` (`nextVariant="ghostLavender"`) | 공유 아래 한 줄: `ghostLavender` "이전"(향 고르기로) + `ghostLavender` "다시 만들기". 좁은 왼쪽 칸에서도 한 줄에 들어가게 짧게 쓴다 |
+
+추천 순위는 `POST /api/blend/recommend`(`src/app/lib/blend/recommendFragrances.ts`)가 정한다: 겹치는 향 수 → 겹치는 계열 수 → 향수 노트 중 고른 향의 비율.
+
+### 주소에 담는 상태
+
+단계와 고른 값은 쿼리스트링에 있다 — 새로고침하거나 주소를 보내도 같은 화면이 나온다. 읽기·쓰기는 `src/app/lib/blend/blendParams.ts` 한 곳에서 한다.
+
+| 값 | 예 | 규칙 |
+|----|-----|------|
+| `step` | `scent`, `result` | 병 단계는 생략. 고른 향 없이 `result`면 향 고르기를 연다 |
+| `bottle` | `sphere` | 모르는 모양이면 기본 병(`cylinder`) |
+| `notes` | `bergamot,vanilla` | 쉼표로 잇는다. 모르는 향·중복은 버리고 6개까지 |
+
+- 병·향을 고를 때는 주소만 바꾸고(`replaceState`) 기록을 쌓지 않는다. 화면도 다시 그리지 않는다.
+- 단계를 넘길 때는 기록을 쌓는다(`pushState`) — 브라우저 뒤로 가기로 이전 단계에 간다. 이때 고른 값은 방금 것을 그대로 쓴다.
+- 잘못된 값이 든 주소는 화면만 고쳐 보여주고, 처음 고를 때 주소도 정리된다.
+- 결과 주소는 링크 미리보기 제목도 바꾼다(`generateMetadata`): "베르가못, 자스민, 바닐라로 만든 나만의 향수". 공유 시트 제목과 같은 문장(`blendResultTitle`)이고, 조사 "로/으로"는 마지막 향 이름의 받침으로 고른다. 미리보기 이미지는 사이트 공통 이미지를 쓴다.
 
 ---
 
