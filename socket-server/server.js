@@ -1,5 +1,6 @@
 const express = require("express");
 const http = require("http");
+const { verifySocketToken } = require("./socketAuth");
 const { Server } = require("socket.io");
 
 // ✅ UTF-8 인코딩 설정 (한글 깨짐 방지)
@@ -50,19 +51,17 @@ const clearQueue = (userId) => {
   console.log(`🗑️ Queue cleared for user ${userId}`);
 };
 
-// ✅ 사용자 정보를 담는 Map (socketId -> { useremail, socketId, userId })
+// ✅ 사용자 정보를 담는 Map (socketId -> { socketId, userId })
 // Map을 사용하여 O(1) 추가/삭제/검색 성능 향상
-const onlineUsersMap = new Map(); // socketId -> { useremail, socketId, userId }
+const onlineUsersMap = new Map(); // socketId -> { socketId, userId }
 
 // ✅ userId로 빠른 검색을 위한 역인덱스 Map (userId -> Set<socketId>)
 // O(1) 검색 성능을 위해 추가
 const userIdToSocketsMap = new Map(); // userId -> Set<socketId>
 
-// ✅ 온라인 사용자 스냅샷 생성 유틸
+// ✅ 온라인 사용자 스냅샷 생성 유틸 (userId만 — 이메일은 보내지 않는다)
 function getOnlineSnapshot() {
-  return Array.from(
-    new Map(Array.from(onlineUsersMap.values()).map(u => [u.userId, { useremail: u.useremail, userId: u.userId }])).values()
-  );
+  return Array.from(userIdToSocketsMap.keys()).map((userId) => ({ userId }));
 }
 
 // ✅ 프로세스 전역 리비전 Map (다중 탭/인스턴스 대비)
@@ -105,21 +104,19 @@ function isMember(roomId, userId) {
 /**
  * 사용자 소켓을 onlineUsersMap에 추가합니다.
  * 동일한 socketId가 이미 존재하면 추가하지 않습니다.
- * @param {string} useremail - 사용자의 이메일
  * @param {string} socketId - 현재 접속한 소켓의 ID
- * @param {string} userId - 사용자의 고유 ID (인증 시스템의 ID)
+ * @param {string} userId - 사용자의 고유 ID (연결 인증에서 확인된 값)
  */
-const addUser = (useremail, socketId, userId) => {
-  const email = String(useremail || "").trim().toLowerCase();
-  if (!email || !socketId || !userId) return;
+const addUser = (socketId, userId) => {
+  if (!socketId || !userId) return;
 
   // 같은 소켓이 이미 있으면 스킵
   if (onlineUsersMap.has(socketId)) {
-    console.log(`ℹ️ User ${email} (ID: ${userId}) with socket ${socketId} already exists. Skipping add.`);
+    console.log(`ℹ️ User ${userId} with socket ${socketId} already exists. Skipping add.`);
     return;
   }
 
-  onlineUsersMap.set(socketId, { useremail: email, socketId, userId });
+  onlineUsersMap.set(socketId, { socketId, userId });
   
   // ✅ 역인덱스 업데이트: userId -> Set<socketId>
   if (!userIdToSocketsMap.has(userId)) {
@@ -127,13 +124,13 @@ const addUser = (useremail, socketId, userId) => {
   }
   userIdToSocketsMap.get(userId).add(socketId);
   
-  console.log(`✅ User ${email} (ID: ${userId}) added with socket ${socketId}. Total online: ${onlineUsersMap.size}`);
+  console.log(`✅ User ${userId} added with socket ${socketId}. Total online: ${onlineUsersMap.size}`);
 };
 
 /**
  * 사용자 소켓을 onlineUsersMap에서 제거합니다.
  * @param {string} socketId - 연결 해제된 소켓의 ID
- * @returns {{useremail: string|null, userId: string|null, isLastSocket: boolean}} - 해당 소켓의 useremail, userId, 그리고 해당 사용자의 마지막 소켓인지 여부
+ * @returns {{userId: string|null, isLastSocket: boolean}} - 해당 소켓의 userId, 그리고 해당 사용자의 마지막 소켓인지 여부
  */
 const removeUser = (socketId) => {
   const leavingUser = onlineUsersMap.get(socketId);
@@ -158,10 +155,9 @@ const removeUser = (socketId) => {
   // ✅ O(1)로 동일한 userId를 가진 다른 소켓이 남아있는지 확인
   const isLastSocket = !userIdToSocketsMap.has(leavingUser.userId);
 
-  console.log(`🗑️ Socket ${socketId} for ${leavingUser.useremail} removed. Total online: ${onlineUsersMap.size}`);
+  console.log(`🗑️ Socket ${socketId} for ${leavingUser.userId} removed. Total online: ${onlineUsersMap.size}`);
 
   return {
-    useremail: leavingUser.useremail,
     userId: leavingUser.userId,
     isLastSocket: isLastSocket,
   };
@@ -175,6 +171,28 @@ const httpServer = http.createServer(app);
 // ✅ UTF-8 인코딩 설정 (한글 깨짐 방지)
 httpServer.setTimeout(120000);
 require("dotenv").config();
+
+// ✅ 연결 인증 설정
+// - SOCKET_AUTH_SECRET: Next(/api/socket/token)와 같은 값. 토큰 서명 검증용.
+// - SOCKET_AUTH_REQUIRED: "true"면 토큰 없는 연결을 거부한다.
+//   그 외에는 배포 전환 기간용 호환 모드 — 토큰 없는 구버전 클라이언트는 auth.userId로 연결을 허용한다.
+//   토큰이 있는데 검증에 실패한 연결은 모드와 상관없이 항상 거부한다.
+// 전환 순서: 소켓 서버 배포(호환 모드) → Next 배포 → SOCKET_AUTH_REQUIRED=true
+const SOCKET_AUTH_SECRET = process.env.SOCKET_AUTH_SECRET || "";
+const SOCKET_AUTH_REQUIRED = process.env.SOCKET_AUTH_REQUIRED === "true";
+
+if (!SOCKET_AUTH_SECRET) {
+  if (SOCKET_AUTH_REQUIRED) {
+    console.error("[auth] SOCKET_AUTH_SECRET 미설정 + SOCKET_AUTH_REQUIRED=true — 모든 소켓 연결을 거부합니다.");
+  } else {
+    console.warn("[auth] SOCKET_AUTH_SECRET 미설정 — 토큰 검증 없이 호환 모드(auth.userId)로만 동작합니다.");
+  }
+} else {
+  console.log(`[auth] 연결 인증 활성화 (토큰 필수: ${SOCKET_AUTH_REQUIRED})`);
+}
+
+// 설정 오류 로그가 연결마다 쌓이지 않도록 1분에 한 번만 남긴다.
+let lastAuthConfigErrorAt = 0;
 
 // 허용 도메인 정리
 const allowedOrigins = (process.env.CLIENT_ORIGIN || "")
@@ -255,11 +273,11 @@ app.get("/", (req, res) => {
       return res.status(401).json({ ok: false, message: '인증 실패' });
     }
     
-    const { userId, useremail, name, image, createdAt } = req.body;
+    // useremail은 받아도 쓰지 않는다 (전체 브로드캐스트에 이메일을 싣지 않음)
+    const { userId, name, image, createdAt } = req.body;
 
     console.log(`[Socket Server] HTTP POST로 새 사용자 등록 알림 수신:`, {
       userId,
-      useremail,
       name,
       createdAt,
       totalOnlineUsers: onlineUsersMap.size
@@ -268,7 +286,6 @@ app.get("/", (req, res) => {
     // 모든 온라인 사용자에게 새 사용자 등록 알림
     io.emit("registered:user", {
       userId,
-      useremail,
       name,
       image: image ?? null,
       createdAt
@@ -300,30 +317,67 @@ app.options('*', (req, res) => {
   return res.sendStatus(403);
 });
 
-io.on("connection", (socket) => {
-  // 🧩 handshake.auth로 초기 유저 정보 세팅
-  const authEmail = String(socket.handshake.auth?.useremail || "").trim().toLowerCase();
-  const authUserId = String(socket.handshake.auth?.userId || "");
+// ✅ 연결 인증 미들웨어 — socket.data.userId는 여기서만 정한다.
+// 이후 핸들러는 handshake.auth나 이벤트 페이로드의 userId·email을 신원으로 쓰지 않는다.
+io.use((socket, next) => {
+  const auth = socket.handshake.auth || {};
+  const token = typeof auth.token === "string" ? auth.token : "";
 
-  if (authEmail) socket.data.useremail = authEmail;
-  if (authUserId) socket.data.userId = authUserId;
+  if (SOCKET_AUTH_REQUIRED && !SOCKET_AUTH_SECRET) {
+    const now = Date.now();
+    if (now - lastAuthConfigErrorAt > 60_000) {
+      lastAuthConfigErrorAt = now;
+      console.error("[auth] SOCKET_AUTH_SECRET 미설정 — 연결 거부 중");
+    }
+    return next(new Error("unauthorized"));
+  }
+
+  // 토큰이 있으면 반드시 검증한다 (비밀값이 없는 호환 모드에서는 검증할 수 없으므로 아래 호환 경로로)
+  if (token && SOCKET_AUTH_SECRET) {
+    const userId = verifySocketToken(token, SOCKET_AUTH_SECRET);
+    if (!userId) {
+      console.log(`[auth] 잘못된 토큰으로 연결 거부 (socket ${socket.id})`);
+      return next(new Error("unauthorized"));
+    }
+    socket.data.userId = userId;
+    socket.data.authVia = "token";
+    return next();
+  }
+
+  if (SOCKET_AUTH_REQUIRED) {
+    return next(new Error("unauthorized"));
+  }
+
+  // 호환 모드: 토큰을 보내지 않는 구버전 클라이언트 (SOCKET_AUTH_REQUIRED=true 전환 후 제거)
+  const legacyUserId = String(auth.userId || "");
+  if (!legacyUserId) {
+    // 로그인한 클라이언트만 연결하므로 신원 없는 연결은 받지 않는다
+    return next(new Error("unauthorized"));
+  }
+  console.log(`[auth] 토큰 없는 호환 연결 (socket ${socket.id})`);
+  socket.data.userId = legacyUserId;
+  socket.data.authVia = "legacy";
+  return next();
+});
+
+io.on("connection", (socket) => {
+  // 🧩 신원은 인증 미들웨어가 정한 값만 사용
+  const authUserId = socket.data.userId;
 
   // ✅ 소켓이 참여한 방들을 안전하게 추적
   socket.data.joinedRooms = new Set();
-  
+
   // ✅ 유저 고정 룸 조인 (개인 알림용)
-  if (authUserId) {
-    socket.join(userRoom(authUserId));
-    socket.data.joinedRooms.add(userRoom(authUserId));
-    console.log(`User ${authEmail} joined personal room: ${userRoom(authUserId)}`);
-  }
-  
+  socket.join(userRoom(authUserId));
+  socket.data.joinedRooms.add(userRoom(authUserId));
+  console.log(`User ${authUserId} joined personal room: ${userRoom(authUserId)}`);
+
   // 연결 시 한 번: 현재 io의 소켓 목록과 비교하여 stale socket 엔트리 정리
   try {
     const activeSocketIds = new Set([...io.sockets.sockets.keys()]);
     const before = onlineUsersMap.size;
     for (const [socketId, user] of onlineUsersMap.entries()) {
-      if (!activeSocketIds.has(socketId) || !user.useremail) {
+      if (!activeSocketIds.has(socketId) || !user.userId) {
         onlineUsersMap.delete(socketId);
         // ✅ 역인덱스도 같이 정리
         if (user.userId) {
@@ -345,30 +399,32 @@ io.on("connection", (socket) => {
     console.log("Prune on connection failed:", e);
   }
 
-  // ✅ 새로 접속한 소켓에만 1회 스냅샷 전송
+  // ✅ 새로 접속한 소켓에만 1회 스냅샷 전송 (인증된 소켓만 여기까지 온다)
   socket.emit("get:onlineUsers", getOnlineSnapshot());
 
-  // 클라이언트가 로그인하여 온라인 사용자 목록에 등록될 때 호출됩니다.
-  socket.on("online:user", ({ useremail, userId }) => {
-    const email = (useremail || "").trim().toLowerCase();
-    const uid = String(userId || "");
-
-    if (!email || !uid) {
-      console.log("[online:user] missing email or userId, skip", { email, uid });
-      return;
+  // ✅ 접속 상태 등록 — 서버가 이미 사용자를 알므로 online:user를 기다리지 않는다
+  {
+    const alreadyOnline = userIdToSocketsMap.has(authUserId) && userIdToSocketsMap.get(authUserId).size > 0;
+    addUser(socket.id, authUserId);
+    if (!alreadyOnline) {
+      console.log(`[Socket Server] 첫 온라인 - 델타 전송: ${authUserId}`);
+      io.emit("online:user", { userId: authUserId });
     }
-    
-    // 소켓 연결 시 해당 소켓에 사용자 정보를 저장 (disconnect 시 활용)
-    socket.data.useremail = email;
-    socket.data.userId = uid; // userId도 저장하여 removeUser에서 활용
+  }
 
-    // ✅ 개인 룸 조인 (로그인 완료 시)
-    if (uid) {
+  // 클라이언트가 연결 후 보내는 신호 — 큐된 메시지 전달용. 페이로드의 userId·email은 무시한다.
+  // (접속 상태 등록은 연결 시 이미 끝났으므로 여기서는 중복 없이 처리됨)
+  socket.on("online:user", () => {
+    const uid = socket.data.userId;
+    if (!uid) return;
+
+    // ✅ 개인 룸 조인 (연결 시 이미 조인했으면 스킵)
+    {
       const room = userRoom(uid);
       if (!socket.data.joinedRooms?.has(room)) {
         socket.join(room);
         socket.data.joinedRooms.add(room);
-        console.log(`User ${email} joined personal room: ${room} (via online:user)`);
+        console.log(`User ${uid} joined personal room: ${room} (via online:user)`);
       }
       
       // ✅ 큐된 메시지 전달
@@ -393,20 +449,17 @@ io.on("connection", (socket) => {
       }
     }
 
-    // 빈 이메일이면 등록/브로드캐스트를 수행하지 않음
-    if (!email) return;
-
-    // ✅ 해당 유저가 이미 온라인인지 체크 (O(1))
+    // ✅ 해당 유저가 이미 온라인인지 체크 (O(1)) — 보통 연결 시 등록되어 있으므로 스킵된다
     const alreadyOnline = userIdToSocketsMap.has(uid) && userIdToSocketsMap.get(uid).size > 0;
-    
-    addUser(email, socket.id, uid);          // ← 통일된 uid 사용
+
+    addUser(socket.id, uid);
 
     // ✅ 이 유저가 "처음" 온라인 상태가 되었을 때만 델타 전송
     if (!alreadyOnline) {
-      console.log(`[Socket Server] 첫 온라인 - 델타 전송: ${email}`);
-      io.emit("online:user", { useremail: email, userId: uid });
+      console.log(`[Socket Server] 첫 온라인 - 델타 전송: ${uid}`);
+      io.emit("online:user", { userId: uid });
     } else {
-      console.log(`[Socket Server] 이미 온라인 - 델타 스킵: ${email}`);
+      console.log(`[Socket Server] 이미 온라인 - 델타 스킵: ${uid}`);
     }
   });
 
@@ -435,11 +488,11 @@ io.on("connection", (socket) => {
     joinRoomMember(roomId, socket.data.userId, socket.id);
     socket.data.joinedRooms.add(roomId);
     
-    console.log(`User ${socket.data.useremail} joined room ${roomId}`);
+    console.log(`User ${socket.data.userId} joined room ${roomId}`);
     
     // ✅ join:success 이벤트 전송 (클라이언트에서 방 입장 완료 확인용)
     socket.emit("join:success", roomId);
-    console.log(`[join:success] sent to ${socket.data.useremail} for room ${roomId}`);
+    console.log(`[join:success] sent to ${socket.data.userId} for room ${roomId}`);
   });
 
   // 사용자가 채팅방에서 나갈 때 (room에서 leave)
@@ -452,7 +505,7 @@ io.on("connection", (socket) => {
     leaveRoomMember(roomId, socket.data.userId, socket.id);
     socket.data.joinedRooms.delete(roomId);
     
-    console.log(`User ${socket.data.useremail} (Socket: ${socket.id}) left room: ${roomId}`);
+    console.log(`User ${socket.data.userId} (Socket: ${socket.id}) left room: ${roomId}`);
   });
 
 
@@ -462,8 +515,7 @@ io.on("connection", (socket) => {
       hasData: !!data,
       hasNewMessage: !!data?.newMessage,
       conversationId: data?.newMessage?.conversationId,
-      socketUserId: socket.data?.userId,
-      socketUseremail: socket.data?.useremail
+      socketUserId: socket.data?.userId
     });
     
     const { newMessage } = data || {};
@@ -618,8 +670,7 @@ io.on("connection", (socket) => {
     } catch (e) {
       console.log("Room cleanup inspection failed:", e);
     }
-    // socket.data에 저장된 사용자 이메일과 userId 정보를 가져옵니다.
-    const disconnectedUserEmail = socket?.data?.useremail;
+    // socket.data에 저장된 userId 정보를 가져옵니다.
     const disconnectedUserId = socket?.data?.userId;
 
     // onlineUsersList에서 소켓을 제거하고, 해당 사용자의 마지막 소켓인지 확인합니다.
@@ -628,11 +679,11 @@ io.on("connection", (socket) => {
     // ✅ 델타만 전송 (전체 스냅샷 브로드캐스트 제거)
     if (result && result.isLastSocket) {
       console.log(
-        `📤 ${disconnectedUserEmail} (ID: ${disconnectedUserId}) fully disconnected.`,
+        `📤 ${disconnectedUserId} fully disconnected.`,
       );
-      io.emit("leave:user", { useremail: result.useremail, userId: result.userId }); // removeUser 반환값 사용 (socket.data 미설정 대비)
+      io.emit("leave:user", { userId: result.userId }); // removeUser 반환값 사용 (socket.data 미설정 대비)
     } else if (result) {
-        console.log(`ℹ️ Socket ${socket.id} for ${disconnectedUserEmail} disconnected, but other sessions remain.`);
+        console.log(`ℹ️ Socket ${socket.id} for ${disconnectedUserId} disconnected, but other sessions remain.`);
     } else {
         console.log(`⚠️ Disconnected socket ${socket.id} not found in user list.`);
     }
