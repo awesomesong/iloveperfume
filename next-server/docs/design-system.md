@@ -440,7 +440,7 @@ function contrast(hex1, hex2) {
 | 탭 | `TextTabs` | 전체 / 신제품 / 직접 등록. 탭 값이 `GET /api/fragrance?source=`로 이어진다(신제품 = `AI_AGENT`, 직접 등록 = `USER`) |
 | 그리드 | `ul.fragrance-list` | `auto-fill` 그리드. 카드 최소 폭 150px·간격 12px → 768px부터 180px·20px |
 | 카드 | `FragranceListCard` (`.fragrance-list-card` + `.product-fragrance-card` + `.product-fragrance-card-layout`) | 첫 이미지(3:4, `object-contain`) → 브랜드(`.product-fragrance-brand`) → 이름(`.product-fragrance-name`) → 수집된 향수만 `.meta-line` "신제품". hover는 그림자만(이동 없음), 포커스는 액센트 외곽선 |
-| 이미지 | `FallbackNextImage` | 수집된 향수는 공식 사이트 이미지를 재호스팅 없이 링크한다 — 호스트는 `next.config.js` `remotePatterns`에 등록(`cdn.shopify.com`) |
+| 이미지 | `FallbackNextImage` | 수집된 향수는 공식 사이트 이미지를 재호스팅 없이 링크한다 — `image-hosts.json`에 없는 호스트는 `next/image` 최적화 없이 원본 주소로 그린다(`resolveImageSrc`). `next/image`로 향수 이미지를 직접 그릴 때도 `unoptimized={resolveImageSrc(src).unoptimized}`를 넘긴다 |
 | 스켈레톤 | `FragranceCardSkeleton` × 12 | 같은 `.fragrance-list` 그리드 안에 그린다 |
 
 상세(`FragranceDetail`)에서 수집된 향수(`source = AI_AGENT`)는:

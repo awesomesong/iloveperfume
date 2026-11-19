@@ -1,6 +1,7 @@
 'use client';
 
 import Image from "next/image";
+import { resolveImageSrc } from "@/src/app/lib/imageSrc";
 import { useEffect, useState, useCallback, useRef, useLayoutEffect } from "react";
 import type { ReactNode, CSSProperties } from "react";
 import clsx from "clsx";
@@ -251,6 +252,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
                             <Image
                                 alt={alt}
                                 src={src}
+                                unoptimized={resolveImageSrc(src).unoptimized}
                                 width={1600}
                                 height={1600}
                                 className={clsx(

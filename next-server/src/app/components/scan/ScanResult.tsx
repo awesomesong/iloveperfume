@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { resolveImageSrc } from '@/src/app/lib/imageSrc';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { HiOutlineArrowRight, HiOutlineCamera, HiOutlinePlus } from 'react-icons/hi2';
@@ -181,6 +182,7 @@ export default function ScanResult({ data }: Props) {
                     src={matchedFragrance.images[0]}
                     alt={matchedFragrance.name}
                     fill
+                    unoptimized={resolveImageSrc(matchedFragrance.images[0]).unoptimized}
                     sizes="80px"
                     className="object-contain p-1"
                   />

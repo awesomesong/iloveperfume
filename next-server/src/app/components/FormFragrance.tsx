@@ -3,6 +3,7 @@ import { useState, ChangeEvent, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import Image from "next/image";
+import { resolveImageSrc } from "@/src/app/lib/imageSrc";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { FormSubmitActions } from "./Button";
@@ -395,6 +396,7 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                                         src={img.src}
                                         alt={img.name}
                                         fill
+                                        unoptimized={resolveImageSrc(img.src).unoptimized}
                                         className="object-cover"
                                     />
                                     <button
