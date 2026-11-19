@@ -18,6 +18,7 @@ const ChatMenu = () => {
                     href='/conversations'
                     title='채팅'
                     className='
+                    chat-fab
                     fixed
                     right-6
                     bottom-6
