@@ -17,12 +17,10 @@ import {
   incrementNoticeDetailCommentsCount,
 } from "@/src/app/lib/react-query/noticeCache";
 import FormComment from "./FormComment";
-import { useSocket } from "../context/socketContext";
 import { CommentsSkeleton } from "./FragranceSkeleton";
 import CircularProgress from "./CircularProgress";
 import StatusMessage from "./StatusMessage";
 import toast from "react-hot-toast";
-import { SOCKET_EVENTS } from "../lib/react-query/utils";
 import type { CommentPage } from "@/src/app/types/comments";
 import DOMPurify from "dompurify";
 import EditableItemRow from "./EditableItemRow";
@@ -41,7 +39,6 @@ type CommentsProps = {
 
 const Comments = ({ noticeId, user }: CommentsProps) => {
   const queryClient = useQueryClient();
-  const socket = useSocket();
   const [editingId, setEditingId] = useState<string | null>(null);
 
 
@@ -130,14 +127,7 @@ const Comments = ({ noticeId, user }: CommentsProps) => {
             updatedComment,
           );
         }
-        
-        // 소켓 브로드캐스트(댓글 수정)
-        try {
-          socket?.emit(SOCKET_EVENTS.NOTICE_COMMENT_UPDATED, {
-            noticeId,
-            comment: updatedComment,
-          });
-        } catch {}
+        // 다른 사용자 화면 반영은 API가 저장 후 소켓 서버로 직접 보낸다
       },
       onError: (err: Error, _vars, ctx) => {
         if (ctx?.prev) {
@@ -161,12 +151,6 @@ const Comments = ({ noticeId, user }: CommentsProps) => {
       // 공지사항 상세 페이지 댓글 수 업데이트
       incrementNoticeDetailCommentsCount(queryClient, noticeId, -1);
       return { prev };
-    },
-    onSuccess: (_result, { commentId }) => {
-      // 소켓 브로드캐스트(댓글 삭제)
-      try {
-        socket?.emit(SOCKET_EVENTS.NOTICE_COMMENT_DELETED, { noticeId, commentId });
-      } catch {}
     },
     onError: (err: Error, _vars, ctx) => {
       if (ctx?.prev) {

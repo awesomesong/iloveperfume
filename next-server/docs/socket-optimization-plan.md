@@ -83,6 +83,17 @@ NODE_PATH=next-server/node_modules node socket-server/scripts/ws-audit.js --quic
 - 완료 기준: `forgedMessage`, `roomDeletedByStranger` pass. 실제 브라우저 2개로 1:1·그룹·AI 채팅 송수신, 읽음 표시, 나가기 확인.
 - 부수 효과: 전송 경로가 "API → 클라이언트 → 소켓"에서 "API → 소켓"으로 줄어 상대방 수신 지연이 한 구간 줄어든다. 전후 지연은 서버 수신 시각 기준으로 측정해 기록한다.
 
+#### 2단계 구현 메모 (2026-11-20)
+- 내부 엔드포인트: 소켓 서버 `POST /internal/emit`, 헤더 `x-webhook-secret` = `WEBHOOK_SECRET`(가입 알림과 같은 값, 해시 후 `timingSafeEqual` 비교). 본문 `{ events: [...] }`(최대 10개, 순서대로 전달). 종류는 `message`(참여자별 `receive:conversation` — 오프라인이면 기존 메모리 큐, 시스템 메시지가 아니면 `receive:message`), `room.event`(rev는 소켓 서버가 매김), `users`(`conversation:new`·`read:state`만), `broadcast`(공지·댓글·리뷰 7개 이름만, `exceptUserIds`로 보낸 사람 제외). 검증 로직은 `socket-server/internalEmit.js`, 테스트는 `socket-server/test/internalEmit.test.js`. `/api/user-registered`도 같은 비교로 바꾸고 틀린 시크릿을 로그에 남기지 않게 했다.
+- Next 쪽: `lib/socketServer/emitSocketEvents.ts`의 `queueSocketEvents`(응답 후 `after()`로 전송)·`sendSocketEvents`(이미 `after()` 안일 때). 타임아웃 2초, 실패해도 API 응답은 그대로(로그에 상태 코드와 이벤트 종류만). 주소는 `SOCKET_SERVER_URL` → `NEXT_PUBLIC_SOCKET_URL` → 운영 주소 순(`lib/socketServer/socketServerUrl.ts`, 가입 알림도 같은 함수 사용).
+- 수신자는 모두 DB 기준: 메시지·첫 메시지·AI 답변은 `conversation.userIds`, 나가기/삭제는 트랜잭션의 남은 멤버 + 나간 사람(다른 탭 정리), 읽음은 마지막 메시지 발신자 + 읽은 사람 본인(다른 탭 안 읽은 수 동기화, 시스템 메시지면 보내지 않음).
+- `receive:message`는 대화방 룸 대신 참여자 개인 룸으로 보낸다(클라이언트 `Body.tsx`가 conversationId로 거름). 대화방 룸으로는 아무것도 보내지 않으므로 `join:room`의 DB 멤버 확인은 하지 않았다(계획과 다름 — 확인할 필요가 없어짐). 대신 `join:room`/`leave:room`에서 `user:`로 시작하는 이름을 막는다 — 이전에는 `join:room("user:<남의 id>")`로 남의 개인 룸 이벤트를 모두 받을 수 있었다(감사 스크립트 `impersonation`에 추가).
+- 보낸 탭 중복 방지: HTTP에는 소켓 ID가 없어 보낸 탭도 자기 메시지를 받는다. 메시지 ID를 클라이언트의 낙관적 ID(`messageId`)로 저장하므로 `upsertMessageSortedInCache`·`bumpConversationOnNewMessage`가 같은 id로 합친다(안 읽은 수는 내 메시지라 그대로). 공지·댓글·리뷰는 같은 처리가 없어 보낸 사람(`exceptUserIds`)을 제외한다 — 보낸 사람의 다른 탭은 새로고침 전까지 반영되지 않는다(이전에는 반영됨).
+- 소켓 서버에서 `send:message`, `conversation:new`, `read:state`, `room.event`, `notice:*`, `fragrance:review:*` 핸들러를 없앴다. 남은 클라이언트 이벤트: `online:user`, `join:room`, `leave:room`.
+- 호환: 이벤트 이름·페이로드 형식은 그대로라 열려 있던 구버전 탭도 받기는 정상. 구버전 탭이 보내는 중계는 무시되므로 그 탭에서 보낸 메시지는 저장되고(API가 대신 전달) 화면 갱신도 정상이다. 공지·댓글·리뷰는 원래 API 저장 후 클라이언트가 중계했으므로 이제 API가 보낸다.
+- 배포 순서: main 머지 시 소켓 서버(GitHub Actions)와 Next(Vercel)가 거의 동시에 배포된다. 엇갈린 몇 분 동안은 실시간 전달만 빠진다(저장은 정상) — Next가 먼저면 내부 호출이 404(경고 로그만), 소켓 서버가 먼저면 구버전 Next 탭의 중계가 무시된다. 새 환경변수는 없다(`WEBHOOK_SECRET`이 양쪽에 이미 있어야 함, `SOCKET_SERVER_URL`은 선택).
+- 완료 기준 측정(2026-11-20): `anonymousSeesEmails`·`impersonation`·`forgedMessage`·`roomDeletedByStranger`·`internalEndpoint`·`logging` 모두 pass. half-open은 그대로(55초, 0/3 — 3단계).
+
 ### 3단계 — 메시지 유실 방지 (R1, R2)
 - 복구 기준을 DB로 바꾼다. 재접속(`connect`) 시 활성 대화방 메시지와 대화 목록을 무효화해 다시 불러온다. 가능하면 "마지막으로 받은 메시지 ID 이후"만 받는 API로 양을 줄인다.
 - 서버 메모리 큐(`messageQueue`)와 관련 로직 제거. `globalRoomRev`는 TTL 정리 추가 또는 제거.

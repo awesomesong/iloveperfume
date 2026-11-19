@@ -509,7 +509,8 @@ const SocketState = () => {
       countedSet.add(curId);
 
       // ✅ 메시지 캐시에 추가
-      upsertMessageSortedInCache(queryClient, convId, canonical);
+      // 이미 화면에 있는 메시지(보낸 탭의 내 메시지 등)는 표시 시각을 유지해 순서가 뒤집히지 않게 한다
+      upsertMessageSortedInCache(queryClient, convId, canonical, { keepShownTime: true });
 
       // ✅ 활성 방 처리
       const myEmail = emailRef.current ?? "";
@@ -1318,7 +1319,7 @@ const SocketState = () => {
 
       // ✅ 버퍼 메시지를 메시지 캐시에 추가 (최적화: 배치 처리)
       for (const b of uniqueBuffered) {
-        upsertMessageSortedInCache(queryClient, convId, b.msg);
+        upsertMessageSortedInCache(queryClient, convId, b.msg, { keepShownTime: true });
       }
 
       updates.push({ convId, finalUnread, latestBuffered });

@@ -222,12 +222,19 @@ const isTop = (arr: FullMessageType[], msg: FullMessageType) => {
  * messages 캐시에 정렬 삽입
  * InfiniteData<{ messages: FullMessageType[]; nextCursor: string | null }>
  * 구조라고 가정하고, 최신 페이지를 pages[0]로 본다.
+ *
+ * keepShownTime: 이미 화면에 있는 메시지(같은 id·clientMessageId)를 교체할 때 표시 시각을 바꾸지 않는다.
+ *   소켓으로 되돌아온 내 메시지가 낙관적 시각(브라우저 시계)을 서버 시각으로 덮으면,
+ *   아직 확정 전인 다음 메시지·AI 대기 메시지보다 늦은 시각이 되어 순서가 뒤집힌다.
+ *   (replaceOptimisticMessage도 같은 이유로 낙관 시각을 유지한다)
  */
 export function upsertMessageSortedInCache(
   qc: QueryClient,
   conversationId: string,
   message: UnnormalizedMessage | FullMessageType,
+  options: { keepShownTime?: boolean } = {},
 ) {
+  const { keepShownTime = false } = options;
   qc.setQueryData(messagesKey(conversationId), (old: MessagesInfinite) => {
     const normalized = normalizeMessage(message);
 
@@ -273,12 +280,14 @@ export function upsertMessageSortedInCache(
         const before = origList[byId];
         if (changed(before, normalized)) {
           list = [...origList];
-          list[byId] = { 
-            ...before, 
+          list[byId] = {
+            ...before,
             ...normalized,
-            // ✅ 2) 서버 시간이 없으면 기존 시간 보존 (null/undefined만 대체)
-            createdAt: normalized.createdAt ?? before.createdAt,
-            serverCreatedAtMs: normalized.serverCreatedAtMs ?? before.serverCreatedAtMs,
+            // ✅ 2) 서버 시간이 없으면 기존 시간 보존 (null/undefined만 대체), keepShownTime이면 항상 보존
+            createdAt: keepShownTime ? before.createdAt : (normalized.createdAt ?? before.createdAt),
+            serverCreatedAtMs: keepShownTime
+              ? before.serverCreatedAtMs
+              : (normalized.serverCreatedAtMs ?? before.serverCreatedAtMs),
             // ✅ 확정 메시지는 에러/대기 상태 제거
             isError: normalized.isError ?? false,
             isWaiting: normalized.isWaiting ?? false,
@@ -295,9 +304,11 @@ export function upsertMessageSortedInCache(
           list[byClient] = { 
             ...before,
             ...normalized,
-            // ✅ 2) 서버 시간이 없으면 낙관 시간 보존 (null/undefined만 대체)
-            createdAt: normalized.createdAt ?? before.createdAt,
-            serverCreatedAtMs: normalized.serverCreatedAtMs ?? before.serverCreatedAtMs,
+            // ✅ 2) 서버 시간이 없으면 낙관 시간 보존 (null/undefined만 대체), keepShownTime이면 항상 보존
+            createdAt: keepShownTime ? before.createdAt : (normalized.createdAt ?? before.createdAt),
+            serverCreatedAtMs: keepShownTime
+              ? before.serverCreatedAtMs
+              : (normalized.serverCreatedAtMs ?? before.serverCreatedAtMs),
             // ✅ 확정 메시지는 에러/대기 상태 제거
             isError: false,
             isWaiting: false,

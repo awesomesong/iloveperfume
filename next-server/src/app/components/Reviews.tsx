@@ -26,8 +26,6 @@ import {
   type ReviewPage,
 } from "@/src/app/lib/react-query/reviewsCache";
 import FormReview from "./FormReview";
-import { useSocket } from "../context/socketContext";
-import { SOCKET_EVENTS } from "@/src/app/lib/react-query/utils";
 import { ReviewsSkeleton } from "./FragranceSkeleton";
 import CircularProgress from "./CircularProgress";
 import StatusMessage from "./StatusMessage";
@@ -49,7 +47,6 @@ type ReviewsProps = {
 
 const Reviews = ({ id, name, user }: ReviewsProps) => {
   const queryClient = useQueryClient();
-  const socket = useSocket();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // ✅ 리뷰 텍스트 sanitize 함수를 useMemo로 최적화
@@ -155,14 +152,7 @@ const Reviews = ({ id, name, user }: ReviewsProps) => {
             updatedReview,
           );
         }
-
-        // 소켓 브로드캐스트(리뷰 수정)
-        try {
-          socket?.emit(SOCKET_EVENTS.FRAGRANCE_REVIEW_UPDATED, {
-            fragranceSlug: id,
-            review: updatedReview,
-          });
-        } catch { }
+        // 다른 사용자 화면 반영은 API가 저장 후 소켓 서버로 직접 보낸다
       },
       onError: (err: MutationError, _vars, ctx) => {
         // ✅ 롤백: 이전 데이터로 완전 복원
@@ -185,16 +175,6 @@ const Reviews = ({ id, name, user }: ReviewsProps) => {
       // ✅ 낙관적 제거 + 카운트 -1 (InfiniteQuery의 모든 페이지 순회)
       removeReviewById(queryClient, id, deletedId);
       return { prev } as MutationContext;
-    },
-    onSuccess: (_result, deletedId) => {
-
-      // 소켓 브로드캐스트(리뷰 삭제)
-      try {
-        socket?.emit(SOCKET_EVENTS.FRAGRANCE_REVIEW_DELETED, {
-          fragranceSlug: id,
-          reviewId: deletedId,
-        });
-      } catch { }
     },
     onError: (err: MutationError, _vars, ctx) => {
       // ✅ 롤백: 이전 데이터로 완전 복원

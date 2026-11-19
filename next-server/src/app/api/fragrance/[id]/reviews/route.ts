@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/prisma/db";
 import { requireUser } from "@/src/app/lib/apiAuth";
+import { queueSocketEvents } from "@/src/app/lib/socketServer/emitSocketEvents";
 
 interface ParamsProp {
   params: Promise<{ id: string }>;
@@ -67,7 +68,20 @@ export async function POST(req: NextRequest, { params }: ParamsProp) {
         text,
         authorEmail: user.email,
       },
+      include: {
+        author: { select: { id: true, name: true, email: true, image: true, profileImage: true, role: true } },
+      },
     });
+
+    // 다른 접속자 화면에 새 리뷰 반영 (작성자 화면은 이미 반영함)
+    queueSocketEvents([
+      {
+        kind: "broadcast",
+        event: "fragrance:review:new",
+        payload: { fragranceSlug: newReview.fragranceSlug, review: newReview },
+        exceptUserIds: [user.id],
+      },
+    ]);
     return NextResponse.json({ newReview }, { status: 200 });
   } catch {
     return NextResponse.json(

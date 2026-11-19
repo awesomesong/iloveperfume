@@ -3,10 +3,8 @@ import { useRouter } from 'next/navigation';
 import { SubmitHandler } from 'react-hook-form';
 import TextareaAutosize from 'react-textarea-autosize';
 import { useCallback, useLayoutEffect, startTransition } from 'react';
-import { useSocket } from '@/src/app/context/socketContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { createConversationWithFirstMessage } from '@/src/app/lib/createConversationWithFirstMessage';
-import { SOCKET_EVENTS } from '@/src/app/lib/react-query/utils';
 import { conversationKey, messagesKey, normalizeMessage, upsertConversationWithFirstMessage } from '@/src/app/lib/react-query/chatCache';
 import type { FullConversationType, ConversationMessagePreview } from '@/src/app/types/conversation';
 import toast from 'react-hot-toast';
@@ -40,7 +38,6 @@ const DraftForm: React.FC<DraftFormProps> = ({
     setIsSending,
 }) => {
     const router = useRouter();
-    const socket = useSocket();
     const queryClient = useQueryClient();
     const isAI = !!aiAgentType;
 
@@ -117,7 +114,8 @@ const DraftForm: React.FC<DraftFormProps> = ({
                 router.replace(`/conversations/${conv.id}`);
             });
 
-            // 소켓/스토리지는 전환 후 비동기로 처리해 페인트 블로킹 최소화
+            // 스토리지는 전환 후 비동기로 처리해 페인트 블로킹 최소화
+            // (새 대화방·첫 메시지의 실시간 전달은 /api/conversations/first-message가 서버에서 직접 보낸다)
             if (typeof window !== 'undefined') {
                 const doDeferred = () => {
                     if (isAI && messageText) {
@@ -127,12 +125,6 @@ const DraftForm: React.FC<DraftFormProps> = ({
                             userMessageId: messageId,
                         }));
                     }
-                    if (socket) {
-                        if (!conv.existingConversation) {
-                            socket.emit(SOCKET_EVENTS.CONVERSATION_NEW, { ...conv, firstMessage: newMessage });
-                        }
-                        socket.emit('send:message', { newMessage });
-                    }
                     sessionStorage.setItem('ilp:focusMessage', '1');
                 };
                 setTimeout(doDeferred, 0);
@@ -141,7 +133,7 @@ const DraftForm: React.FC<DraftFormProps> = ({
             toast.error('메시지 전송에 실패했습니다.');
             setIsSending(false);
         }
-    }, [isSending, aiAgentType, isAI, isGroup, memberIds, groupName, targetUserId, queryClient, socket, router, setIsSending]);
+    }, [isSending, aiAgentType, isAI, isGroup, memberIds, groupName, targetUserId, queryClient, router, setIsSending]);
 
     // ✅ 공통 훅: 이미지 업로드
     const handleImageUpload = useCallback(

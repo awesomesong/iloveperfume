@@ -24,7 +24,6 @@ import { useConversationLoading } from "@/src/app/hooks/useConversationLoading";
 import { sendMessage } from "@/src/app/lib/sendMessage";
 import { useFailedMessages } from "@/src/app/hooks/useFailedMessages";
 import { useAIStream } from "@/src/app/hooks/useAIStream";
-import { useSocket } from "@/src/app/context/socketContext";
 import ChatSubmitButton from "./ChatSubmitButton";
 import { useChatInput } from "@/src/app/hooks/useChatInput";
 import { SubmitHandler } from "react-hook-form";
@@ -62,21 +61,12 @@ const AIChatForm = ({
     });
   }, []);
 
-  const socket = useSocket();
-
-  // ✅ AI 응답 완료 시 다른 브라우저/탭에 전달
-  const handleAIComplete = useCallback((finalMessage: FullMessageType) => {
-    if (socket) {
-      socket.emit("send:message", { newMessage: finalMessage });
-    }
-  }, [socket]);
-
   // AI 스트림 요청 훅
+  // (사용자 메시지·AI 답변의 다른 탭 전달은 각 API가 저장 후 소켓 서버로 직접 보낸다)
   const { requestAI, abort: abortAI } = useAIStream({
     conversationId,
     aiAgentType,
     onNewContent: notifyNewContent,
-    onComplete: handleAIComplete,
     onStreamEnd: () => setIsDisabled(false), // 스트림 완료 즉시 폼 활성화
   });
 
@@ -269,11 +259,6 @@ const AIChatForm = ({
         });
       }
 
-      // ✅ 다른 브라우저/탭의 conversationList 동기화
-      if (socket) {
-        socket.emit("send:message", { newMessage: result.newMessage });
-      }
-
       await requestAI({
         userMessage: message,
         userMessageId, // 서버가 이 ID로 조회하여 시간 계산
@@ -293,7 +278,7 @@ const AIChatForm = ({
       setIsDisabled(false);
       focusAndHold();
     }
-  }, [conversationId, queryClient, requestAI, removeFailedMessage, addFailedMessage, isConversationLoading, setValue, session, isSessionLoading, isDisabled, notifyNewContent, socket, focusAndHold]);
+  }, [conversationId, queryClient, requestAI, removeFailedMessage, addFailedMessage, isConversationLoading, setValue, session, isSessionLoading, isDisabled, notifyNewContent, focusAndHold]);
 
   // ✅ 제출 경로 통일 (사파리 모바일 호환: 명시적 preventDefault)
   // handleSubmit은 이벤트 객체가 없어도 작동하지만, 폼 제출 시에는 명시적으로 전달

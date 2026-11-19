@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/src/app/lib/session";
 import prisma from "@/prisma/db";
+import { queueSocketEvents } from "@/src/app/lib/socketServer/emitSocketEvents";
 
 export const runtime = "nodejs";
 
@@ -51,7 +52,7 @@ export async function PATCH(
       conv.lastMessageId
         ? prisma.message.findUnique({
             where: { id: conv.lastMessageId },
-            select: { createdAt: true, senderId: true },
+            select: { createdAt: true, senderId: true, type: true },
           })
         : Promise.resolve(null),
     ]);
@@ -109,6 +110,32 @@ export async function PATCH(
         });
         seenUsersForLastMessage = readStates.map(read => read.user);
       }
+    }
+
+    // ✅ 실시간 읽음 알림 (수신자·내용 모두 서버가 DB에서 계산)
+    // - 마지막 메시지 발신자: 읽음 표시 갱신
+    // - 읽은 사람 본인: 다른 탭의 안 읽은 수 동기화
+    // 시스템 메시지는 읽음 표시 대상이 아니므로 보내지 않는다
+    if (lastMessage?.type !== "system") {
+      const notify = new Set<string>([user.id]);
+      if (messageSenderId && messageSenderId !== user.id && conv.userIds.includes(messageSenderId)) {
+        notify.add(messageSenderId);
+      }
+      queueSocketEvents([
+        {
+          kind: "users",
+          event: "read:state",
+          payload: {
+            conversationId,
+            lastMessageId: conv.lastMessageId,
+            readerId: user.id,
+            seenUsers: includeSeenUsers
+              ? seenUsersForLastMessage.map((u) => ({ id: u.id, name: u.name, image: u.image }))
+              : undefined,
+          },
+          userIds: [...notify],
+        },
+      ]);
     }
 
     // ✅ 기본 응답

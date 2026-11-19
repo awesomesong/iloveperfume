@@ -100,23 +100,18 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
 
   // === 1) readStateMutation: onMutate에서 낙관적 워터마크 반영 유지 ===
   const { mutate: readStateMutation } = useMutation({
+    // 읽음 알림(read:state)은 read-state API가 처리 후 소켓 서버로 직접 보낸다 (수신자는 DB 기준)
     mutationFn: (vars: {
       conversationId: string;
       seenUntilMs: number;
       lastMessageId?: string;
       includeSeenUsers?: boolean;
-      suppressSocketEmit?: boolean;
-    }) => {
-      const payload = { ...vars };
-      delete payload.suppressSocketEmit;
-      return readState(payload);
-    },
+    }) => readState(vars),
     onMutate: async (vars: {
       conversationId: string;
       seenUntilMs: number;
       lastMessageId?: string;
       includeSeenUsers?: boolean;
-      suppressSocketEmit?: boolean;
     }) => {
       const { conversationId: targetConversationId } = vars;
 
@@ -133,10 +128,9 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
         conversationId: targetConversationId,
         includeSeenUsers,
         lastMessageId,
-        suppressSocketEmit,
       } = vars;
 
-      // 총합 갱신 / 소켓 통지 등 기존 코드 유지
+      // 총합 갱신
       const totalUnread = setTotalUnreadFromList(queryClient);
       if (totalUnread !== undefined) setUnreadCount(totalUnread);
 
@@ -148,19 +142,6 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
           lastMessageId,
           data.seenUsers
         );
-      }
-
-      if (socket && !suppressSocketEmit) {
-        // ✅ API에서 전달받은 메시지 발신자 ID 사용 (효율적)
-        const messageSenderId = data.messageSenderId;
-
-        socket?.emit("read:state", {
-          conversationId: targetConversationId,
-          lastMessageId: vars.lastMessageId, // ✅ lastMessageId 포함
-          readerId: session?.user?.id, // ✅ readerId 추가
-          seenUsers: includeSeenUsers ? data.seenUsers : undefined, // ✅ 읽은 사용자 정보 포함
-          messageSenderId, // ✅ API에서 전달받은 메시지 발신자 ID
-        });
       }
     },
     onError: (_err, _vars, context) => {
@@ -368,7 +349,6 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
       seenUntilMs: Date.now(),
       lastMessageId: messageId,
       includeSeenUsers: shouldIncludeSeenUsers,
-      suppressSocketEmit: isSystemMessage,
     });
   }, [conversationId, isAIChat, session?.user?.id, readStateMutation]);
 

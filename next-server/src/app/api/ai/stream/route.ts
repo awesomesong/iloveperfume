@@ -4,6 +4,7 @@ import prisma from "@/prisma/db";
 import { randomUUID } from "crypto";
 import { validatePrompt } from "@/src/app/utils/aiPolicy";
 import { OPENAI_TEXT_MODEL } from "@/src/app/lib/ai/models";
+import { messageEvent, sendSocketEvents } from "@/src/app/lib/socketServer/emitSocketEvents";
 
 export const runtime = "nodejs";
 // 클라이언트(useAIStream)가 60초에 abort하므로 그 이상 유지할 필요가 없다
@@ -237,6 +238,7 @@ function buildConversationContext(messages: HistoryMessage[], currentMessage: st
 type StreamContext = {
   conversationId: string;
   userId: string;
+  userIds: string[]; // 대화방 참여자 (실시간 전달 대상, DB 기준)
   messageId?: string;
   existingAIMessageId?: string;
   userMessageCreatedAt?: Date; // 답변 대상 사용자 메시지 시각 (이 대화방에서 찾은 경우만)
@@ -321,6 +323,42 @@ async function saveAIErrorMessage(ctx: StreamContext, body: string) {
   }
 }
 
+// 저장된 AI 답변을 참여자의 다른 탭에 실시간 전달 (스트림을 닫은 뒤 호출 — 응답을 늦추지 않음)
+async function emitSavedAIMessage(ctx: StreamContext, messageId: string) {
+  try {
+    const msg = await prisma.message.findFirst({
+      where: { id: messageId, conversationId: ctx.conversationId, isAIResponse: true },
+      select: {
+        id: true,
+        body: true,
+        image: true,
+        type: true,
+        createdAt: true,
+        conversationId: true,
+        isAIResponse: true,
+        isError: true,
+        sender: { select: { id: true, name: true, email: true, image: true } },
+      },
+    });
+    if (!msg) return;
+    await sendSocketEvents([
+      messageEvent(
+        {
+          ...msg,
+          isAIResponse: true,
+          isError: !!msg.isError,
+          serverCreatedAtMs: msg.createdAt.getTime(),
+          conversation: { isGroup: false, userIds: ctx.userIds },
+          clientMessageId: msg.id,
+        },
+        ctx.userIds,
+      ),
+    ]);
+  } catch (error) {
+    console.error("[ai/stream] 실시간 전달 준비 오류:", error instanceof Error ? error.message : error);
+  }
+}
+
 // 스트리밍 응답 처리 함수
 async function handleStreamingResponse(
   upstream: { response: Response; clearDeadline: () => void },
@@ -337,6 +375,8 @@ async function handleStreamingResponse(
     finishReason: string | null;
     usage: OpenAIUsage | null;
   } = { text: "", finishReason: null, usage: null };
+  // 저장에 성공한 AI 메시지 ID (스트림을 닫은 뒤 소켓으로 전달)
+  let savedForSocket: string | null = null;
 
   // 클라이언트가 떠나면 enqueue가 throw한다 → 전송만 멈추고, 업스트림은 끝까지 읽어 답변을 저장한다
   const send = (text: string) => {
@@ -492,6 +532,7 @@ async function handleStreamingResponse(
           where: { id: conversationId, lastMessageAt: { lte: aiCreatedAt } },
           data: { lastMessageAt: aiCreatedAt, lastMessageId: savedMessageId },
         });
+        savedForSocket = savedMessageId;
 
         // ✅ 스트림 마지막에 메타데이터 전송 (클라이언트가 createdAt 업데이트하도록)
         // ✅ 모바일 사파리: 메타데이터 전송 보장 (DONE 전에 전송)
@@ -550,6 +591,8 @@ async function handleStreamingResponse(
     } catch {
       // 이미 닫힌 경우 무시
     }
+    // 응답 스트림을 닫은 뒤 전달한다 (after()가 이 함수가 끝날 때까지 실행을 유지)
+    if (savedForSocket) await emitSavedAIMessage(ctx, savedForSocket);
   }
 }
 
@@ -684,7 +727,7 @@ export async function POST(req: NextRequest) {
     // 5. 대화방 권한 확인: 존재 + 참여자 + AI 채팅방을 한 쿼리로
     const conversation = await prisma.conversation.findFirst({
       where: { id: conversationId, userIds: { has: user.id }, isAIChat: true },
-      select: { id: true },
+      select: { id: true, userIds: true },
     });
     if (!conversation) {
       return NextResponse.json(
@@ -741,6 +784,7 @@ export async function POST(req: NextRequest) {
         streamDone = handleStreamingResponse(upstream, controller, client, {
           conversationId,
           userId: user.id,
+          userIds: conversation.userIds,
           messageId,
           existingAIMessageId,
           userMessageCreatedAt,

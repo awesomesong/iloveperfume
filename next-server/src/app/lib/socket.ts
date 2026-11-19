@@ -2,7 +2,7 @@
 import { io, type Socket } from "socket.io-client";
 
 const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL ??
+  process.env.NEXT_PUBLIC_SOCKET_URL ||
   "https://socket-server-muddy-shadow-6983.fly.dev";
 
 const TOKEN_FETCH_TIMEOUT_MS = 8_000;

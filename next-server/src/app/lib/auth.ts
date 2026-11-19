@@ -3,6 +3,7 @@ import { AuthOptions } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter } from "next-auth/adapters";
 import prisma from "@/prisma/db";
+import { getSocketServerUrl } from "@/src/app/lib/socketServer/socketServerUrl";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import KakaoProvider from "next-auth/providers/kakao";
@@ -123,7 +124,7 @@ export const authOptions: AuthOptions = {
     events: {
         createUser: async ({ user }) => {
             try {
-                const socketServerUrl = 'https://socket-server-muddy-shadow-6983.fly.dev';
+                const socketServerUrl = getSocketServerUrl();
                 await fetch(`${socketServerUrl}/api/user-registered`, {
                     method: 'POST',
                     headers: {
