@@ -207,6 +207,60 @@ export function parseProductPage(url: string, html: string): ProductPage | null 
   };
 }
 
+// ───────── 기사 페이지 ─────────
+
+/** 기사 본문이 아닌 영역 — 메뉴·광고·댓글·관련 기사 목록 */
+const NON_ARTICLE_BLOCK = /<(script|style|noscript|nav|header|footer|aside|form|figure|figcaption|button|select|iframe)\b[\s\S]*?<\/\1>/gi;
+/** 본문 문장으로 보는 줄의 최소 길이 — 메뉴·관련 기사 제목은 이보다 짧다 */
+const ARTICLE_LINE_MIN = 40;
+/** 본문 사이에 끼는 짧은 줄(사진 설명·소제목)을 이만큼까지는 본문에 이어 붙인다 */
+const ARTICLE_GAP_LINES = 2;
+const ARTICLE_MIN_LENGTH = 200;
+
+/** text: 본문(찾지 못하면 빈 문자열), image: 대표 이미지(og:image) */
+export type ArticlePage = { text: string; image: string };
+
+const compact = (text: string) => text.replace(/\s+/g, "").toLowerCase();
+
+/**
+ * 기사 페이지에서 본문 글과 대표 이미지를 읽는다.
+ * 1) 구조화 데이터(JSON-LD articleBody)가 있으면 그것
+ * 2) 없으면 긴 문장이 이어지는 가장 큰 덩어리 — 언론사마다 마크업이 달라 특정 태그·클래스에 기대지 않는다
+ * keywords(브랜드 표기)를 주면 그중 하나가 들어 있는 덩어리만 본문으로 본다 — 하단 고지문·다른 기사 목록을 고르지 않기 위해서다.
+ */
+export function parseArticlePage(html: string, keywords: readonly string[] = []): ArticlePage {
+  const image = metaContent(html, "og:image");
+  const keys = keywords.map(compact).filter(Boolean);
+  const mentions = (text: string) => keys.length === 0 || keys.some((key) => compact(text).includes(key));
+
+  const structured = jsonLdNodes(html)
+    .map((node) => plainText(node.articleBody))
+    .reduce((best, text) => (text.length > best.length ? text : best), "");
+  if (structured.length >= ARTICLE_MIN_LENGTH && mentions(structured)) return { text: structured, image };
+
+  const lines = htmlToText(html.replace(NON_ARTICLE_BLOCK, " ")).split("\n");
+  let best: string[] = [];
+  let bestLength = 0;
+  let run: string[] = [];
+  let runLength = 0;
+  let gap = 0;
+  const close = () => {
+    if (runLength > bestLength && mentions(run.join(" "))) [best, bestLength] = [run, runLength];
+    [run, runLength, gap] = [[], 0, 0];
+  };
+  for (const line of lines) {
+    if (line.length >= ARTICLE_LINE_MIN) {
+      run.push(line);
+      runLength += line.length;
+      gap = 0;
+    } else if (run.length > 0 && ++gap > ARTICLE_GAP_LINES) {
+      close();
+    }
+  }
+  close();
+  return { text: bestLength >= ARTICLE_MIN_LENGTH ? best.join("\n") : "", image };
+}
+
 // ───────── 사이트맵 ─────────
 
 const PRODUCT_SITEMAP_HINT = /product|item|goods|shop|catalog/i;

@@ -95,6 +95,21 @@ export const MAINTENANCE_START_LIMIT_MS = 28_000;
 /** 수집 대상 관리 한 단계에 쓰는 시간 */
 export const MAINTENANCE_BUDGET_MS = 22_000;
 
+// ───────── 출시 기사에서 등록 (공식 사이트를 읽을 수 없는 브랜드) ─────────
+
+/** 1회 실행에서 출시 기사를 찾아보는 브랜드 수 — 넘치면 날마다 순환한다 */
+export const NEWS_BRANDS_PER_RUN = 6;
+/** 브랜드 하나에서 1회 실행에 읽는 기사 수 (같은 출시를 다룬 기사 묶음마다 한 건) */
+export const NEWS_ARTICLES_PER_BRAND = 2;
+/** 1회 실행에서 LLM에 넘기는 기사 수 */
+export const NEWS_MAX_CANDIDATES = 4;
+/** 같은 브랜드의 출시 기사가 이 날수 안에 몰려 있으면 같은 보도자료를 여러 매체가 실은 것으로 본다 */
+export const NEWS_SAME_RELEASE_DAYS = 3;
+/** 제목·발췌문에 이 표현이 있어야 출시 기사 후보로 본다 */
+export const NEWS_LAUNCH_SIGNAL = /출시|선보|론칭|런칭|신제품|새 향수|신규/;
+/** 제목에 이 표현이 있으면 출시 기사가 아닌 것으로 본다 (행사·화보·실적·인터뷰) */
+export const NEWS_TITLE_EXCLUDE = /팝업|포토콜|화보|앰버서더|앰배서더|인터뷰|어워드|awards?|실적|매출|면세점|입점/i;
+
 // ───────── 향수 단품 판별 (브랜드별 규칙 없이 공통 표현으로) ─────────
 
 /** 상품 이름·유형·카테고리에 이 표현이 있으면 향수 후보로 본다 (영·불·한) */

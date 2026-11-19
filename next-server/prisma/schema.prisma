@@ -273,13 +273,16 @@ model ArrivalSource {
   @@index([brandKey])
 }
 
-// 사이트맵에서 본 상품 주소 — 게시일이 없는 사이트에서 "처음 본 날"로 신제품을 가린다
+// 수집하면서 본 주소.
+// - 상품 주소(article = false): 사이트맵에서 본 상품 주소 — 게시일이 없는 사이트에서 "처음 본 날"로 신제품을 가린다
+// - 기사 주소(article = true): 공식 사이트를 읽을 수 없는 브랜드의 출시 기사 — 한 번 판단한 기사를 다시 읽지 않는다
 model ArrivalSeenUrl {
   sourceId    String
   url         String
-  // 향수 단품인지. null이면 아직 열어 보지 않음
+  // 상품 주소: 향수 단품인지(null이면 아직 열어 보지 않음). 기사 주소: 이 기사로 향수를 등록했는지
   perfume     Boolean?
   firstSeenAt DateTime
+  article     Boolean       @default(false)
   source      ArrivalSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
 
   @@id([sourceId, url])

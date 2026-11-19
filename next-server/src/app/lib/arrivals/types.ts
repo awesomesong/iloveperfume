@@ -46,8 +46,19 @@ export type ArrivalCandidate = {
   bodyText: string;
   category: string;
   images: string[];
-  /** 같은 이름의 제품이 처음 등장한 날 */
+  /** 같은 이름의 제품이 처음 등장한 날 (출시 기사는 기사 발행일) */
   firstSeenAt: Date;
+  /**
+   * 있으면 공식 사이트가 아니라 출시 기사에서 온 후보다. 이때 title은 기사 제목, bodyText는 기사 본문,
+   * officialUrl은 기사 주소이고, name·nameKey는 비어 있다(향수 이름은 LLM이 기사에서 읽는다).
+   */
+  article?: {
+    /** 브랜드의 등록부 행(ArrivalSource) — 기사 주소를 기록할 때 쓴다 */
+    sourceId: string;
+    publisher: string;
+    /** 같은 출시를 다룬 다른 매체의 기사 주소 */
+    siblings: string[];
+  };
 };
 
 /** LLM 판정·작성을 거쳐 검증까지 통과한 저장 대상 */
@@ -70,7 +81,7 @@ export type ValidationRejectReason =
 export type ValidationResult = {
   accepted: DescribedArrival[];
   /** 저장하지 않는 후보와 그 사유 — 로그용 */
-  rejected: { brand: string; title: string; reason: ValidationRejectReason }[];
+  rejected: { brand: string; title: string; officialUrl: string; reason: ValidationRejectReason }[];
 };
 
 export type RuleDropReason =
@@ -96,6 +107,8 @@ export type ArrivalPipelineResult = {
   failedSources: number;
   collected: number;
   afterRules: number;
+  /** 출시 기사에서 온 후보 수 (candidates에 포함) */
+  newsCandidates: number;
   candidates: number;
   described: number;
   saved: number;

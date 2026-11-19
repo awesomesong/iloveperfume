@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { getFragranceBySlugServer, getFragranceSlugsServer } from '@/src/app/lib/getFragrances';
 import FragranceDetail from '@/src/app/components/fragrance/FragranceDetail';
 import FragranceDetailSkeleton from '@/src/app/components/FragranceDetailSkeleton';
+import { isLaunchArticleUrl } from '@/src/app/lib/arrivals/sourceStore';
 
 // 향수 상세는 데이터 변경 빈도가 낮으므로 ISR로 캐싱 (1시간)
 export const revalidate = 3600;
@@ -19,7 +20,12 @@ type Props = {
 
 async function FragranceContent({ slug }: { slug: string }) {
   const { fragrance } = await getFragranceBySlugServer(slug);
-  return <FragranceDetail slug={slug} fragrance={fragrance} />;
+  // 수집된 향수의 출처가 출시 기사면 화면에서 "공식 사이트"라고 적지 않는다. 확인하지 못하면 공식 사이트로 본다
+  const fromLaunchArticle =
+    fragrance.source === 'AI_AGENT' && fragrance.officialUrl
+      ? await isLaunchArticleUrl(fragrance.officialUrl).catch(() => false)
+      : false;
+  return <FragranceDetail slug={slug} fragrance={fragrance} fromLaunchArticle={fromLaunchArticle} />;
 }
 
 export default async function FragrancePage({ params }: Props) {

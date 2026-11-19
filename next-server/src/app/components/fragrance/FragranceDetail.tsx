@@ -17,9 +17,11 @@ type Props = {
   fragrance: FragranceWithAuthor;
   /** 네이버 쇼핑 검색어용 한글 이름 (서버에서 조회, 없으면 영문 이름 사용) */
   koreanName?: string | null;
+  /** 수집된 향수의 출처가 브랜드 공식 사이트가 아니라 언론의 출시 기사일 때 true (서버에서 조회) */
+  fromLaunchArticle?: boolean;
 };
 
-export default function FragranceDetail({ slug, fragrance: initialFragrance, koreanName }: Props) {
+export default function FragranceDetail({ slug, fragrance: initialFragrance, koreanName, fromLaunchArticle = false }: Props) {
   // 서버(SSG/ISR)에서 내려준 fragrance를 initialData로 두고,
   // FormFragrance가 수정 후 setQueryData(fragranceDetailKey(slug), ...)로 채워둔
   // react-query 캐시가 있으면 그 값을 그대로 읽어 화면에 반영한다.
@@ -78,7 +80,7 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance, kor
 
                   {isCollected && (
                     <p className="meta-line">
-                      <span>브랜드 공식 사이트 정보를 바탕으로 자동 수집</span>
+                      <span>{fromLaunchArticle ? '언론 보도를 바탕으로 자동 수집' : '브랜드 공식 사이트 정보를 바탕으로 자동 수집'}</span>
                     </p>
                   )}
                 </div>
@@ -125,6 +127,7 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance, kor
                   name={fragrance.name}
                   koreanName={shopKoreanName}
                   officialUrl={fragrance.officialUrl}
+                  officialUrlIsArticle={fromLaunchArticle}
                 />
               </div>
             </div>

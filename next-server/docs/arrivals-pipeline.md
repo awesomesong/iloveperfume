@@ -11,10 +11,12 @@ Vercel Cron (vercel.json, 매일 01:00 UTC = 10:00 KST)
   └─ GET /api/cron/perfume-arrivals       Authorization: Bearer CRON_SECRET
        0. loadSourcesForRun   DB 등록부(ArrivalSource)에서 수집 중(ACTIVE)인 사이트 — 오래 읽지 않은 것부터 최대 15곳
        1. collectArrivals     SHOPIFY: 상품 목록(/products.json) 전체 · SITEMAP: 사이트맵에서 처음 보는 상품 주소만 열기
+          collectLaunchNews   (동시에) 공식 사이트를 읽을 수 없는 브랜드의 출시 기사 — 2·3번을 거치지 않고 4번으로 간다
        2. filterByRules       향수 단품 판별(공통 규칙) · 제외 태그 · 묶음 구성 · 판매처 한정 · 용량만 다른 중복 합치기 · 처음 등장한 날이 60일 이내 · 이미지 · 소개문 길이
        3. excludeExisting     이미 있는 공식 URL · 다시 수집하지 않기로 한 URL(FragranceBlockedUrl) · 같은 브랜드+이름 제외
        4. describeArrivals    OpenAI 1회 호출 — 향수 단품 판정 + 한국어 소개·노트(JSON)
        5. validateDescriptions id 대조 · 향수 판정 · 확신도 · 이름이 제목에 있는지 · 설명 길이/한국어 · 노트 표기(용어집) · 최대 10건
+          settleNews          기사에서 온 후보는 향수 이름이 여기서 정해지므로 이때 이름 중복을 확인한다
        6. saveAsFragrances    Fragrance 저장 — 바로 공개 (officialUrl unique → 중복 실행에도 안전)
        7. maintainSources     시간이 남으면 수집 대상 관리를 한 단계 진행 (판정 → 공식 사이트 찾기 → 브랜드 찾기)
 ```
@@ -47,10 +49,11 @@ LLM이 쓰는 것은 이름 표기(제목과 대조)와 소개문뿐이다. 노�
 | `collectArrivals.ts` | 수집 (SHOPIFY·SITEMAP 공용 결과 형식) |
 | `filterArrivals.ts` | 규칙 필터, 이름 정리(`cleanName`), DB 중복 제외 |
 | `describeArrivals.ts` · `noteGlossary.ts` | 소개문 작성·검증, 노트 용어집 — **노트 표기를 바꾸거나 단어를 추가할 때는 용어집에서** |
+| `newsArrivals.ts` | 출시 기사에서 등록 — 기사 고르기·읽기, 판정 뒤 중복 정리 |
 | `probeSource.ts` | 사이트 자동 판정 (수집 가능 / 불가 / 보류) |
 | `discoverBrands.ts` | 판매처에서 브랜드 후보 찾기 |
 | `resolveBrandSites.ts` | 브랜드의 공식 사이트 찾기(웹 검색) + 주소 검증 |
-| `sourceStore.ts` | DB 등록부 읽기·쓰기 (`ArrivalSource`, `ArrivalSeenUrl`, `ArrivalBrandLead`) |
+| `sourceStore.ts` | DB 등록부 읽기·쓰기 (`ArrivalSource`, `ArrivalSeenUrl`, `ArrivalBrandLead`) — 기사 기록 포함 |
 | `maintainSources.ts` | 수집 대상 관리 단계 실행 |
 | `runPipeline.ts` | 전체 순서 |
 | `src/app/api/cron/perfume-arrivals/route.ts` | 크론 진입점 |
@@ -99,6 +102,35 @@ LLM이 쓰는 것은 이름 표기(제목과 대조)와 소개문뿐이다. 노�
 
 규칙이 놓친 것은 LLM 판정(4번 단계)이 한 번 더 거른다. 2026-11-19에 기존 두 브랜드(D.S. & Durga, Juliette Has a Gun) 362건으로 예전 브랜드별 규칙과 비교했을 때 통과 제품이 같았다.
 
+## 출시 기사에서 등록 (`newsArrivals.ts`)
+
+디올·에르메스·바이레도처럼 공식 사이트가 자동 요청을 막는 브랜드는 공식 사이트에서 수집할 수 없다(차단은 우회하지 않는다).
+이런 브랜드의 신제품은 **국내 언론의 출시 기사**에서 찾는다. 등록부에 있고 판정까지 마쳤지만 수집 중인 사이트가 없는 브랜드만 대상이다 —
+공식 사이트에서 수집하는 브랜드는 대상이 아니어서 같은 향수가 두 경로로 들어오지 않는다.
+
+```
+브랜드(하루 6곳, 순환) ─▶ 네이버 뉴스 검색 "{브랜드 한글 표기} 향수 출시" ─▶ 출시 기사 고르기 ─▶ 같은 출시 묶기
+   ─▶ 묶음마다 한 건 읽기(하루 최대 4건) ─▶ 공식 사이트 후보와 같은 LLM 호출·검증 ─▶ 이름 중복 확인 ─▶ 저장 + 기사 기록
+```
+
+공식 사이트 수집과 다른 점마다 장치를 뒀다.
+
+| 걸림돌 | 장치 |
+|--------|------|
+| 검색 결과의 발췌문만으로는 노트·설명을 쓸 수 없다 | 고른 기사에 한해 본문을 읽는다(JSON-LD `articleBody`, 없으면 긴 문장이 이어지는 가장 큰 덩어리 중 브랜드명이 있는 것). 본문은 읽기만 하고 저장하지 않는다. 본문을 못 찾으면 발췌문으로 대신한다 |
+| 브랜드·이름을 LLM이 지어낼 수 있다 | 브랜드는 등록부 표기로 고정하고, 제목에 그 표기가 있는 기사만 본다. 향수 이름은 낱말이 모두 기사에 있어야 받는다 |
+| 이름이 한글로 들어온다 | 기사에 영문 표기가 함께 있으면 영문을, 없으면 한글을 쓴다. 중복 확인은 영문 이름과 `FragranceKoreanName`의 한글 이름 둘 다와 견준다 |
+| 같은 보도자료를 여러 매체가 싣는다 | 같은 브랜드의 출시 기사가 3일 안에 몰려 있으면 한 묶음으로 보고 한 건만 읽는다(`NEWS_SAME_RELEASE_DAYS`). 등록되면 묶음 전체를 끝낸다 |
+| 팝업·실적·인터뷰·한정 패키지 기사가 섞인다 | 제목 규칙(`NEWS_LAUNCH_SIGNAL`, `NEWS_TITLE_EXCLUDE`)으로 먼저 거르고, "새로 출시된 향수 단품을 알리는 기사인지"는 LLM이 판정한다 |
+| 같은 기사를 날마다 다시 판단하면 비용이 든다 | 판단을 끝낸 기사 주소를 `ArrivalSeenUrl`(`article = true`)에 기록하고 다시 읽지 않는다. 출시 기사가 아니라고 판정된 기사만 끝내고, 같은 묶음의 다른 기사는 다음 실행에서 읽는다 |
+| 화면에서 기사를 공식 사이트라고 부르면 안 된다 | 상세 화면이 출처를 확인해 "언론 보도를 바탕으로 자동 수집", "출시 기사 보기"로 적는다 |
+
+- 매체는 뉴스 수집(`/news`)의 등록 매체 24곳으로 제한하지 않는다. 출시 기사는 대부분 그 밖의 매체에 실린다(2026-11-19 조사: 에르메스 7건 중 2건만 등록 매체). 대신 등록 매체의 기사를 먼저 읽고, `BLOCKED_DOMAINS`는 그대로 적용한다. 네이버 뉴스 검색에 나오는 것은 검색 제휴 언론사뿐이다.
+- 매체의 robots.txt가 금지하거나 자동 요청을 막으면 읽지 않는다. 대표 이미지가 `http://`뿐인 매체(일부 구형 사이트)는 화면에 그릴 수 없어 건너뛴다.
+- 한 기사에서 향수 하나만 등록한다. 기사가 향수 두 종을 함께 소개하면 먼저 소개한 하나만 들어온다.
+- `/news`에 싣는 뉴스 요약은 지금처럼 기사 본문을 읽지 않는다. 본문을 읽는 것은 이 경로에서 고른 출시 기사(하루 최대 4건)뿐이다.
+- 2026-11-19 시험(막힌 브랜드 6곳, 최근 60일): 출시 기사 후보 10건 → 바이레도 "하바나 통카", 불가리 "바치아미 앙코라" 2건 등록 대상, 홀리데이 한정 컬렉션·어워드·협업 홈 컬렉션 기사는 탈락. 디올·에르메스는 그 기간에 향수 단품 출시 기사가 없었다 — 이 경로는 한 달에 몇 건 수준이다.
+
 ## 한국 판매 기준
 
 **한국에서 살 수 있는 향수만** 올린다. 두 단계로 거른다.
@@ -108,6 +140,7 @@ LLM이 쓰는 것은 이름 표기(제목과 대조)와 소개문뿐이다. 노�
 | 브랜드 | 국내 판매처에 입점한 브랜드만 후보가 된다. 회원 등록으로만 알려진 브랜드는 공식 사이트가 한국 스토어(원화 판매·한국 주소·`.kr`)일 때만 켠다 | `ArrivalSource.koreaBasis`, `RETAILERS`, `MEMBER_LEAD_SOURCE` |
 | 제품 | 소개문에 판매처를 특정 매장·공식몰로 한정하는 문구가 있으면 뺀다(탈락 사유 `exclusiveChannel`) | `EXCLUSIVE_SALE_PATTERNS` |
 
+- 출시 기사로 들어오는 향수는 국내 언론이 국내 출시를 보도한 것이라 그 자체가 한국 판매 근거다.
 - 제품 단계 예: "sold exclusively at D.S. & Durga New York stores"(Rockaway Beach), "sold direct only". 프랑스어 스토어용으로 "vendu exclusivement…", "en exclusivité sur…"도 본다.
 - 문구는 판매 맥락으로 좁혀 잡는다. "exclusive" 한 단어로 잡으면 "Exclusive, Elégante et Somptueuse" 같은 수식어까지 걸린다.
 - 한계: 브랜드 단위 확인이라 막 나온 신제품이 아직 국내에 들어오지 않았을 수 있다. 상품별 국내 판매를 확인하려면 국내 쇼핑몰 검색이 필요한데, 네이버 쇼핑 검색 API는 2026-07-31에 종료됐다(ADR-0003).
@@ -198,7 +231,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3001/api/cron/per
 ## DB 마이그레이션
 
 - `20261117000000_fragrance_arrivals` — `Fragrance.source`, `Fragrance.officialUrl`(unique), `FragranceBlockedUrl` 추가.
-- `20261119000000_arrival_sources` — `ArrivalSource`, `ArrivalSeenUrl`, `ArrivalBrandLead` 추가. 새 테이블만 만들고 기존 데이터는 바꾸지 않는다. 코드에 적혀 있던 수집 대상 2곳(D.S. & Durga, Juliette Has a Gun)을 `ArrivalSource`에 옮겨 넣는다.
+- `20261119000000_arrival_sources` — `ArrivalSource`, `ArrivalSeenUrl`(상품 주소·기사 주소 기록), `ArrivalBrandLead` 추가. 새 테이블만 만들고 기존 데이터는 바꾸지 않는다. 코드에 적혀 있던 수집 대상 2곳(D.S. & Durga, Juliette Has a Gun)을 `ArrivalSource`에 옮겨 넣는다.
 
 **배포 전에 먼저 적용해야 한다** — Vercel 빌드는 마이그레이션을 실행하지 않는다. 적용하지 않고 배포하면 크론이 테이블을 찾지 못해 실패한다.
 
@@ -217,5 +250,6 @@ npx prisma generate
 - 상세 화면이 `description`·`notes`를 HTML로 렌더링하므로, 검증 단계에서 태그와 꺾쇠(`<`, `>`)를 모두 제거한다. 외부 데이터에서 온 글을 이 단계를 거치지 않고 저장하면 안 된다.
 - 요청에는 `Accept-Language`를 빈 값으로 보낸다. 이 헤더가 있으면 스토어가 요청 IP의 국가용 목록으로 줄여서 응답한다(DEDCOOL에서 확인).
 - 수집된 향수에는 작성자가 없다(`authorEmail = null`). 수정·삭제는 관리자만 할 수 있다.
-- 한국어 사이트에서 수집한 향수는 이름이 한글로 저장된다(예: 이솝 "사일런틀리, 휠"). 같은 향수가 영문 이름으로 이미 등록돼 있으면 이름 중복 확인에 걸리지 않는다.
+- 한국어 사이트·출시 기사에서 수집한 향수는 이름이 한글로 저장될 수 있다(예: 이솝 "사일런틀리, 휠", 바이레도 "하바나 통카"). 중복 확인은 등록된 향수의 한글 이름(`FragranceKoreanName`)과도 견주지만, 그 향수의 한글 이름이 아직 만들어지지 않았으면 걸리지 않는다.
+- `Fragrance.officialUrl`에는 공식 제품 페이지 또는 출시 기사 주소가 들어간다. 어느 쪽인지는 `ArrivalSeenUrl`에 그 주소가 기사(`article = true`)로 기록돼 있는지로 가린다(`isLaunchArticleUrl`).
 - 소개문에 향에 대한 설명이 없는 제품은 LLM 판정에서 걸러진다.

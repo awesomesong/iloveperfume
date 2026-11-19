@@ -26,7 +26,7 @@ export function effectiveTextLength(text: string): number {
 const NAMED_ENTITIES: Record<string, string> = {
   amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
   rsquo: "’", lsquo: "‘", rdquo: "”", ldquo: "“", bdquo: "„", ndash: "–", mdash: "—", hellip: "…",
-  times: "×", deg: "°", eacute: "é", egrave: "è", ecirc: "ê", euml: "ë", agrave: "à", acirc: "â",
+  times: "×", deg: "°", middot: "·", eacute: "é", egrave: "è", ecirc: "ê", euml: "ë", agrave: "à", acirc: "â",
   auml: "ä", ccedil: "ç", icirc: "î", iuml: "ï", ocirc: "ô", ouml: "ö", ugrave: "ù", ucirc: "û",
   uuml: "ü", szlig: "ß", Eacute: "É", Auml: "Ä", Ouml: "Ö", Uuml: "Ü", ntilde: "ñ", oacute: "ó", aacute: "á", iacute: "í",
 };

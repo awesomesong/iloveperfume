@@ -218,11 +218,16 @@ export async function findKnownUrls(urls: string[]): Promise<Set<string>> {
   return new Set([...saved, ...blocked].flatMap((row) => (row.officialUrl ? [row.officialUrl] : [])));
 }
 
-/** 이미 있는 향수를 제외한다: 처리한 공식 URL, 같은 브랜드+이름(사용자 등록분 포함, 대소문자 무시) */
+/**
+ * 이미 있는 향수를 제외한다: 처리한 공식 URL, 같은 브랜드+이름(사용자 등록분 포함, 대소문자 무시).
+ * 이름이 한글인 후보(한국어 사이트·출시 기사)는 등록된 향수의 한글 이름(FragranceKoreanName)과도 견준다 —
+ * 같은 향수가 영문 이름으로 이미 있을 때 한글 이름으로 또 등록되는 것을 막는다.
+ */
 export async function excludeExisting(candidates: ArrivalCandidate[]): Promise<ArrivalCandidate[]> {
   if (candidates.length === 0) return [];
+  const koreanNamed = candidates.filter((c) => /[가-힣]/.test(c.name));
 
-  const [knownUrls, sameName] = await Promise.all([
+  const [knownUrls, sameName, koreanNames] = await Promise.all([
     findKnownUrls(candidates.map((c) => c.officialUrl)),
     prisma.fragrance.findMany({
       where: {
@@ -233,10 +238,20 @@ export async function excludeExisting(candidates: ArrivalCandidate[]): Promise<A
       },
       select: { brand: true, name: true },
     }),
+    koreanNamed.length === 0
+      ? []
+      : prisma.fragranceKoreanName.findMany({
+          where: { OR: [...new Set(koreanNamed.map((c) => c.brand))].map((brand) => ({ brand: { equals: brand, mode: "insensitive" as const } })) },
+          select: { brand: true, korean: true },
+        }),
   ]);
   const knownNames = new Set(sameName.map((f) => `${toKey(f.brand)}\n${f.name.trim().toLowerCase()}`));
+  const knownKoreanNames = new Set(koreanNames.map((row) => `${toKey(row.brand)}\n${toKey(cleanName(row.korean))}`));
 
   return candidates.filter(
-    (c) => !knownUrls.has(c.officialUrl) && !knownNames.has(`${toKey(c.brand)}\n${c.name.trim().toLowerCase()}`),
+    (c) =>
+      !knownUrls.has(c.officialUrl) &&
+      !knownNames.has(`${toKey(c.brand)}\n${c.name.trim().toLowerCase()}`) &&
+      !knownKoreanNames.has(`${toKey(c.brand)}\n${toKey(c.name)}`),
   );
 }

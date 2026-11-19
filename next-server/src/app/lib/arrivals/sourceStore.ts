@@ -4,12 +4,14 @@ import {
   MAX_COLLECT_FAILURES,
   MAX_SOURCES_PER_RUN,
   MEMBER_LEAD_SOURCE,
+  NEWS_BRANDS_PER_RUN,
   REPROBE_DAYS,
   RESOLVE_MAX_ATTEMPTS,
   RETRY_PROBE_DAYS,
 } from "./config";
 import type { CollectResult, SeenStore } from "./collectArrivals";
 import type { BrandLead } from "./discoverBrands";
+import type { NewsBrand, NewsOutcome, NewsStore } from "./newsArrivals";
 import { findKnownUrls } from "./filterArrivals";
 import type { ProbeVerdict } from "./probeSource";
 import type { ResolveResult } from "./resolveBrandSites";
@@ -41,7 +43,10 @@ export async function loadSourcesForRun(): Promise<ArrivalSource[]> {
 
 export const seenStore: SeenStore = {
   async load(sourceId) {
-    return prisma.arrivalSeenUrl.findMany({ where: { sourceId }, select: { url: true, perfume: true, firstSeenAt: true } });
+    return prisma.arrivalSeenUrl.findMany({
+      where: { sourceId, article: false },
+      select: { url: true, perfume: true, firstSeenAt: true },
+    });
   },
   async save(sourceId, { added, marked, baseline }) {
     for (let i = 0; i < added.length; i += CHUNK) {
@@ -89,6 +94,50 @@ export async function recordCollectRun(sources: readonly ArrivalSource[], failed
       });
     }
   }
+}
+
+// ───────── 출시 기사 ─────────
+
+/**
+ * 출시 기사를 찾아볼 브랜드 — 등록부에 있고 판정까지 마쳤지만 수집 중인 공식 사이트가 없는 브랜드.
+ * 공식 사이트에서 수집하는 브랜드는 넣지 않는다(같은 향수가 두 경로로 들어오지 않게). 한도보다 많으면 날마다 순환한다.
+ */
+export async function loadNewsBrands(now: Date): Promise<NewsBrand[]> {
+  const rows = await prisma.arrivalSource.findMany({
+    orderBy: [{ brandKey: "asc" }, { rank: "asc" }, { host: "asc" }],
+    select: { id: true, brand: true, brandKey: true, aliases: true, status: true, reason: true },
+  });
+  const groups = new Map<string, typeof rows>();
+  for (const row of rows) groups.set(row.brandKey, [...(groups.get(row.brandKey) ?? []), row]);
+
+  const brands = [...groups.values()]
+    .filter((group) => group.every((row) => row.status !== "ACTIVE" && row.reason !== null))
+    .map((group) => ({ sourceId: group[0].id, brand: group[0].brand, aliases: [...new Set(group.flatMap((row) => row.aliases))] }));
+  if (brands.length <= NEWS_BRANDS_PER_RUN) return brands;
+  const start = (Math.floor(now.getTime() / DAY_MS) * NEWS_BRANDS_PER_RUN) % brands.length;
+  return Array.from({ length: NEWS_BRANDS_PER_RUN }, (_, i) => brands[(start + i) % brands.length]);
+}
+
+export const newsStore: NewsStore = {
+  async seenArticles(sourceIds) {
+    const rows = await prisma.arrivalSeenUrl.findMany({ where: { sourceId: { in: sourceIds }, article: true }, select: { url: true } });
+    return new Set(rows.map((row) => row.url));
+  },
+  unsaved: seenStore.unsaved,
+};
+
+/** 판단을 끝낸 기사를 기록한다 — 다음 실행에서 다시 읽지 않는다 */
+export async function recordArticles(outcomes: readonly NewsOutcome[]): Promise<void> {
+  if (outcomes.length === 0) return;
+  await prisma.arrivalSeenUrl.createMany({
+    data: outcomes.map(({ sourceId, url, saved, publishedAt }) => ({ sourceId, url, perfume: saved, firstSeenAt: publishedAt, article: true })),
+    skipDuplicates: true,
+  });
+}
+
+/** 수집된 향수의 출처 주소가 출시 기사인지 (화면에서 "공식 사이트"와 구분해 적는 데 쓴다) */
+export async function isLaunchArticleUrl(url: string): Promise<boolean> {
+  return (await prisma.arrivalSeenUrl.findFirst({ where: { url, article: true }, select: { url: true } })) !== null;
 }
 
 // ───────── 판정 ─────────
