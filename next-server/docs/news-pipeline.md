@@ -14,8 +14,8 @@ Vercel Cron (vercel.json, 매일 00:00 UTC = 09:00 KST)
        3. filterCandidates    48시간 이내 · 검증된 매체만 통과(TRUSTED_DOMAINS 화이트리스트 또는 네이버 뉴스 제휴 매체 인링크)
                               · 차단 도메인 · 제외 키워드 · 향수 기사 판별(perfumeArticle.ts) · URL 중복
                               · 같은 소식 중복(이번 실행의 다른 후보 + 최근 3일 게시 글 제목과 비교, dedupe.ts) · DB에 있는 URL 제외
-       4. selectAndSummarize  OpenAI 1회 호출 — 선별 + 제목·요약(JSON)
-       5. validateSelection   id 대조 · 카테고리 · 관련도 · 길이 · 같은 소식 중복 안전망(LLM 제목 vs 최근 3일 글·이번 선별분)
+       4. selectAndSummarize  OpenAI 1회 호출(OPENAI_TEXT_MODEL) — 선별 + 제목·요약(JSON)
+       5. validateSelection   id 대조 · 카테고리 · 관련도 · 상투어·작성 과정 언급 문장 제거(FILLER_SENTENCE_PATTERNS) · 길이 · 같은 소식 중복 안전망(LLM 제목 vs 최근 3일 글·이번 선별분)
                               · 이번 실행에서 브랜드당 1건 · 최근 3일 같은 브랜드 글과는 낮은 기준(0.3)으로 같은 소식 판별 · 최대 5건
        6. fetchOgImage        선별된 기사(최대 5건)에 한해 원문 og:image를 최선형으로 가져옴 — 실패해도 null로 계속 진행
        7. saveAsNotices       Notice 저장 — 바로 공개 (sourceUrl unique → 중복 실행에도 안전)
@@ -145,4 +145,6 @@ npx prisma generate
 - 기사 본문을 가져오지 않는다. 검색 API의 제목·발췌문으로 만든 요약과 원문 링크만 싣는다.
 - 기사 이미지는 선별된 기사에 한해 원문의 og:image(없으면 twitter:image)를 최선형으로 가져와 그대로 링크한다(`fetchImage.ts`). 재호스팅·캐싱하지 않으므로 원문 이미지가 바뀌거나 사이트가 핫링크를 막으면(Referer 체크 등) 화면에서 조용히 빠진다 — 이미지는 있으면 좋고 없어도 되는 부가 정보다.
 - 수집 대상은 `config.ts`의 `TRUSTED_DOMAINS`(= `SOURCE_NAME_BY_DOMAIN`에 등록된 매체)와 네이버 뉴스 제휴 매체로 제한한다. 새 매체를 추가하려면 `SOURCE_NAME_BY_DOMAIN`에 도메인→매체명을 등록한다.
+- 제목·요약 작성 기준(프롬프트 `[작성 규칙]`): 제목과 첫 문장만 읽어도 어느 브랜드가 무엇을 했는지 알 수 있게 쓴다. 이름 없는 주어("한 30대 사업가"), 잘린 발췌문의 이름("디즈니 영화 '팀..."), 한 기사에 나온 다른 브랜드의 사실, 기사에 없는 날짜·전망은 쓰지 않는다.
+  2026-11 같은 후보 29건 비교에서 gpt-4o-mini는 이 기준을 자주 어겨 AI 채팅과 같은 모델(`lib/ai/models.ts`)로 바꿨다. 프롬프트를 바꾸면 `?dryRun=1`로 제목·요약을 직접 읽어 확인한다.
 - `summary`는 일반 텍스트다. HTML을 저장하거나 `dangerouslySetInnerHTML`로 렌더링하지 않는다.
