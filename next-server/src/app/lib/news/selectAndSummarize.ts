@@ -1,14 +1,17 @@
 import { NEWS_CATEGORIES, isNewsCategory } from "./categories";
 import {
+  DUPLICATE_SIMILARITY_THRESHOLD,
   MAX_PUBLISH_PER_RUN,
   MIN_RELEVANCE,
   OPENAI_MODEL,
   OPENAI_TIMEOUT_MS,
+  SAME_BRAND_SIMILARITY_THRESHOLD,
   SUMMARY_MAX_LENGTH,
   SUMMARY_MIN_LENGTH,
   TITLE_MAX_LENGTH,
 } from "./config";
 import { toPlainText } from "./collectNews";
+import { compactText, createTitleSimilarity, isSimilarToAny } from "./dedupe";
 import type { NewsCandidate, SelectedNews } from "./types";
 
 const OPENAI_API = "https://api.openai.com/v1/chat/completions";
@@ -27,7 +30,9 @@ articles 중에서 향수 애호가에게 실제로 유용한 "향수 소식"만
 - 주가·실적·투자 등 기업 재무 기사
 - 향수가 중심이 아닌 기사(화장품·패션 기사에 향수가 한 줄 언급된 경우 포함)
 - 광고 모델·앰배서더 발탁만 다룬 기사, 단순 할인·세일 안내
-- "고향에 대한 향수"처럼 향(香)과 무관한 기사
+- 향수가 사은품·샘플 증정으로만 언급된 기사
+- 매장·플랫폼·유통사의 매출·방문객 기사에서 향수가 판매 품목 중 하나로 나열된 경우
+- "향수"가 추억·그리움의 뜻으로 쓰인 기사("고향에 대한 향수", "어린 시절의 향수를 자극" 등 향(香)과 무관한 기사)
 - recentTitles에 있는 글과 같은 소식을 다룬 기사
 - 같은 소식을 다룬 기사가 여러 개면 가장 정보가 많은 한 건만 고른다
 
@@ -101,11 +106,15 @@ function clampSummary(summary: string): string {
 /**
  * LLM 출력 검증 (순수 함수). LLM이 돌려준 값은 그대로 믿지 않는다.
  * - id는 실제 후보 목록에 있어야 한다 (URL·매체명·발행일은 LLM이 아니라 후보 원본에서 가져온다)
- * - 카테고리·점수·길이 검사, HTML 제거, 브랜드당 1건, 최대 게시 수 제한
+ * - 카테고리·점수·길이 검사, HTML 제거, 이번 실행에서 브랜드당 1건, 최대 게시 수 제한
+ * - 최근 글에 같은 브랜드 글이 있으면 그 글과의 제목 유사도를 SAME_BRAND_SIMILARITY_THRESHOLD(더 낮은 기준)로 본다
+ * - 중복 안전망: recentTitles(최근 DUPLICATE_LOOKBACK_DAYS일 게시 글 제목)와 같은 소식이면 제외한다.
+ *   프롬프트의 "recentTitles와 같은 소식 제외" 지시는 LLM이 지키지 않을 때가 있어 코드로 한 번 더 막는다.
  */
 export function validateSelection(
   rawItems: unknown,
   candidates: NewsCandidate[],
+  recentTitles: string[] = [],
 ): SelectedNews[] {
   if (!Array.isArray(rawItems)) return [];
 
@@ -134,12 +143,38 @@ export function validateSelection(
     valid.push({ candidate, category: raw.category, relevance, brand, title, summary });
   }
 
-  // 관련도 높은 순으로, 같은 브랜드는 1건만
+  // IDF 코퍼스: 후보 기사(제목+발췌문) + 최근 게시 글 제목 + LLM이 쓴 제목
+  const similarity = createTitleSimilarity([
+    ...candidates.map((c) => `${c.title} ${c.description}`),
+    ...recentTitles,
+    ...valid.map((item) => item.title),
+  ]);
+  const compactRecentTitles = recentTitles.map(compactText);
+
+  // 관련도 높은 순으로, 최근 글·이번 실행에서 고른 글과 같은 소식은 제외, 이번 실행에서 같은 브랜드는 1건만
   valid.sort((a, b) => b.relevance - a.relevance);
   const usedBrands = new Set<string>();
   const result: SelectedNews[] = [];
   for (const item of valid) {
-    const brandKey = item.brand?.toLowerCase().replace(/\s+/g, "");
+    const isDuplicateTitle =
+      isSimilarToAny(similarity, item.title, recentTitles, DUPLICATE_SIMILARITY_THRESHOLD) ||
+      isSimilarToAny(similarity, item.title, result.map((r) => r.title), DUPLICATE_SIMILARITY_THRESHOLD);
+    if (isDuplicateTitle) continue;
+
+    // 최근 글 중 같은 브랜드 글과는 더 낮은 기준(SAME_BRAND_SIMILARITY_THRESHOLD)으로 같은 소식인지 본다
+    // — 브랜드만 같고 다른 소식(샤넬 신제품 다음 날의 샤넬 화보)은 싣는다
+    const brandKey = item.brand ? compactText(item.brand) : "";
+    if (
+      brandKey.length >= 2 &&
+      recentTitles.some(
+        (recent, i) =>
+          compactRecentTitles[i].includes(brandKey) &&
+          similarity(item.title, recent) >= SAME_BRAND_SIMILARITY_THRESHOLD,
+      )
+    ) {
+      continue;
+    }
+
     if (brandKey) {
       if (usedBrands.has(brandKey)) continue;
       usedBrands.add(brandKey);
@@ -154,6 +189,8 @@ export function validateSelection(
 export async function selectAndSummarize(
   candidates: NewsCandidate[],
   recentTitles: string[],
+  /** 중복 안전망용 — 최근 DUPLICATE_LOOKBACK_DAYS일 안에 만든 글 제목(내린 글 포함) */
+  lookbackTitles: string[] = [],
 ): Promise<SelectedNews[]> {
   if (candidates.length === 0) return [];
 
@@ -208,5 +245,5 @@ export async function selectAndSummarize(
     throw new Error("OpenAI 응답을 JSON으로 해석하지 못했습니다.");
   }
 
-  return validateSelection(parsed.items, candidates);
+  return validateSelection(parsed.items, candidates, lookbackTitles);
 }
