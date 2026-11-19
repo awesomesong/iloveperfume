@@ -2,8 +2,8 @@ import { useSocket } from "../context/socketContext";
 import { useEffect, useCallback } from "react";
 import useActiveList from "./useActiveList";
 
+// 서버는 userId만 보낸다 (이메일은 보내지 않음)
 interface OnlineUserPayload {
-  useremail: string;
   userId: string;
 }
 

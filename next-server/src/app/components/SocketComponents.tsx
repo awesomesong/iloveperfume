@@ -20,6 +20,8 @@ export default function SocketConnectionGuard() {
   const delayedRetryRef = useRef<number | undefined>(undefined);
 
   // ✅ online:user emit 함수
+  // 서버는 연결 인증 때 이미 사용자를 알고 있으므로 신원 정보는 보내지 않는다.
+  // (빈 객체는 페이로드를 구조 분해하는 구버전 서버 핸들러가 죽지 않게 하기 위함)
   const emitOnlineUser = useCallback(() => {
     if (hasEmittedOnlineRef.current || !socket) {
       return;
@@ -28,16 +30,12 @@ export default function SocketConnectionGuard() {
     if (
       socket.connected &&
       status === "authenticated" &&
-      session?.user?.email &&
       session?.user?.id
     ) {
-      socket.emit("online:user", {
-        useremail: session.user.email,
-        userId: session.user.id,
-      });
+      socket.emit("online:user", {});
       hasEmittedOnlineRef.current = true;
     } 
-  }, [socket, status, session?.user?.email, session?.user?.id]);
+  }, [socket, status, session?.user?.id]);
 
   // ✅ 소켓 연결 이벤트 리스너 등록
   useEffect(() => {
@@ -120,7 +118,7 @@ export default function SocketConnectionGuard() {
   useEffect(() => {
     hasEmittedOnlineRef.current = false;
     emitOnlineUser();
-  }, [session?.user?.id, session?.user?.email, emitOnlineUser]);
+  }, [session?.user?.id, emitOnlineUser]);
 
   return null;
 }
