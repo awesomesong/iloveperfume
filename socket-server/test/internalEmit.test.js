@@ -45,6 +45,18 @@ test("정상 message 이벤트를 통과시키고 수신자 중복을 제거한�
   assert.equal(res.events[0].message.id, "m1");
 });
 
+test("message: id·conversationId만 있으면 통과하고, 나머지 필드는 받은 그대로 둔다", () => {
+  const minimal = { id: "m1", conversationId: "c1" };
+  const r1 = validateEmitRequest({ events: [{ kind: "message", message: minimal, userIds: ["a"] }] });
+  assert.equal(r1.ok, true);
+  assert.deepEqual(r1.events[0].message, { id: "m1", conversationId: "c1" });
+  // 미리보기용으로 줄인 필드·시스템 메시지·알 수 없는 필드도 검사하지 않고 통과
+  const preview = { id: "m2", conversationId: "c1", type: "system", body: null, extra: { nested: [1, 2] } };
+  const r2 = validateEmitRequest({ events: [{ kind: "message", message: preview, userIds: ["a", "b"] }] });
+  assert.equal(r2.ok, true);
+  assert.equal(r2.events[0].message, preview); // 같은 객체 (복사·변형 없음)
+});
+
 test("본문 형식이 틀리면 거부한다", () => {
   for (const body of [null, "x", [], {}, { events: [] }, { events: "x" }]) {
     assert.equal(validateEmitRequest(body).ok, false, JSON.stringify(body));
@@ -120,6 +132,18 @@ test("rev는 단조 증가한다", () => {
   assert.equal(nextRoomRev(undefined, 1000), 1000);
   assert.equal(nextRoomRev(5000, 1000), 5001);
   assert.equal(nextRoomRev(999, 1000), 1000);
+});
+
+test("rev: 서버 전체 단일 카운터로 같은 밀리초에 여러 방 이벤트가 와도 계속 증가한다", () => {
+  let last = 0;
+  const revs = [];
+  for (let i = 0; i < 5; i++) {
+    last = nextRoomRev(last, 1000); // 시계가 멈춰 있어도
+    revs.push(last);
+  }
+  assert.deepEqual(revs, [1000, 1001, 1002, 1003, 1004]);
+  // 시계가 뒤로 가도 줄지 않는다
+  assert.equal(nextRoomRev(last, 500), 1005);
 });
 
 test("room.event 페이로드는 기존 리스너 형식 그대로 (member.left만 recipients 포함)", () => {

@@ -12,22 +12,58 @@ import { getSocketServerUrl } from "./socketServerUrl";
 
 const EMIT_TIMEOUT_MS = 2_000;
 
-/** 메시지를 받는 쪽(클라이언트)이 기대하는 형태 — api/messages 응답의 newMessage와 같다 */
+/**
+ * 소켓으로 보내는 메시지 (receive:conversation) — 클라이언트가 실제로 읽는 필드만 담는다.
+ * - id·conversationId·type·createdAt: 캐시 병합·정렬·중복 제거 (chatCache의 normalizeMessage / upsertMessageSortedInCache)
+ * - body·image·sender.name·sender.image: 말풍선·아바타(MessageView)와 목록 미리보기(bumpConversationOnNewMessage)
+ * - sender.id: 내 메시지 판별(MessageView isOwn, SocketState·Body), 안 읽은 수 계산
+ * - conversation.isGroup: 그룹 읽음 표시·읽은 사용자 요청(Body processReadState)
+ * - conversation.userIds: 참여자 판별(Body liveUsersKey → MessageView의 나간 사용자 표시)
+ * - isAIResponse: AI 답변이면 true (없으면 false로 본다)
+ * 보내지 않는 것: 발신자 이메일(화면에 안 씀), serverCreatedAtMs(createdAt에서 계산), isError(소켓 경로에서 읽지 않음),
+ *   clientMessageId(메시지 id가 이미 낙관적 id와 같다)
+ */
 export type SocketMessagePayload = {
   id: string;
   conversationId: string;
-  body: string | null;
-  image: string | null;
   type: string | null;
   createdAt: Date | string;
-  serverCreatedAtMs: number;
-  sender: { id: string; name: string | null; email: string | null; image: string | null };
+  body: string | null;
+  /** 이미지 메시지일 때만 */
+  image?: string | null;
+  sender: { id: string; name: string | null; image: string | null };
   conversation: { isGroup: boolean; userIds: string[] };
-  isAIResponse: boolean;
-  isError: boolean;
-  /** 보낸 탭의 낙관적 메시지 ID (서버 ID와 같게 저장하지만 기존 클라이언트 호환을 위해 같이 보낸다) */
-  clientMessageId?: string;
+  isAIResponse?: true;
 };
+
+/** DB에서 읽은 메시지 (select 결과). 필요한 필드만 골라 SocketMessagePayload로 만든다 */
+export type SocketMessageSource = {
+  id: string;
+  conversationId: string;
+  type: string | null;
+  createdAt: Date | string;
+  body: string | null;
+  image?: string | null;
+  isAIResponse?: boolean | null;
+  sender: { id: string; name: string | null; image: string | null };
+};
+
+export function toSocketMessage(
+  message: SocketMessageSource,
+  conversation: { isGroup: boolean; userIds: string[] },
+): SocketMessagePayload {
+  return {
+    id: message.id,
+    conversationId: message.conversationId,
+    type: message.type,
+    createdAt: message.createdAt,
+    body: message.body,
+    ...(message.type === "image" ? { image: message.image ?? null } : {}),
+    sender: { id: message.sender.id, name: message.sender.name, image: message.sender.image },
+    conversation: { isGroup: conversation.isGroup, userIds: conversation.userIds },
+    ...(message.isAIResponse ? { isAIResponse: true as const } : {}),
+  };
+}
 
 export type SocketEmitEvent =
   | { kind: "message"; message: SocketMessagePayload; userIds: string[] }
@@ -108,7 +144,14 @@ export function queueSocketEvents(events: SocketEmitEvent[]): void {
   }
 }
 
-/** 새 메시지 → 참여자 전원(보낸 사람의 다른 탭 포함)에게 */
-export function messageEvent(message: SocketMessagePayload, userIds: string[]): SocketEmitEvent {
-  return { kind: "message", message, userIds };
+/**
+ * 새 메시지 → 참여자 전원(보낸 사람의 다른 탭 포함)에게 receive:conversation으로.
+ * conversation.userIds는 받는 사람(userIds)과 다를 수 있다 (예: 나가기 시스템 메시지는 남은 사람 기준).
+ */
+export function messageEvent(
+  message: SocketMessageSource,
+  conversation: { isGroup: boolean; userIds: string[] },
+  userIds: string[],
+): SocketEmitEvent {
+  return { kind: "message", message: toSocketMessage(message, conversation), userIds };
 }

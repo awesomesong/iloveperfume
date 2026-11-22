@@ -180,7 +180,6 @@ export async function DELETE(req: Request, { params }: ParamsProp) {
               select: {
                 id: true,
                 name: true,
-                email: true,
                 image: true,
               },
             },
@@ -217,22 +216,7 @@ export async function DELETE(req: Request, { params }: ParamsProp) {
     if (result.event === "member.left" && result.systemMessage && remaining.length > 0) {
       const sm = result.systemMessage;
       socketEvents.push(
-        messageEvent(
-          {
-            id: sm.id,
-            conversationId: sm.conversationId,
-            body: sm.body,
-            image: null,
-            type: sm.type,
-            createdAt: sm.createdAt,
-            serverCreatedAtMs: new Date(sm.createdAt).getTime(),
-            sender: sm.sender,
-            conversation: { isGroup: true, userIds: remaining },
-            isAIResponse: false,
-            isError: false,
-          },
-          remaining,
-        ),
+        messageEvent(sm, { isGroup: true, userIds: remaining }, remaining),
       );
     }
     socketEvents.push(

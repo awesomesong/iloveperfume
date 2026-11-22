@@ -336,23 +336,12 @@ async function emitSavedAIMessage(ctx: StreamContext, messageId: string) {
         createdAt: true,
         conversationId: true,
         isAIResponse: true,
-        isError: true,
-        sender: { select: { id: true, name: true, email: true, image: true } },
+        sender: { select: { id: true, name: true, image: true } },
       },
     });
     if (!msg) return;
     await sendSocketEvents([
-      messageEvent(
-        {
-          ...msg,
-          isAIResponse: true,
-          isError: !!msg.isError,
-          serverCreatedAtMs: msg.createdAt.getTime(),
-          conversation: { isGroup: false, userIds: ctx.userIds },
-          clientMessageId: msg.id,
-        },
-        ctx.userIds,
-      ),
+      messageEvent({ ...msg, isAIResponse: true }, { isGroup: false, userIds: ctx.userIds }, ctx.userIds),
     ]);
   } catch (error) {
     console.error("[ai/stream] 실시간 전달 준비 오류:", error instanceof Error ? error.message : error);

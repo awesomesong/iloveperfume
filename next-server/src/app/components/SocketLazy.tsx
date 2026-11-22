@@ -1,10 +1,6 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-const SocketComponents = dynamic(
-  () => import('@/src/app/components/SocketComponents'),
-  { ssr: false }
-);
 const SocketState = dynamic(
   () => import('@/src/app/components/SocketState'),
   { ssr: false }
@@ -17,7 +13,6 @@ const UserActiveStatus = dynamic(
 export default function SocketLazy() {
   return (
     <>
-      <SocketComponents />
       <SocketState />
       <UserActiveStatus />
     </>

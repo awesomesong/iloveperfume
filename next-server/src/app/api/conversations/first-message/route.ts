@@ -106,7 +106,7 @@ function buildResponse(conv: ConvShape, msg: MsgShape, existingConversation: boo
       : [{ kind: "users" as const, event: "conversation:new" as const, payload: { ...conversation, firstMessage: newMessage }, userIds }]),
     // 멱등 경로(P2002)에서 다른 방의 메시지가 돌아온 경우는 보내지 않는다
     ...(msg.conversationId === conv.id
-      ? [messageEvent({ ...newMessage, isAIResponse: false, isError: false, clientMessageId: msg.id }, userIds)]
+      ? [messageEvent(msg, newMessage.conversation, userIds)]
       : []),
   ]);
 

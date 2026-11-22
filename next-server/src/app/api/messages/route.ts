@@ -114,13 +114,7 @@ export async function POST(req: NextRequest) {
     // 실시간 전달: 참여자는 DB의 userIds 기준 (보낸 사람의 다른 탭 포함, 보낸 탭은 같은 id로 중복 제거)
     // 멱등 경로(P2002)에서 다른 방·다른 사람의 메시지가 돌아온 경우는 보내지 않는다
     if (result.conversationId === conv.id && result.sender?.id === user.id) {
-      const clientMessageId = typeof messageId === "string" && messageId ? messageId : undefined;
-      queueSocketEvents([
-        messageEvent(
-          { ...newMessage, isAIResponse: !!result.isAIResponse, isError: !!result.isError, clientMessageId },
-          conv.userIds,
-        ),
-      ]);
+      queueSocketEvents([messageEvent(result, newMessage.conversation, conv.userIds)]);
     }
 
     // 응답
