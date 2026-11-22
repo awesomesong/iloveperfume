@@ -267,7 +267,6 @@ const SocketState = () => {
 
   // 상태 refs
   const userIdRef = useRef<string | null>(null);
-  const emailRef = useRef<string | null>(null);
   const lastSocketRef = useRef<ReturnType<typeof useSocket> | null>(null);
   const myHandlersRef = useRef<Map<string, (...args: unknown[]) => void>>(
     new Map(),
@@ -396,7 +395,6 @@ const SocketState = () => {
       // ✅ pending NEW/EXIT 먼저 적용
       reconcileAfterList();
 
-      // ✅ 서버 큐잉으로 메시지 복구 - 워터마크 불필요
       const listNow = queryClient.getQueryData(conversationListKey) as ConversationListData | undefined;
 
       // ✅ LIVE 모드 진입 시 읽음 처리
@@ -412,7 +410,11 @@ const SocketState = () => {
   }, [reconcileAfterList, syncActiveConversationRead, queryClient]);
 
   // ✅ 소켓 핸들러들 (useEffect 밖에서 정의)
-  const handleSocketConnect = useCallback(async () => {
+  // fromConnectEvent: 소켓 connect 이벤트로 불렸는가.
+  //   true  → 방금 연결됨. 이 시점에 이미 있는 캐시는 연결 전에 받은 것이라, 그 사이(첫 로드면 조회~연결, 재접속이면 끊긴 동안)
+  //           온 메시지가 빠져 있을 수 있다 — 서버는 오프라인 메시지를 쌓아 두지 않는다.
+  //   false → 마운트 시점에 소켓이 이미 연결돼 있던 경우. 캐시를 받는 동안에도 연결돼 있었으므로 공백이 없다.
+  const handleSocketConnect = useCallback(async (fromConnectEvent = false) => {
     // ✅ 로그인되어 있을 때만 실행
     if (status !== "authenticated") return;
 
@@ -423,8 +425,35 @@ const SocketState = () => {
     const existingList = queryClient.getQueryData(conversationListKey) as ConversationListData | undefined;
     const hasListNow = !!(existingList?.conversations?.length);
 
-    // ✅ 리스트가 없으면 기본 fetch만 실행 (서버 큐잉과 별개)
-    if (!hasListNow) {
+    if (fromConnectEvent) {
+      // ✅ 다른 방 메시지 캐시: 연결 전에 받아 둔 것이므로 요청 없이 stale로만 표시 → 다시 열 때 새로 받는다
+      //    (열려 있는 방은 Body가 같은 connect 이벤트에서 최신 페이지만 받아 병합한다 — 낙관적 메시지 보존)
+      const activeId = String(conversationIdRef.current ?? "");
+      queryClient.invalidateQueries({
+        queryKey: ["messages"],
+        refetchType: "none",
+        predicate: (q) => String(q.queryKey[1] ?? "") !== activeId,
+      });
+    }
+
+    // 연결 시점에 첫 조회가 진행 중이면 그 DB 읽기가 연결 전에 끝났을 수 있으므로 같은 경로로 다시 받는다
+    // (refetchQueries는 진행 중인 요청을 취소하고 새로 보낸다)
+    const listFetching = queryClient.isFetching({ queryKey: conversationListKey, exact: true }) > 0;
+    if (fromConnectEvent && (existingList !== undefined || listFetching)) {
+      // ✅ 연결 전에 받아 둔 목록이 있으면(첫 연결·재접속 모두) 다시 받아 미리보기·안 읽은 수를 DB 기준으로 맞춘다.
+      //    받는 동안 오는 실시간 메시지는 기존 버퍼(processList)가 처리한다.
+      //    (브라우저 네트워크 복구 때의 목록 재조회는 끈다 — ConversationList의 refetchOnReconnect: false)
+      // 아래 checkFetching 폴링(100ms)을 기다리지 않고 바로 버퍼 모드로 — 재조회 직후 도착하는 메시지가 응답에 덮이지 않게
+      listReadyRef.current = false;
+      queryClient
+        .refetchQueries({ queryKey: conversationListKey, exact: true })
+        .then(() => syncActiveConversationRead())
+        .catch((err) => {
+          if (err instanceof CancelledError) return;
+          console.error('[SocketState] 연결 후 conversationList 재조회 실패:', err);
+        });
+    } else if (!hasListNow) {
+      // ✅ 리스트가 없으면 기본 fetch만 실행 (연결 후에 받으므로 공백 없음)
       // ensureQueryData: 캐시에 없으면 fetch, 있으면 재사용
       queryClient.ensureQueryData({
         queryKey: conversationListKey,
@@ -513,10 +542,10 @@ const SocketState = () => {
       upsertMessageSortedInCache(queryClient, convId, canonical, { keepShownTime: true });
 
       // ✅ 활성 방 처리
-      const myEmail = emailRef.current ?? "";
+      const myUserId = userIdRef.current ?? "";
       const activeId = String(conversationIdRef.current ?? "");
       const isActive = activeId === convId;
-      const isMyMessage = String(msg?.sender?.email ?? "").toLowerCase() === myEmail.toLowerCase();
+      const isMyMessage = !!myUserId && getMessageSenderId(msg) === myUserId;
 
       if (isActive) {
         applyLocalRead(queryClient, convId);
@@ -773,12 +802,9 @@ const SocketState = () => {
       // firstMessage가 있는 새 대화방이고 현재 보고 있지 않으면 안읽은 수 1 증가
       // 단, 내가 보낸 첫 메시지는 안읽음 카운트에서 제외 (conversationIdRef 미갱신 타이밍 대응)
       if (firstMsg && String(id) !== String(conversationIdRef.current)) {
-        const myEmail = (emailRef.current ?? "").toLowerCase();
-        const myUserId = (userIdRef.current ?? "").toLowerCase();
-        const senderEmail = String(firstMsg.sender?.email ?? "").toLowerCase();
-        const senderId = String(firstMsg.sender?.id ?? firstMsg.senderId ?? "").toLowerCase();
-        const isFirstMsgMine =
-          (myEmail && senderEmail === myEmail) || (myUserId && senderId === myUserId);
+        const myUserId = userIdRef.current ?? "";
+        const senderId = String(firstMsg.sender?.id ?? firstMsg.senderId ?? "");
+        const isFirstMsgMine = !!myUserId && senderId === myUserId;
         if (!isFirstMsgMine) addAndClampUnread(queryClient, id, 1);
       }
 
@@ -914,14 +940,12 @@ const SocketState = () => {
   }, [queryClient]);
 
   useEffect(() => {
-    if (status === "authenticated" && session?.user?.id && session.user.email) {
+    if (status === "authenticated" && session?.user?.id) {
       userIdRef.current = String(session.user.id);
-      emailRef.current = String(session.user.email);
     } else if (status === "unauthenticated") {
       userIdRef.current = null;
-      emailRef.current = null;
     }
-  }, [status, session?.user?.id, session?.user?.email]);
+  }, [status, session?.user?.id]);
 
   // 방 전환 시
   useEffect(() => {
@@ -999,10 +1023,15 @@ const SocketState = () => {
       handlers.handleSocketConnect();
     }
 
+    // connect 이벤트는 최신 핸들러(최신 세션 상태)로 호출한다 — 위의 마운트 시점 호출과 구분해 true를 넘긴다
+    const onConnect = () => {
+      void handlersRef.current.handleSocketConnect(true);
+    };
+
     // 이벤트 등록 (cleanup에서도 사용할 목록)
     const entries: Array<[string, (payload: unknown) => void]> = [
       ["disconnect", handlers.handleDisconnect],
-      ["connect", handlers.handleSocketConnect],
+      ["connect", onConnect],
       [SOCKET_EVENTS.RECEIVE_CONVERSATION, handlers.handleReceiveConversation as (payload: unknown) => void],
       [SOCKET_EVENTS.CONVERSATION_NEW, handlers.handleConversationNew as (payload: unknown) => void],
       [SOCKET_EVENTS.ROOM_EVENT, handlers.handleRoomEvent as (payload: unknown) => void],
@@ -1272,22 +1301,13 @@ const SocketState = () => {
 
       // ✅ 실제로 안읽음으로 카운트될 메시지만 필터링
       // 내 메시지가 아니고, 시스템 메시지가 아니고, isBumpableType이 true인 메시지만 카운트
-      const myEmail = emailRef.current ?? "";
       const myUserId = userIdRef.current ?? "";
       const countables = filteredNewer.filter(b => {
         const m = b.msg;
 
-        // ✅ 내 메시지 체크: email 또는 userId로 비교
-        // sender.id를 우선 확인하고, 없으면 getMessageSenderId 사용
-        const senderId = String(m?.sender?.id ?? getMessageSenderId(m) ?? "");
-        const senderEmail = String(m?.sender?.email ?? "");
-
-        // ✅ email이 있으면 email로, 없으면 userId로 비교
-        const isMyMsgByEmail = myEmail && senderEmail &&
-          String(senderEmail).toLowerCase() === String(myEmail).toLowerCase();
-        const isMyMsgById = myUserId && senderId &&
-          String(senderId).toLowerCase() === String(myUserId).toLowerCase();
-        const isMyMsg = isMyMsgByEmail || isMyMsgById;
+        // ✅ 내 메시지 체크: 발신자 id로 비교 (소켓 메시지에는 발신자 이메일이 없다)
+        const senderId = getMessageSenderId(m);
+        const isMyMsg = !!myUserId && !!senderId && senderId === myUserId;
 
         if (isMyMsg) return false; // 내 메시지는 안읽음 카운트에서 제외
 
@@ -1453,6 +1473,13 @@ const SocketState = () => {
       // ✅ API 응답 완료 후에만 processList 실행
       // ⚠️ 중요: fetchStatus가 'idle'이고 status가 'success'인 경우에만 API 응답으로 간주
       // 이 시점에는 listReadyRef가 false이므로 모든 실시간 메시지는 버퍼에 저장됨
+      // 조회가 (재시도까지) 실패하면 버퍼 모드에 갇히지 않게 기존 캐시로 버퍼를 비우고 실시간 처리로 돌아간다
+      // (연결 직후 재조회는 네트워크가 불안정할 때 실패하기 쉽다)
+      if (q.state?.fetchStatus === 'idle' && q.state?.status === 'error') {
+        if (!listReadyRef.current) processList();
+        return;
+      }
+
       const isApiResponse = q.state?.fetchStatus === 'idle' && q.state?.status === 'success';
       if (!isApiResponse) return;
 

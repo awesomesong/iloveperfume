@@ -106,6 +106,30 @@ NODE_PATH=next-server/node_modules node socket-server/scripts/ws-audit.js --quic
 - `join:room` 속도 제한.
 - 완료 기준: `logging` pass, 페이로드 크기 전후 수치 기록.
 
+#### 3·4단계 구현 메모 (2026-11-20)
+- 전제: 운영 Fly에 `SOCKET_AUTH_REQUIRED=true` 설정 후 토큰 없는 연결이 `unauthorized`로 거부되는 것을 확인(2026-11-20). 그래서 호환 모드를 지웠다 — 서버는 토큰만 신원으로 쓰고(`SOCKET_AUTH_REQUIRED` 플래그 제거, 비밀값이 없으면 전부 거부), 클라이언트 `lib/socket.ts`는 `{ token }`만 보낸다. Fly에 남은 `SOCKET_AUTH_REQUIRED`는 더 이상 읽지 않는다.
+- **복구 기준을 DB로(3단계)**: 서버 메모리 큐(`messageQueue`)와 온라인 여부 분기, 클라이언트의 `online:user` 송신(`SocketComponents.tsx` 삭제)과 서버 핸들러를 없앴다. 대신 소켓 `connect` 때 **연결 전에 받아 둔 캐시가 있으면** DB에서 다시 맞춘다(첫 연결 포함 — 새로고침 때 "조회~연결" 사이 공백도 이전엔 큐가 메웠다).
+  - 대화 목록: `SocketState.handleSocketConnect(true)`가 목록을 `refetchQueries`(받는 동안 실시간 메시지는 기존 버퍼). 연결 시점에 첫 조회가 진행 중이면 그것도 다시 받는다. 재조회가 실패하면 버퍼를 기존 캐시로 비우고 실시간 처리로 돌아간다(버퍼 모드에 갇히지 않게).
+  - 열린 방: `Body.tsx`가 최신 페이지(50건)만 받아 `chatCache.mergeLatestMessagesPage`로 병합 — 캐시에 없는 id만 넣어 낙관적·실패 메시지와 보낸 탭의 표시 시각을 그대로 둔다. 50건보다 많이 밀려 이어지지 않으면 최신 페이지를 첫 페이지로 다시 세운다.
+  - 다른 방 메시지 캐시는 요청 없이 stale 표시만(다시 열 때 받음). 브라우저 `refetchOnReconnect`는 목록·메시지 모두 끄고 이 경로 하나로 처리.
+  - 소켓이 이미 연결된 채 화면을 옮기면 connect가 없으므로 추가 요청 없음.
+- **half-open 감지**: `pingInterval 15s / pingTimeout 10s`. 감사 스크립트 측정 55초 → 24.7초. 그 사이 메시지는 서버가 복구하지 않고 위의 재조회가 복구한다.
+- **room.event rev**: 방별 `globalRoomRev` Map 대신 서버 전역 카운터 `max(now, last+1)` — 메모리가 늘지 않는다. 클라이언트는 방별 마지막 rev를 기억하고 끊김 때 초기화하므로 그대로.
+- **메시지 이벤트 하나로(E2)**: 서버는 메시지마다 `receive:conversation`만 보낸다(시스템 메시지 포함). `receive:message`(같은 객체를 한 번 더 보내던 것)는 없앴고, `Body.tsx`의 읽음 처리는 `receive:conversation`에서 시스템 메시지를 빼고 동작한다.
+- **페이로드 축소(E2)**: `emitSocketEvents.toSocketMessage`가 클라이언트가 실제로 읽는 필드만 보낸다(id·conversationId·type·createdAt·body, 이미지일 때 image, AI 답변일 때 isAIResponse, sender id·name·image, conversation isGroup·userIds). 발신자 이메일·`serverCreatedAtMs`·`isError`·`clientMessageId`를 뺐다. 내 메시지 판별은 이메일 대신 발신자 id로 바꿨다(`SocketState`·`Body`·`MessageView`). 1:1 메시지 1건 642B → 466B(-27%), 메시지당 이벤트가 2개 → 1개라 수신 바이트는 약 1,284B → 466B.
+- **접속 상태 묶어 보내기**: `online:user`/`leave:user` 즉시 브로드캐스트 대신 1초마다 바뀐 사용자만 `presence:delta {online, offline}`로 보낸다(`socket-server/presence.js`, 창 안에서 켜졌다 꺼진 사용자도 현재 상태로 포함). 연결 스냅샷 `get:onlineUsers`는 자기 자신도 포함. 멤버 목록(`/chatMember`)이 전체 사용자의 접속 표시를 쓰므로 "대화 상대에게만"으로 줄이지는 않았다.
+
+  | 동시 연결 | 이벤트 수 (이전 추정 → 지금) | 바이트 (이전 추정 → 지금) | 연결 후 RSS |
+  |---|---|---|---|
+  | 200 | 20,100 → 200 | 864KB → 587KB | 75.5MB |
+  | 1,000 | 500,500 → 1,000 | 22.0MB → 15.9MB | 114.2MB |
+
+  이벤트 수는 N² → N으로 줄었지만 바이트는 여전히 N²에 비례한다(각 delta에 N개 id, 스냅샷 합계도 1,000명에 13.4MB). 수천 명 이상이면 위 "확장 단계"의 범위 축소가 필요하다.
+- **`join:room` 제한(E4)**: 소켓당 10초에 30회, 대화방 룸 100개(`socket-server/joinLimiter.js`). 대화방 룸으로 보내는 이벤트가 없어 `roomMembers` 캐시도 지웠다(나가기·삭제 때 `socketsLeave`).
+- **로그(E1)**: 정상 경로는 시작 1줄 + `/internal/emit` 요청당 1줄(종류·수신자 수). 인증 실패는 사유만(같은 사유 10초에 1줄), 나머지는 `SOCKET_DEBUG=1`일 때만.
+- 검증(로컬, 2026-11-20): `npm test` 42개 통과, 감사 스크립트 전 항목 pass. 브라우저 두 탭(같은 계정, AI 방)에서 실시간 수신은 `receive:conversation` 1건씩·질문→답 순서 유지, 소켓 서버를 끈 채 다른 탭에서 보낸 질문·답이 재접속 후 순서대로 나타남(재접속 요청: 토큰·목록·열린 방 각 1건), 새로고침 때 목록·메시지 추가 요청 없음.
+- 배포: 서버와 클라이언트 이벤트 형식이 함께 바뀐다(`presence:delta`, `receive:message` 제거). 배포가 엇갈린 몇 분, 또는 새로고침 전 구버전 탭에서는 접속 표시·열린 방 자동 읽음이 멈출 수 있다(메시지 저장·목록은 정상).
+
 ### 운영 확인 (R3) — 2026-11-19 확인
 - `fly machines list` 결과: 머신 1대(`nrt`, shared-cpu-1x, 512MB). 지금은 머신이 갈라져 메시지가 엇갈리는 문제는 없다.
 - 대신 `hard_limit = 100`이 실제 한계다. 머신이 1대뿐이라 101번째 연결(탭)은 다른 곳으로 갈 수 없고, Fly 프록시에서 대기하다 실패할 수 있다.

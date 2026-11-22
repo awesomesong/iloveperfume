@@ -36,22 +36,6 @@ async function fetchSocketToken(): Promise<TokenResult> {
   }
 }
 
-/**
- * 토큰 payload의 sub(userId)를 꺼낸다. 서명 검증은 하지 않는다(서버가 함).
- * 배포 전환 기간에 토큰을 모르는 구버전 소켓 서버도 개인 룸에 넣어 주도록 userId를 같이 보내기 위한 용도.
- * 새 소켓 서버는 토큰이 있으면 이 값을 무시한다. SOCKET_AUTH_REQUIRED=true 전환 후 제거.
- */
-function readTokenSubject(token: string): string | undefined {
-  try {
-    const body = token.split(".")[0] ?? "";
-    const base64 = body.replace(/-/g, "+").replace(/_/g, "/");
-    const payload = JSON.parse(atob(base64)) as { sub?: unknown };
-    return typeof payload.sub === "string" ? payload.sub : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 export const getSocket = (): Socket => {
   if (globalThis.__socket__) return globalThis.__socket__;
 
@@ -74,12 +58,7 @@ export const getSocket = (): Socket => {
     auth: (cb) => {
       void fetchSocketToken().then(({ token, status }) => {
         lastTokenStatus = status;
-        if (!token) {
-          cb({});
-          return;
-        }
-        const userId = readTokenSubject(token);
-        cb(userId ? { token, userId } : { token });
+        cb(token ? { token } : {});
       });
     },
   });

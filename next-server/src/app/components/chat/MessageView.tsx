@@ -63,7 +63,7 @@ const areEqual = (prev: MessageBoxProps, next: MessageBoxProps) => {
     prev.showDateDivider === next.showDateDivider &&
     prev.isAIChat === next.isAIChat &&
     prev.conversationId === next.conversationId &&
-    prev.currentUser?.email === next.currentUser?.email &&
+    prev.currentUser?.id === next.currentUser?.id &&
     prev.seenUsersForLastMessage === next.seenUsersForLastMessage // ✅ 참조 비교로 빠른 탈출
   ) {
     return true;
@@ -108,7 +108,7 @@ const areEqual = (prev: MessageBoxProps, next: MessageBoxProps) => {
       p.isWaiting !== n.isWaiting ||
       p.isTyping !== n.isTyping ||
       p.isError !== n.isError ||
-      p.sender?.email !== n.sender?.email ||
+      p.sender?.id !== n.sender?.id ||
       p.sender?.name !== n.sender?.name ||
       p.sender?.image !== n.sender?.image ||
       p.conversation?.isGroup !== n.conversation?.isGroup
@@ -122,7 +122,7 @@ const areEqual = (prev: MessageBoxProps, next: MessageBoxProps) => {
     prev.showDateDivider !== next.showDateDivider ||
     prev.isAIChat !== next.isAIChat ||
     prev.conversationId !== next.conversationId ||
-    prev.currentUser?.email !== next.currentUser?.email
+    prev.currentUser?.id !== next.currentUser?.id
   ) return false;
 
   // 5) seenUsersForLastMessage 배열 내용 비교 (참조가 다를 때만)
@@ -186,7 +186,8 @@ const MessageView: React.FC<MessageBoxProps> = ({
   const currentUserId = String(currentUser?.id ?? "");
   const senderId = String(data?.sender?.id ?? "");
   const isAIMessage = data.isAIResponse;
-  const isOwn = !isAIMessage && currentUser?.email === data?.sender?.email;
+  // 발신자 id로 판별 (소켓으로 받은 메시지에는 발신자 이메일이 없다)
+  const isOwn = !isAIMessage && !!currentUserId && currentUserId === senderId;
 
   const filteredSeenUsers = useMemo(() => {
     // ✅ 핵심: isLastOwn가 false면 무조건 빈 배열 반환

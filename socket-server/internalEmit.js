@@ -59,9 +59,11 @@ function toUserIds(value, { allowEmpty = false } = {}) {
  *
  * 지원 형식:
  * - { kind: "message", message: { id, conversationId, ... }, userIds }
- *     → 참여자별 receive:conversation (오프라인이면 큐), 시스템 메시지가 아니면 receive:message
+ *     → userIds 전원의 개인 룸으로 receive:conversation 하나만 (시스템 메시지 포함, message는 받은 그대로).
+ *       id·conversationId만 검사하고 나머지 필드는 손대지 않는다 (페이로드 필드는 Next가 정한다).
+ *       오프라인 큐는 없다 — 끊겨 있던 동안의 메시지는 클라이언트가 재접속 때 DB에서 다시 불러온다.
  * - { kind: "room.event", conversationId, type: "member.left" | "room.deleted", userId?, remainingUserIds?, userIds }
- *     → userIds에게 room.event (rev는 소켓 서버가 매긴다)
+ *     → userIds에게 room.event (rev는 소켓 서버가 서버 전체 단일 카운터로 매긴다)
  * - { kind: "users", event: "conversation:new" | "read:state", payload, userIds }
  * - { kind: "broadcast", event: <BROADCAST_EVENTS>, payload, exceptUserIds? }
  */
@@ -137,7 +139,11 @@ function validateEmitRequest(body) {
   return { ok: true, events: out };
 }
 
-/** room.event 리비전: 단조 증가 + 대략적 시간 반영 */
+/**
+ * room.event 리비전: max(지금 시각, 직전 rev + 1).
+ * 서버 전체에서 카운터 하나만 쓴다(방별로 따로 두지 않음). 클라이언트는 방별로 마지막 rev를 기억하고
+ * 끊기면 초기화하므로, 전역 단조 증가면 방 안에서도 단조 증가한다.
+ */
 function nextRoomRev(last, now = Date.now()) {
   return Math.max((last ?? 0) + 1, now);
 }
