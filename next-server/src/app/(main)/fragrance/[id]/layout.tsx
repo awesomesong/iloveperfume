@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return {
       title: `${fragrance.brand} · ${fragrance.name}`,
       description,
+      alternates: { canonical: `${base}/fragrance/${id}` },
       openGraph: {
         title: `${fragrance.brand} · ${fragrance.name}`,
         description,
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         description,
         images: [imageUrl],
       },
-      keywords: ['향수', '퍼퓸', 'Fragrance', 'Perfume', fragrance.brand],
+      keywords: ['향수', '퍼퓸', 'Fragrance', 'Perfume', fragrance.brand, fragrance.name, '향수 최저가', '향수 가격'],
     };
   } catch {
     return {
