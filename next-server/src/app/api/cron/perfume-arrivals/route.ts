@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isCronAuthorized } from "@/src/app/lib/cronAuth";
 import { runBackfill } from "@/src/app/lib/arrivals/backfill";
 import { maintainSources, type MaintenanceStep } from "@/src/app/lib/arrivals/maintainSources";
+import { runRetailerFill } from "@/src/app/lib/arrivals/retailerArrivals";
 import { runArrivalsPipeline } from "@/src/app/lib/arrivals/runPipeline";
 
 export const runtime = "nodejs";
@@ -17,6 +18,8 @@ export const maxDuration = 60;
  *   평소에는 크론이 수집 뒤 남는 시간에 한 단계씩 하므로 필요 없다. 처음 채울 때나 한꺼번에 돌릴 때 쓴다.
  *   Vercel에서는 실행 시간 제한 안에서만 하고, 로컬에서는 넉넉히 돈다.
  * - 기존 향수 채우기(신제품 수집은 하지 않음): ?backfill=1 (&limit=LLM에 넘길 향수 수, &dryRun=1)
+ * - 공식 사이트를 읽을 수 없는 브랜드의 기존 향수: ?backfill=retailer (&limit=열어 볼 판매처 상품 페이지 수, &dryRun=1)
+ *   크론은 /api/cron/perfume-retailer로 하루 한 번 조금씩 한다.
  *   크론은 /api/cron/perfume-backfill로 하루 한 묶음씩 하고, 처음 채울 때는 로컬에서 limit을 크게 주어 돌린다.
  */
 const MAINTENANCE_STEPS: readonly MaintenanceStep[] = ["discover", "resolve", "probe"];
@@ -48,6 +51,10 @@ export async function GET(req: NextRequest) {
         deadline: Date.now() + MANUAL_MAINTENANCE_MS,
         limit: manualLimit,
       });
+      return NextResponse.json(result, { status: 200 });
+    }
+    if (params.get("backfill") === "retailer") {
+      const result = await runRetailerFill({ deadline: Date.now() + MANUAL_MAINTENANCE_MS, pages: manualLimit, dryRun });
       return NextResponse.json(result, { status: 200 });
     }
     if (params.get("backfill") === "1") {

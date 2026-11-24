@@ -120,19 +120,31 @@ export async function recordCollectRun(sources: readonly ArrivalSource[], failed
  * 공식 사이트에서 수집하는 브랜드는 넣지 않는다(같은 향수가 두 경로로 들어오지 않게). 한도보다 많으면 날마다 순환한다.
  */
 export async function loadNewsBrands(now: Date): Promise<NewsBrand[]> {
+  const brands = await loadClosedBrands();
+  if (brands.length <= NEWS_BRANDS_PER_RUN) return brands;
+  const start = (Math.floor(now.getTime() / DAY_MS) * NEWS_BRANDS_PER_RUN) % brands.length;
+  return Array.from({ length: NEWS_BRANDS_PER_RUN }, (_, i) => brands[(start + i) % brands.length]);
+}
+
+/** 수집 중인 공식 사이트가 없는 브랜드 — 판매처 향수의 공식 페이지를 찾을 때 쓸 공식 사이트 주소(hosts)도 함께 준다 */
+export type ClosedBrand = NewsBrand & { hosts: string[] };
+
+export async function loadClosedBrands(): Promise<ClosedBrand[]> {
   const rows = await prisma.arrivalSource.findMany({
     orderBy: [{ brandKey: "asc" }, { rank: "asc" }, { host: "asc" }],
-    select: { id: true, brand: true, brandKey: true, aliases: true, status: true, reason: true },
+    select: { id: true, brand: true, brandKey: true, aliases: true, status: true, reason: true, host: true },
   });
   const groups = new Map<string, typeof rows>();
   for (const row of rows) groups.set(row.brandKey, [...(groups.get(row.brandKey) ?? []), row]);
 
-  const brands = [...groups.values()]
+  return [...groups.values()]
     .filter((group) => group.every((row) => row.status !== "ACTIVE" && row.reason !== null))
-    .map((group) => ({ sourceId: group[0].id, brand: group[0].brand, aliases: [...new Set(group.flatMap((row) => row.aliases))] }));
-  if (brands.length <= NEWS_BRANDS_PER_RUN) return brands;
-  const start = (Math.floor(now.getTime() / DAY_MS) * NEWS_BRANDS_PER_RUN) % brands.length;
-  return Array.from({ length: NEWS_BRANDS_PER_RUN }, (_, i) => brands[(start + i) % brands.length]);
+    .map((group) => ({
+      sourceId: group[0].id,
+      brand: group[0].brand,
+      aliases: [...new Set(group.flatMap((row) => row.aliases))],
+      hosts: group.map((row) => row.host),
+    }));
 }
 
 export const newsStore: NewsStore = {

@@ -57,6 +57,7 @@ LLM이 쓰는 것은 이름 표기(제목과 대조)와 소개문뿐이다. 노�
 | `maintainSources.ts` | 수집 대상 관리 단계 실행 |
 | `runPipeline.ts` | 전체 순서 |
 | `backfill.ts` | 기존 향수 채우기 (아래 "기존 향수 채우기") |
+| `retailerArrivals.ts` · `webSearch.ts` | 공식 사이트를 읽을 수 없는 브랜드의 기존 향수 — 판매처에서 찾고 공식 도메인 웹 검색으로 내용을 가져온다 |
 | `src/app/api/cron/perfume-arrivals/route.ts` | 크론 진입점 |
 
 위치는 모두 `src/app/lib/arrivals/` 기준이다. `filterByRules`, `pickForRun`, `validateDescriptions`, `resolveNotes`, `looksLikePerfume`, `aggregateBrands`, `trackedUrls`, `urlStem`은 순수 함수다.
@@ -154,6 +155,29 @@ Vercel Cron (매일 02:00 UTC) ─▶ GET /api/cron/perfume-backfill   (= /api/c
 - 채운 향수는 `Fragrance.firstSeenAt`이 예전 날짜(SHOPIFY 게시일)이거나 비어 있다(SITEMAP — 처음 등장한 날을 모른다). 목록의 "신제품" 탭과 카드 표시는 `firstSeenAt`이 60일 이내인 것만 대상이라(`isNewArrival`, `NEW_ARRIVAL_DAYS`) 채운 향수는 전체 탭에만 나온다.
 - 공식 사이트를 읽을 수 없는 브랜드(디올·에르메스 등)의 기존 향수는 채울 수 없다. 출시 기사 경로는 새로 나온 향수만 다룬다.
 - 2026-11-25 시험: D.S. & Durga 상품 103개 → 기존 향수 26건, Juliette Has a Gun 255개 → 20건. 임시 DB에서 3건씩 두 번 돌려 6건이 겹치지 않고 저장됐고, 후보가 없는 사이트는 LLM 호출 없이 끝난 것으로 기록됐다.
+
+## 공식 사이트를 읽을 수 없는 브랜드의 기존 향수 (`retailerArrivals.ts`)
+
+디올·에르메스처럼 공식 사이트가 자동 요청을 막거나 상품 정보를 주지 않는 브랜드는 위 채우기로 들어오지 않는다.
+이 브랜드들은 **판매처 상품 페이지에서 "어떤 향수가 국내에서 팔리는지"와 이미지만** 얻고, 내용은 공식 페이지에서 가져온다.
+
+```
+Vercel Cron (매일 03:00 UTC) ─▶ GET /api/cron/perfume-retailer   (= /api/cron/perfume-arrivals?backfill=retailer)
+  loadClosedBrands     수집 중인 공식 사이트가 없는 브랜드 (출시 기사 경로와 같은 대상)
+  판매처 상품 페이지     하루 8개를 고르게 뽑아 연다 — 대상 브랜드의 향수 단품만 남긴다(세트·소용량·"센츠" 샘플 제외)
+  excludeExisting      이미 등록된 향수면 검색하지 않는다
+  findOfficialPage     웹 검색 1회 — 그 브랜드의 공식 도메인으로만 제한(allowed_domains)해 공식 상품 페이지의 제품명·주소·향 설명·노트를 원문 그대로 가져온다
+  describeArrivals → saveAsFragrances   가져온 글을 공식 사이트 소개문과 똑같이 다룬다 (글에 없는 노트는 버린다)
+  판매처 주소 기록       판정을 끝낸 판매처 주소를 ArrivalSeenUrl(article = true)에 적어 다시 검색하지 않는다
+```
+
+- **AI가 아는 지식으로 채우지 않는다.** 공식 페이지를 못 찾았거나, 답의 주소가 공식 도메인이 아니거나, 검색이 공식 도메인의 페이지를 읽지 않았으면 등록하지 않는다. 판매처 페이지의 글(전성분 표기뿐이다)도 쓰지 않는다.
+- 한계: 코드는 "공식 도메인만 검색했다"는 것까지 확인한다. 검색 모델이 페이지 글을 정확히 옮겼는지는 대조하지 못한다(공식 사이트 수집은 코드가 원문을 직접 읽는다).
+- `Fragrance.officialUrl`은 공식 상품 페이지 주소다. 이미지는 판매처 이미지를 링크한다(공식 이미지는 읽을 수 없다).
+- 등록부의 사이트가 패션 사이트인 브랜드(프라다 — 향수는 prada-beauty.com)는 공식 페이지를 못 찾아 등록되지 않는다.
+- 비용: 향수 1건당 웹 검색 1회(입력 약 12,000토큰) + 소개문 작성. 한 번 판정한 향수는 다시 검색하지 않는다.
+- 2026-11-25 시험: 공식 도메인 제한 검색 15건 모두 공식 페이지에서 노트를 찾았다. 임시 DB에서 판매처 페이지 30개 → 대상 향수 4건 → 공식 페이지 3건 → 2건 저장(나머지는 이름 대조 탈락·공식 페이지 없음).
+- 한꺼번에: `curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3001/api/cron/perfume-arrivals?backfill=retailer&limit=200"` (`limit` = 열어 볼 판매처 상품 페이지 수, `&dryRun=1`이면 저장하지 않는다)
 
 ## 한국 판매 기준
 
