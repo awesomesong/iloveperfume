@@ -104,6 +104,7 @@ const MATERIAL_TERMS: readonly (readonly [en: string, ko: string])[] = [
 
   // 스파이스·허브
   ["pepper|peppercorn", "페퍼"],
+  ["baie rose|baies rose", "핑크 페퍼"], // 프랑스어 표기 (pink pepper)
   ["chili|chilli", "칠리"],
   ["cardamom", "카다멈"],
   ["cinnamon", "시나몬"],

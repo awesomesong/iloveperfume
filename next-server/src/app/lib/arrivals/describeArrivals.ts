@@ -57,13 +57,12 @@ source가 "news"인 제품은 공식 소개문이 아니라 언론 기사다 —
   · "It opens on A and B, crisp and green. The heart moves to C. The base rests on D and E, sun on bare shoulders."처럼 문장으로 풀어 쓴 경우에도 top / middle / base로 나눈다. 이때 노트는 opens on / heart / base 바로 뒤에 나열된 것(A, B, C, D, E)뿐이고, 그 뒤에 쉼표로 덧붙인 인상 설명(crisp and green, sun on bare shoulders)은 노트가 아니다.
   · 노트로 제시된 것은 하나도 빠뜨리지 않는다. 향을 설명하는 문장 속의 형용 표현(citrus, woody, fresh)은 노트가 아니므로 넣지 않는다.
   · 오타나 낯선 철자도 고치지 않는다(vetyver를 vetiver로 바꾸지 않는다). Oil·Absolute·Essence 같은 추출 방식 표기만 뺄 수 있다.
-- translations: 위에 나열한 영문 노트 가운데 일상어로 된 표현만 골라 { en, ko }로 뜻을 옮긴다. 해당하는 노트가 없으면(한글로 적힌 노트뿐일 때 포함) 빈 배열로 둔다.
-  · 넣는 것 ①: 원료가 아닌 풍경·사물 — 자연 풍경(바다 공기, 비, 흙, 모래), 사물과 제품(책, 로션, 가죽 재킷), 장소, 피부.
-  · 넣는 것 ②: 원료에 일상어 수식어가 붙은 것(flowering, wet, damp, sun-dried). 수식어는 뜻으로 옮기고 원료는 [노트 용어집] 표기를 쓴다.
-  · 넣지 않는 것: 모든 단어가 [노트 용어집]에 있는 노트(pink pepper, wild rose, Haitian vetiver). 그리고 품종·지명·상표·학명처럼 고유한 이름이 붙은 원료와 낯선 원료 이름 — 이런 이름은 영문 그대로 저장되므로 한글로 옮기지 않는다.
-  · en은 위에 나열한 것과 똑같이 쓴다. ko는 영어 단어를 소리 나는 대로 한글로 적지 말고(spray를 스프레이로 쓰지 않는다) 사전의 뜻 그대로 자연스러운 한국어로 옮긴다. 다른 사물로 바꾸거나 "~의 향" 같은 말을 덧붙이지 않는다.
-  예) wet pavement → 비에 젖은 포장도로, old books → 오래된 책, sea spray → 바다 물보라, sun-warmed skin → 햇볕에 데워진 살결, flowering jasmine → 꽃이 핀 자스민, damp cedar → 젖은 시더
-- description에서 원료를 언급할 때도 [노트 용어집]의 한국어 표기를 글자 그대로 쓴다. 뜻이 같아도 다른 표기로 바꾸지 않는다(ambroxan은 "암브록산", moss는 "이끼", patchouli는 "패출리", vetyver는 "베티버"). 용어집에 없는 원료 이름은 영문 그대로 쓰고, 소리 나는 대로 한글로 지어 쓰지 않는다.
+- translations: 위에 나열한 노트 가운데 모든 단어가 [노트 용어집]에 있는 것(pink pepper, wild rose, Haitian vetiver)을 뺀 나머지를 모두 골라 { en, ko }로 한국어 표기를 단다. 저장되는 노트는 모두 한글이어야 하므로 하나도 빠뜨리지 않는다. 남는 노트가 없으면(한글로 적힌 노트뿐일 때 포함) 빈 배열로 둔다.
+  · en은 위에 나열한 것과 똑같이 쓴다(프랑스어 등 영어가 아닌 노트도 원문 그대로).
+  · 원료 이름(낯선 원료·품종·상표·학명 포함)은 국내 향수 판매처의 관례대로 소리 나는 대로 적는다. 영어가 아닌 언어로 적힌 원료는 같은 원료의 [노트 용어집] 표기를 쓰고, 용어집에 없으면 그 원료의 통용 표기를 쓴다. 예) cypriol → 사이프리올, palisander wood → 팰리샌더 우드, Mandarine → 만다린, Fève Tonka → 통카빈, Muscs Blancs → 화이트 머스크, Vanille de Madagascar → 마다가스카르 바닐라
+  · 풍경·사물·일상어 표현과 원료에 붙은 일상어 수식어(flowering, wet, sun-dried)는 소리 나는 대로 적지 말고 사전의 뜻 그대로 옮긴다(spray를 스프레이로 쓰지 않는다). 예) wet pavement → 비에 젖은 포장도로, old books → 오래된 책, sea spray → 바다 물보라, flowering jasmine → 꽃이 핀 자스민, damp cedar → 젖은 시더, Effluves Marins → 바다 내음
+  · 원료 부분은 [노트 용어집] 표기를 글자 그대로 쓴다. 다른 원료나 사물로 바꾸거나 "~의 향" 같은 말을 덧붙이지 않는다.
+- description에서 원료를 언급할 때도 [노트 용어집]의 한국어 표기를 글자 그대로 쓴다. 뜻이 같아도 다른 표기로 바꾸지 않는다(ambroxan은 "암브록산", moss는 "이끼", patchouli는 "패출리", vetyver는 "베티버"). 용어집에 없는 원료 이름은 notes의 translations에 쓴 한국어 표기와 같게 쓴다.
 
 [노트 용어집] english=한국어
 ${NOTE_GLOSSARY_PROMPT}
@@ -116,7 +115,7 @@ const RESPONSE_SCHEMA = {
                     other: NOTE_NAMES_SCHEMA,
                     translations: {
                       type: "array",
-                      description: "원료가 아닌 풍경·사물 표현의 한국어 뜻",
+                      description: "용어집만으로 옮길 수 없는 노트의 한국어 표기",
                       items: {
                         type: "object",
                         additionalProperties: false,
@@ -185,7 +184,7 @@ const NOTE_GROUPS = [
 
 type NoteGroup = (typeof NOTE_GROUPS)[number]["key"];
 
-/** 노트 하나가 어떻게 정해졌는지 — glossary: 용어집 표기, llm: LLM의 뜻 번역, english: 영문 그대로, dropped: 원문에 없어 버림 */
+/** 노트 하나가 어떻게 정해졌는지 — glossary: 용어집 표기, llm: LLM의 한국어 표기, english: 원문 그대로, dropped: 원문에 없어 버림 */
 export type ResolvedNote = {
   group: NoteGroup;
   en: string;
@@ -249,12 +248,12 @@ function createSourceCheck(bodyText: string): (en: string) => boolean {
 }
 
 /**
- * LLM이 준 노트를 저장할 문자열로 바꾼다 (순수 함수). 원료의 한국어 표기는 LLM이 아니라 코드가 정한다.
- * LLM은 노트 이름을 영문 그대로 나열하고, 일상어로 된 표현만 뜻을 옮겨 준다(translations).
+ * LLM이 준 노트를 저장할 문자열로 바꾼다 (순수 함수). 용어집에 있는 원료의 한국어 표기는 LLM이 아니라 코드가 정한다.
+ * LLM은 노트 이름을 원문 표기 그대로 나열하고, 용어집만으로 옮길 수 없는 노트의 한국어 표기를 따로 준다(translations).
  * 1) 원문(소개문)에 없는 노트는 버린다 — 지어낸 노트 차단
  * 2) 모든 단어가 용어집에 있으면 용어집 표기 — 실행마다 같은 표기가 나온다
- * 3) LLM이 뜻을 옮겨 준 표현은 그 번역. 원료가 섞여 있으면 그 원료를 용어집 표기로 썼을 때만 받는다
- * 4) 그 밖에는 영문 그대로 — 용어집에 없는 원료를 한글로 지어 옮기지 않는다
+ * 3) 그 밖에는 LLM이 준 한국어 표기. 용어집 원료가 섞여 있으면 그 원료를 용어집 표기로 썼을 때만 받는다
+ * 4) LLM이 표기를 주지 않았거나 3)의 확인을 통과하지 못하면 원문 그대로 — 저장 화면이 한글 표기로 맞춰지도록 프롬프트가 모든 노트의 표기를 요구한다
  *    (예: "balm of Gilead"를 "발미드 질레아드"로, "baldy cypress"를 "시더"로 옮기던 문제)
  * 저장 형식은 "Top: a, b\nMiddle: c\nBase: d". 남는 노트가 없으면 text는 null이다.
  */
