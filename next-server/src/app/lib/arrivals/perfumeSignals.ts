@@ -65,5 +65,7 @@ const NON_PERFUME_URL_HINT = /home|room|candle|diffuser|body|hand|hair|skin|bath
  * 패션·주얼리가 주력인 사이트(로에베·미우미우)에서 향수가 아닌 상품에 요청을 쓰지 않기 위해서다.
  */
 export function perfumeUrlScore(url: string): number {
-  return (PERFUME_URL_STRONG.test(url) ? 2 : PERFUME_URL_HINT.test(url) ? 1 : 0) - (NON_PERFUME_URL_HINT.test(url) ? 3 : 0);
+  // 사이트 이름은 보지 않는다 — "room1015.com"의 room, "bdkparfums.com"의 parfums가 모든 상품에 걸린다
+  const path = url.replace(/^https?:\/\/[^/]+/i, "");
+  return (PERFUME_URL_STRONG.test(path) ? 2 : PERFUME_URL_HINT.test(path) ? 1 : 0) - (NON_PERFUME_URL_HINT.test(path) ? 3 : 0);
 }

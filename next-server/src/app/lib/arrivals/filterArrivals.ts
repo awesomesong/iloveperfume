@@ -103,6 +103,7 @@ function pickRepresentative(members: Member[]): Member {
  * 2) 이름 단위: 용량·농도만 다른 제품을 하나로 합치고, 그 이름이 처음 등장한 날이 기간 안인지 본다
  *    (예전 향수의 새 용량·트래블 스프레이는 신제품이 아니다)
  * 3) 대표 제품의 이미지 · 소개문 길이
+ * 기간만 지난 향수는 버리지 않고 backlog로 돌려준다 (탈락 수는 예전처럼 notNew로만 센다).
  */
 export function filterByRules(raw: RawArrival[], now: Date = new Date()): RuleFilterResult {
   const dropped: Record<RuleDropReason, number> = {
@@ -145,6 +146,7 @@ export function filterByRules(raw: RawArrival[], now: Date = new Date()): RuleFi
   }
 
   const kept: ArrivalCandidate[] = [];
+  const backlog: ArrivalCandidate[] = [];
   let mergedVariants = 0;
 
   for (const { nameKey, members } of groups.values()) {
@@ -159,21 +161,21 @@ export function filterByRules(raw: RawArrival[], now: Date = new Date()): RuleFi
         : [];
     const firstSeen = Math.min(...memberTimes, ...relatedTimes);
 
-    if (firstSeen < since || firstSeen > until) {
-      dropped.notNew += 1;
-      continue;
-    }
+    // 기간이 지난 향수는 신제품이 아니다 — 나머지 규칙을 통과하면 backlog에 담는다
+    const isNew = firstSeen >= since && firstSeen <= until;
+    if (!isNew) dropped.notNew += 1;
+    if (firstSeen > until) continue;
     if (images.length === 0) {
-      dropped.noImage += 1;
+      if (isNew) dropped.noImage += 1;
       continue;
     }
     if (effectiveTextLength(rep.bodyText) < MIN_BODY_LENGTH) {
-      dropped.shortBody += 1;
+      if (isNew) dropped.shortBody += 1;
       continue;
     }
 
     const brandNames = brandNamesOf(rep);
-    kept.push({
+    (isNew ? kept : backlog).push({
       brand: rep.source.brand,
       name: cleanName(rep.title, brandNames),
       title: rep.title,
@@ -187,11 +189,11 @@ export function filterByRules(raw: RawArrival[], now: Date = new Date()): RuleFi
     });
   }
 
-  kept.sort(
-    (a, b) => b.firstSeenAt.getTime() - a.firstSeenAt.getTime() || a.officialUrl.localeCompare(b.officialUrl),
-  );
+  for (const list of [kept, backlog]) {
+    list.sort((a, b) => b.firstSeenAt.getTime() - a.firstSeenAt.getTime() || a.officialUrl.localeCompare(b.officialUrl));
+  }
 
-  return { kept, dropped, mergedVariants };
+  return { kept, backlog, dropped, mergedVariants };
 }
 
 const brandNamesOf = (raw: RawArrival) => [raw.source.brand, ...raw.source.aliases];

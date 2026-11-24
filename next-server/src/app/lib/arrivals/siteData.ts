@@ -310,8 +310,8 @@ export const isPast = (deadline?: number) => deadline !== undefined && Date.now(
  */
 const SMALL_SITE_URLS = 300;
 
-/** robots.txt에 Sitemap이 없을 때 찾아볼 흔한 위치 */
-const DEFAULT_SITEMAP_PATHS = ["/sitemap.xml", "/sitemap_index.xml"];
+/** robots.txt에 Sitemap이 없을 때 찾아볼 흔한 위치 — 마지막은 PrestaShop 기본 위치(Room 1015·Obvious Parfums) */
+const DEFAULT_SITEMAP_PATHS = ["/sitemap.xml", "/sitemap_index.xml", "/1_index_sitemap.xml"];
 
 /**
  * robots.txt의 Sitemap(없으면 흔한 위치)에서 시작해 상품 주소를 모은다.
@@ -353,7 +353,8 @@ export async function readSitemap(host: string, robots: RobotsRules, options: Si
     if (!fetched || fetched.status >= 500) incomplete = true;
     if (!fetched || fetched.status !== 200) continue;
 
-    const xml = fetched.text;
+    // 주소를 CDATA로 감싼 사이트맵(PrestaShop 등)도 같은 식으로 읽는다
+    const xml = fetched.text.replace(/<!\[CDATA\[|\]\]>/g, "");
     if (/<sitemapindex/i.test(xml)) {
       for (const match of xml.matchAll(/<sitemap>[\s\S]*?<loc>\s*([^<]+?)\s*<\/loc>/gi)) {
         const loc = htmlToText(match[1]);

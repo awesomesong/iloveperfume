@@ -4,6 +4,7 @@
  * 수집 대상 브랜드는 여기 적지 않는다 — 판매처에서 찾아 DB(ArrivalSource)에 자동으로 등록된다.
  */
 import { OPENAI_TEXT_MODEL } from "@/src/app/lib/ai/models";
+import { NEW_ARRIVAL_DAYS } from "@/src/app/types/fragrance";
 
 // ───────── 수집 대상 찾기 (브랜드 → 공식 사이트 → 판정) ─────────
 
@@ -89,6 +90,13 @@ export const COLLECT_BUDGET_MS = 14_000;
 /** 같은 사이트에 이어서 요청할 때 간격 */
 export const REQUEST_GAP_MS = 1_000;
 export const FEED_TIMEOUT_MS = 8_000;
+
+/** 기존 향수 채우기에서 LLM 1회 호출에 넘기는 후보 수 — 통과한 것을 모두 저장할 수 있게 MAX_SAVE_PER_RUN과 같게 둔다 */
+export const BACKFILL_BATCH_SIZE = 10;
+/** 채우기 한 묶음에서 상품 페이지를 여는 데 쓰는 시간 (사이트맵 방식) */
+export const BACKFILL_PAGES_BUDGET_MS = 15_000;
+/** 채우기 한 묶음(상품 페이지 열기 + LLM 호출)에 드는 시간 — 남은 시간이 이보다 적으면 새 묶음을 시작하지 않는다 */
+export const BACKFILL_BATCH_BUDGET_MS = 35_000;
 
 /** 수집·작성 뒤 시간이 이만큼 안 지났을 때만 수집 대상 관리(찾기·판정)를 한 단계 진행한다 — 크론 실행 시간 제한(60초) 때문 */
 export const MAINTENANCE_START_LIMIT_MS = 28_000;
@@ -195,7 +203,7 @@ export const EXCLUSIVE_SALE_PATTERNS: readonly RegExp[] = [
 // ───────── 신제품 후보 기준 ─────────
 
 /** 같은 이름의 제품이 처음 등장한 날이 이 기간 안이어야 신제품으로 본다 */
-export const WINDOW_DAYS = 60;
+export const WINDOW_DAYS = NEW_ARRIVAL_DAYS;
 /** 향수 한 건에 저장할 이미지 수 */
 export const MAX_IMAGES = 3;
 /** 공식 소개문이 이보다 짧으면 설명을 쓸 근거가 부족하다고 보고 제외한다 (영어 기준 글자 수 — text.ts effectiveTextLength) */

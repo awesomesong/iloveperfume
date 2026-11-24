@@ -36,10 +36,27 @@ export async function loadSourcesForRun(): Promise<ArrivalSource[]> {
     orderBy: [{ lastCollectedAt: { sort: "asc", nulls: "first" } }, { host: "asc" }],
     take: MAX_SOURCES_PER_RUN,
   });
-  return rows.flatMap((row) =>
-    row.kind ? [{ id: row.id, brand: row.brand, aliases: row.aliases, host: row.host, kind: row.kind, baselineAt: row.baselineAt }] : [],
-  );
+  return rows.flatMap(toSource);
 }
+
+const toSource = (row: SourceRow): ArrivalSource[] =>
+  row.kind ? [{ id: row.id, brand: row.brand, aliases: row.aliases, host: row.host, kind: row.kind, baselineAt: row.baselineAt }] : [];
+
+/**
+ * 기존 향수를 아직 다 채우지 않은 수집 대상 — 주소 순으로 한 곳씩 끝낸다.
+ * 사이트맵 방식은 기준선(지금 있는 상품 주소)을 기록한 뒤부터 대상이다.
+ */
+export async function loadBackfillSources(): Promise<ArrivalSource[]> {
+  const rows = await prisma.arrivalSource.findMany({
+    where: { status: "ACTIVE", backfilledAt: null, OR: [{ kind: "SHOPIFY" }, { kind: "SITEMAP", baselineAt: { not: null } }] },
+    orderBy: { host: "asc" },
+    take: MAX_SOURCES_PER_RUN,
+  });
+  return rows.flatMap(toSource);
+}
+
+export const markBackfilled = (sourceId: string, now: Date) =>
+  prisma.arrivalSource.update({ where: { id: sourceId }, data: { backfilledAt: now } });
 
 export const seenStore: SeenStore = {
   async load(sourceId) {

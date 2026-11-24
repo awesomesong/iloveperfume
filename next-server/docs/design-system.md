@@ -451,9 +451,9 @@ function contrast(hex1, hex2) {
 | 요소 | 클래스 / 컴포넌트 | 규칙 |
 |------|-------------------|------|
 | 페이지 | `.fragrance-list-page` | `.news-page`와 같은 폭·여백(최대 1440px, 좌우 16px → 32px) |
-| 탭 | `TextTabs` | 전체 / 신제품 / 직접 등록. 탭 값이 `GET /api/fragrance?source=`로 이어진다(신제품 = `AI_AGENT`, 직접 등록 = `USER`) |
+| 탭 | `TextTabs` | 전체 / 신제품 / 직접 등록. 탭 값이 `GET /api/fragrance?source=`로 이어진다(신제품 = `AI_AGENT`, 직접 등록 = `USER`). 신제품 탭은 수집된 향수 가운데 공식 사이트에 처음 등장한 지 60일 이내인 것만 보여준다 — 기존 향수 채우기로 들어온 예전 향수는 전체 탭에만 나온다 |
 | 그리드 | `ul.fragrance-list` | `auto-fill` 그리드. 카드 최소 폭 150px·간격 12px → 768px부터 180px·20px |
-| 카드 | `FragranceCard` (`.fragrance-list-card` + `.product-fragrance-card` + `.product-fragrance-card-layout`) — 향수 만들기 결과도 같은 카드를 쓴다 | 첫 이미지(3:4, `object-contain`) → 브랜드(`.product-fragrance-brand`) → 이름(`.product-fragrance-name`) → 수집된 향수만 `.meta-line` "신제품". hover는 그림자만(이동 없음), 포커스는 액센트 외곽선 |
+| 카드 | `FragranceCard` (`.fragrance-list-card` + `.product-fragrance-card` + `.product-fragrance-card-layout`) — 향수 만들기 결과도 같은 카드를 쓴다 | 첫 이미지(3:4, `object-contain`) → 브랜드(`.product-fragrance-brand`) → 이름(`.product-fragrance-name`) → 신제품(`isNewArrival` — 처음 등장한 지 60일 이내인 수집 향수)만 `.meta-line` "신제품". hover는 그림자만(이동 없음), 포커스는 액센트 외곽선 |
 | 이미지 | `FallbackNextImage` | 수집된 향수는 공식 사이트 이미지를 재호스팅 없이 링크한다 — `image-hosts.json`에 없는 호스트는 `next/image` 최적화 없이 원본 주소로 그린다(`resolveImageSrc`). `next/image`로 향수 이미지를 직접 그릴 때도 `unoptimized={resolveImageSrc(src).unoptimized}`를 넘긴다 |
 | 스켈레톤 | `FragranceCardSkeleton` × 12 | 같은 `.fragrance-list` 그리드 안에 그린다 |
 

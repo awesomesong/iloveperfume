@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isCronAuthorized } from "@/src/app/lib/cronAuth";
+import { runBackfill } from "@/src/app/lib/arrivals/backfill";
 import { maintainSources, type MaintenanceStep } from "@/src/app/lib/arrivals/maintainSources";
 import { runArrivalsPipeline } from "@/src/app/lib/arrivals/runPipeline";
 
@@ -15,6 +16,8 @@ export const maxDuration = 60;
  * - 수집 대상 관리만 따로 실행(수집은 하지 않음): ?maintain=discover|resolve|probe (&limit=처리할 수)
  *   평소에는 크론이 수집 뒤 남는 시간에 한 단계씩 하므로 필요 없다. 처음 채울 때나 한꺼번에 돌릴 때 쓴다.
  *   Vercel에서는 실행 시간 제한 안에서만 하고, 로컬에서는 넉넉히 돈다.
+ * - 기존 향수 채우기(신제품 수집은 하지 않음): ?backfill=1 (&limit=LLM에 넘길 향수 수, &dryRun=1)
+ *   크론은 /api/cron/perfume-backfill로 하루 한 묶음씩 하고, 처음 채울 때는 로컬에서 limit을 크게 주어 돌린다.
  */
 const MAINTENANCE_STEPS: readonly MaintenanceStep[] = ["discover", "resolve", "probe"];
 const MANUAL_MAINTENANCE_MS = process.env.VERCEL ? 50_000 : 10 * 60_000;
@@ -36,14 +39,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "maintain 값은 discover, resolve, probe 중 하나여야 합니다." }, { status: 400 });
   }
   const limit = Number(params.get("limit"));
+  const manualLimit = Number.isInteger(limit) && limit > 0 ? limit : undefined;
 
   try {
     if (step) {
       const result = await maintainSources({
         step,
         deadline: Date.now() + MANUAL_MAINTENANCE_MS,
-        limit: Number.isInteger(limit) && limit > 0 ? limit : undefined,
+        limit: manualLimit,
       });
+      return NextResponse.json(result, { status: 200 });
+    }
+    if (params.get("backfill") === "1") {
+      const result = await runBackfill({ deadline: Date.now() + MANUAL_MAINTENANCE_MS, limit: manualLimit, dryRun });
       return NextResponse.json(result, { status: 200 });
     }
     const result = await runArrivalsPipeline({ dryRun });

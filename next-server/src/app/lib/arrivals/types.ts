@@ -14,6 +14,9 @@ export type ArrivalSource = {
   baselineAt: Date | null;
 };
 
+/** "처음 등장한 날"을 모르는 기존 상품의 날짜 — 신제품 기간 밖이 되도록 아주 옛날로 둔다 (저장할 때는 null) */
+export const UNKNOWN_FIRST_SEEN = new Date(0);
+
 /** 공식 사이트에서 읽은 제품 한 건 (향수가 아닌 것도 포함된 원본) */
 export type RawArrival = {
   source: ArrivalSource;
@@ -96,6 +99,8 @@ export type RuleDropReason =
 
 export type RuleFilterResult = {
   kept: ArrivalCandidate[];
+  /** 신제품 기간이 지났을 뿐 다른 규칙은 모두 통과한 기존 향수 — 기존 향수 채우기(backfill)가 쓴다 */
+  backlog: ArrivalCandidate[];
   /** 사유별 탈락 수 — notNew·noImage·shortBody는 이름 단위, 나머지는 제품 단위 */
   dropped: Record<RuleDropReason, number>;
   /** 같은 향수의 용량·농도만 다른 제품을 하나로 합친 수 */

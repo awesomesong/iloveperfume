@@ -43,7 +43,7 @@ Next.js 15 (App Router) · React 19 · TS · Prisma · NextAuth · Cloudinary ·
 
 - 향수 스캔(`/scan`): [src/app/api/scan/README.md](src/app/api/scan/README.md) — 만지기 전 필독.
 - 향수 뉴스(`/news`): [docs/news-pipeline.md](docs/news-pipeline.md) — 글은 크론 파이프라인만 생성. 검색어·기준 값은 `src/app/lib/news/config.ts`.
-- 향수 신제품 수집: [docs/arrivals-pipeline.md](docs/arrivals-pipeline.md) — 브랜드 공식 사이트의 신제품을 크론이 `Fragrance`에 등록(`source = AI_AGENT`). 수집 대상 브랜드는 코드에 적지 않는다 — 파이프라인이 찾아 DB(`ArrivalSource`)에 등록하고 판정한다. 기준 값은 `src/app/lib/arrivals/config.ts`.
+- 향수 신제품 수집: [docs/arrivals-pipeline.md](docs/arrivals-pipeline.md) — 브랜드 공식 사이트의 신제품을 크론이 `Fragrance`에 등록(`source = AI_AGENT`). 수집 대상 브랜드는 코드에 적지 않는다 — 파이프라인이 찾아 DB(`ArrivalSource`)에 등록하고 판정한다. 신제품 기간이 지난 기존 향수는 같은 단계를 쓰는 채우기(`backfill.ts`, `/api/cron/perfume-backfill`)가 등록한다. 기준 값은 `src/app/lib/arrivals/config.ts`.
 - 의사결정 기록: [docs/decisions/](docs/decisions/) — ADR-0001(가격 소스), ADR-0002(Vision 2-pass).
 
 ---

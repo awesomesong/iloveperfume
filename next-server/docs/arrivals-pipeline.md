@@ -56,6 +56,7 @@ LLM이 쓰는 것은 이름 표기(제목과 대조)와 소개문뿐이다. 노�
 | `sourceStore.ts` | DB 등록부 읽기·쓰기 (`ArrivalSource`, `ArrivalSeenUrl`, `ArrivalBrandLead`) — 기사 기록 포함 |
 | `maintainSources.ts` | 수집 대상 관리 단계 실행 |
 | `runPipeline.ts` | 전체 순서 |
+| `backfill.ts` | 기존 향수 채우기 (아래 "기존 향수 채우기") |
 | `src/app/api/cron/perfume-arrivals/route.ts` | 크론 진입점 |
 
 위치는 모두 `src/app/lib/arrivals/` 기준이다. `filterByRules`, `pickForRun`, `validateDescriptions`, `resolveNotes`, `looksLikePerfume`, `aggregateBrands`, `trackedUrls`, `urlStem`은 순수 함수다.
@@ -130,6 +131,29 @@ LLM이 쓰는 것은 이름 표기(제목과 대조)와 소개문뿐이다. 노�
 - 한 기사에서 향수 하나만 등록한다. 기사가 향수 두 종을 함께 소개하면 먼저 소개한 하나만 들어온다.
 - `/news`에 싣는 뉴스 요약은 지금처럼 기사 본문을 읽지 않는다. 본문을 읽는 것은 이 경로에서 고른 출시 기사(하루 최대 4건)뿐이다.
 - 2026-11-19 시험(막힌 브랜드 6곳, 최근 60일): 출시 기사 후보 10건 → 바이레도 "하바나 통카", 불가리 "바치아미 앙코라" 2건 등록 대상, 홀리데이 한정 컬렉션·어워드·협업 홈 컬렉션 기사는 탈락. 디올·에르메스는 그 기간에 향수 단품 출시 기사가 없었다 — 이 경로는 한 달에 몇 건 수준이다.
+
+## 기존 향수 채우기 (`backfill.ts`)
+
+신제품 파이프라인은 처음 등장한 지 60일 이내인 향수만 받는다. 수집 대상 사이트에 **이미 올라와 있던 향수**는 따로 채운다.
+새 단계는 없다 — 규칙 필터·DB 중복 제외·LLM 판정·검증·저장은 신제품과 같은 함수를 쓰고, 후보를 꺼내는 곳만 다르다.
+
+```
+Vercel Cron (매일 02:00 UTC) ─▶ GET /api/cron/perfume-backfill   (= /api/cron/perfume-arrivals?backfill=1)
+  loadBackfillSources   수집 중이고 아직 다 채우지 않은 사이트(backfilledAt = null) — 주소 순으로 한 곳씩 끝낸다
+  후보 꺼내기            SHOPIFY: 상품 목록에서 filterByRules가 돌려준 backlog(기간만 지난 향수) — 추가 요청 없음
+                        SITEMAP: 기준선에 기록만 해 둔 상품 주소를 묶음 크기만큼 연다(collectSitemapBacklog)
+  excludeExisting → describeArrivals(묶음당 1회 호출, 최대 10건) → saveAsFragrances
+  끝낸 주소 기록          저장되지 않은 후보의 주소를 ArrivalSeenUrl(perfume = false)에 적는다
+  다 채웠으면             ArrivalSource.backfilledAt 기록 → 다음 실행부터 이 사이트는 건너뛴다
+```
+
+- **LLM에는 향수 하나를 한 번만 넘긴다.** 저장된 향수는 공식 URL로, 탈락한 향수는 끝낸 주소 기록으로 걸러진다. 응답 누락(`noResponse`)처럼 판정이 끝나지 않은 것만 다음에 다시 본다.
+- 크론은 하루 한 묶음(최대 10건)이다. 처음 채울 때는 로컬에서 `limit`을 크게 주어 돌린다(아래 "수동 실행").
+- 사이트맵 방식은 LLM에 넘길 만큼만 페이지를 연다. 이미 판정한 상품의 다른 용량 주소(`urlStem`이 같은 것)는 열지 않고 끝낸다.
+- 새로 켜진 수집 대상은 `backfilledAt`이 비어 있어 자동으로 채우기 대상이 된다.
+- 채운 향수는 `Fragrance.firstSeenAt`이 예전 날짜(SHOPIFY 게시일)이거나 비어 있다(SITEMAP — 처음 등장한 날을 모른다). 목록의 "신제품" 탭과 카드 표시는 `firstSeenAt`이 60일 이내인 것만 대상이라(`isNewArrival`, `NEW_ARRIVAL_DAYS`) 채운 향수는 전체 탭에만 나온다.
+- 공식 사이트를 읽을 수 없는 브랜드(디올·에르메스 등)의 기존 향수는 채울 수 없다. 출시 기사 경로는 새로 나온 향수만 다룬다.
+- 2026-11-25 시험: D.S. & Durga 상품 103개 → 기존 향수 26건, Juliette Has a Gun 255개 → 20건. 임시 DB에서 3건씩 두 번 돌려 6건이 겹치지 않고 저장됐고, 후보가 없는 사이트는 LLM 호출 없이 끝난 것으로 기록됐다.
 
 ## 한국 판매 기준
 
@@ -225,12 +249,23 @@ curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3001/api/cron/per
 curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3001/api/cron/perfume-arrivals?maintain=probe&limit=50"
 ```
 
+기존 향수 채우기를 한꺼번에 돌린다(신제품 수집은 하지 않는다). `limit`은 LLM에 넘길 향수 수다.
+
+```bash
+# 저장·기록 없이 사이트마다 한 묶음만 판정해 본다
+curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3001/api/cron/perfume-arrivals?backfill=1&dryRun=1"
+
+# 100건까지 채운다 (로컬에서는 최대 10분)
+curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3001/api/cron/perfume-arrivals?backfill=1&limit=100"
+```
+
 현재 상태는 DB에서 본다: `ArrivalSource`의 `status`·`reason`(왜 켜졌거나 꺼졌는지), `ArrivalBrandLead`의 `status`·`note`.
 특정 사이트를 수집에서 빼려면 그 행을 지우지 말고(지우면 다시 찾아 등록된다) `status = INACTIVE`, `nextProbeAt`을 먼 미래로 둔다.
 
 ## DB 마이그레이션
 
 - `20261117000000_fragrance_arrivals` — `Fragrance.source`, `Fragrance.officialUrl`(unique), `FragranceBlockedUrl` 추가.
+- `20261125000000_arrival_backfill` — `Fragrance.firstSeenAt`, `ArrivalSource.backfilledAt` 추가. 지금까지 수집된 향수는 `firstSeenAt`을 수집한 날로 채운다(모두 신제품으로 들어왔으므로).
 - `20261119000000_arrival_sources` — `ArrivalSource`, `ArrivalSeenUrl`(상품 주소·기사 주소 기록), `ArrivalBrandLead` 추가. 새 테이블만 만들고 기존 데이터는 바꾸지 않는다. 코드에 적혀 있던 수집 대상 2곳(D.S. & Durga, Juliette Has a Gun)을 `ArrivalSource`에 옮겨 넣는다.
 
 **배포 전에 먼저 적용해야 한다** — Vercel 빌드는 마이그레이션을 실행하지 않는다. 적용하지 않고 배포하면 크론이 테이블을 찾지 못해 실패한다.

@@ -210,6 +210,8 @@ model Fragrance {
   source      FragranceSource              @default(USER)
   // 브랜드 공식 제품 페이지. unique로 같은 제품의 중복 수집을 막는다 (사용자 등록 건은 null)
   officialUrl String?                      @unique
+  // 공식 사이트(또는 출시 기사)에 처음 등장한 날 — "신제품" 표시 기준. 모르거나 사용자 등록이면 null
+  firstSeenAt DateTime?
   author      User?                        @relation(fields: [authorEmail], references: [email])
 
   @@index([source, createdAt(sort: Desc)])
@@ -264,6 +266,8 @@ model ArrivalSource {
   // SITEMAP: 기존 상품 주소를 기준선으로 기록한 시각
   baselineAt      DateTime?
   lastCollectedAt DateTime?
+  // 기존 향수(신제품 기간이 지난 것) 채우기를 끝낸 시각. null이면 아직 채울 것이 남았다
+  backfilledAt    DateTime?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   seenUrls        ArrivalSeenUrl[]
