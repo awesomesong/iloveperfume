@@ -106,6 +106,8 @@ export const FEED_TIMEOUT_MS = 8_000;
 export const THIN_BODY_BUDGET_MS = 8_000;
 /** 기존 향수 채우기에서 LLM 1회 호출에 넘기는 후보 수 — 통과한 것을 모두 저장할 수 있게 MAX_SAVE_PER_RUN과 같게 둔다 */
 export const BACKFILL_BATCH_SIZE = 10;
+/** 기존 향수 채우기에서 한 실행에 함께 채우는 브랜드 수 — 묶음(10건)을 브랜드마다 나눠 채운다(5곳 × 2건) */
+export const BACKFILL_BRANDS_PER_RUN = 5;
 /** 채우기 한 묶음에서 상품 페이지를 여는 데 쓰는 시간 (사이트맵 방식) */
 export const BACKFILL_PAGES_BUDGET_MS = 15_000;
 /** 채우기 한 묶음(상품 페이지 열기 + LLM 호출)에 드는 시간 — 남은 시간이 이보다 적으면 새 묶음을 시작하지 않는다 */
