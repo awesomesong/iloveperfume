@@ -26,7 +26,6 @@ import {
 import { useFailedMessages } from "@/src/app/hooks/useFailedMessages";
 import { useAIStream } from "@/src/app/hooks/useAIStream";
 import { useConversationLoading } from "@/src/app/hooks/useConversationLoading";
-import DOMPurify from 'dompurify';
 
 type SeenUser = {
   id: string;
@@ -158,20 +157,6 @@ const MessageView: React.FC<MessageBoxProps> = ({
   const { isLoading: isConversationLoading } = useConversationLoading();
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [seenUsers, setSeenUsers] = useState<SeenUser[]>([]);
-
-  const sanitizedMessageBody = useMemo(() => {
-    if (typeof window === 'undefined') {
-      // SSR에서는 원본 텍스트 반환
-      return data.body || '';
-    }
-
-    try {
-      return DOMPurify.sanitize(data.body || '');
-    } catch (error) {
-      console.warn('DOMPurify 로드 실패:', error);
-      return data.body || '';
-    }
-  }, [data.body]);
 
   const seenIdSetRef = useRef<Set<string>>(new Set());
   const [dotCount, setDotCount] = useState(0);
@@ -599,12 +584,12 @@ const MessageView: React.FC<MessageBoxProps> = ({
                     <span className="text-amber-500 font-medium">{".".repeat(dotCount)}</span>
                   </div>
                 )}
+                {/* 메시지는 HTML로 해석하지 않고 글자 그대로 보여 준다 (태그·외부 이미지·링크가 동작하지 않도록) */}
                 <pre
                   className={clsx("whitespace-pre-wrap break-all min-w-0", isError ? "text-red-800" : "text-[var(--color-text-primary)]")}
-                  dangerouslySetInnerHTML={{
-                    __html: sanitizedMessageBody,
-                  }}
-                />
+                >
+                  {data.body || ''}
+                </pre>
               </div>
             )}
           </div>
