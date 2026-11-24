@@ -1296,6 +1296,17 @@ h6 {
 .blend-scent-option__check {
   visibility: hidden;
 }
+/* 다른 층에 담은 향: 이름·층 이름 모두 보조색, 동그라미 자리에 층 이름 */
+.blend-scent-option--taken {
+  cursor: default;
+}
+.blend-scent-option--taken .blend-scent-option__label {
+  color: var(--color-text-secondary);
+}
+.blend-scent-option__taken {
+  flex: none;
+  font-size: 0.8125rem;
+}
 .dark .blend-scent-option__label {
   border-bottom-color: var(--color-accent-border);
 }

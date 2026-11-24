@@ -3,13 +3,13 @@ import { HiXMark } from "react-icons/hi2";
 import {
     MAX_LAYER_NOTES,
     SCENT_LAYERS,
-    notesInLayer,
     scentNoteName,
+    type LayerNotes,
     type ScentLayerId,
 } from "@/src/app/lib/blend/scentNotes";
 
 type Props = {
-    noteIds: readonly string[];
+    notes: LayerNotes;
     /** 지금 고르는 층 — 이 줄은 개수(1/2)를 붙이고, 고른 향을 눌러 뺄 수 있게 그린다 */
     currentLayerId?: ScentLayerId;
     /** 고른 향 빼기 — 지금 층 줄의 × 버튼 */
@@ -20,10 +20,10 @@ type Props = {
  * 고른 향을 층별 표로 — "처음 향 | 베르가못, 레몬" 한 줄씩. 향 고르기와 결과가 함께 쓴다.
  * 아직 고르지 않은 층은 뿌린 뒤 언제 나는 향인지(layer.hint)를 보여 준다.
  */
-const ScentPyramid = ({ noteIds, currentLayerId, onRemove }: Props) => (
+const ScentPyramid = ({ notes, currentLayerId, onRemove }: Props) => (
     <dl className="blend-pyramid" aria-live="polite">
         {SCENT_LAYERS.map((layer) => {
-            const ids = notesInLayer(noteIds, layer.id);
+            const ids = notes[layer.id];
             const isCurrent = layer.id === currentLayerId;
             return (
                 <div key={layer.id} className={isCurrent ? "blend-pyramid__row blend-pyramid__row--current" : "blend-pyramid__row"}>

@@ -4,8 +4,10 @@ import {
     LAYER_BY_NOTE_ID,
     MAX_LAYER_NOTES,
     SCENT_LAYERS,
-    notesInLayer,
+    SCENT_NOTE_BY_ID,
+    allNoteIds,
     scentNoteName,
+    type LayerNotes,
     type ScentLayerId,
 } from "./scentNotes";
 
@@ -17,16 +19,17 @@ export const BLEND_PAGE_TITLE = "나만의 향수 만들기";
 export const BLEND_STEPS = ["bottle", "top", "middle", "base", "result"] as const;
 export type BlendStep = (typeof BLEND_STEPS)[number];
 
-/** 지금 단계와 고른 값 — 주소의 쿼리스트링(?step=&bottle=&color=&notes=)과 1:1로 대응한다 */
+/** 지금 단계와 고른 값 — 주소의 쿼리스트링(?step=&bottle=&color=&top=&middle=&base=)과 1:1로 대응한다 */
 export type BlendState = {
     step: BlendStep;
     bottleId: string;
     colorId: string;
-    noteIds: readonly string[];
+    notes: LayerNotes;
 };
 
 type ParamValue = string | string[] | undefined;
-export type BlendSearchParams = Partial<Record<"step" | "bottle" | "color" | "notes", ParamValue>>;
+/** notes는 층이 없던 옛 공유 링크(?notes=베르가못,장미,…) — 읽기만 하고 새로 쓰지 않는다 */
+export type BlendSearchParams = Partial<Record<"step" | "bottle" | "color" | "notes" | ScentLayerId, ParamValue>>;
 
 const STEPS = new Set<string>(BLEND_STEPS);
 const BOTTLE_IDS = new Set(BOTTLE_SHAPES.map((shape) => shape.id));
@@ -38,22 +41,31 @@ export const nextStep = (step: BlendStep): BlendStep => BLEND_STEPS[Math.min(BLE
 export const prevStep = (step: BlendStep): BlendStep => BLEND_STEPS[Math.max(BLEND_STEPS.indexOf(step) - 1, 0)];
 
 /** 결과는 세 층을 모두 골라야 보여줄 수 있다 — 빈 층이 있으면 그 층 고르기로 */
-export function resolveStep(step: BlendStep, noteIds: readonly string[]): BlendStep {
+export function resolveStep(step: BlendStep, notes: LayerNotes): BlendStep {
     if (step !== "result") return step;
-    return SCENT_LAYERS.find((layer) => notesInLayer(noteIds, layer.id).length === 0)?.id ?? step;
+    return SCENT_LAYERS.find((layer) => notes[layer.id].length === 0)?.id ?? step;
 }
 
-/** 모르는 향·중복을 버리고, 층마다 MAX_LAYER_NOTES개까지만 남긴다 */
-function cleanNoteIds(raw: string): string[] {
-    const count = new Map<ScentLayerId, number>();
-    const noteIds: string[] = [];
-    for (const id of new Set(raw.split(","))) {
-        const layer = LAYER_BY_NOTE_ID.get(id);
-        if (!layer || (count.get(layer) ?? 0) >= MAX_LAYER_NOTES) continue;
-        count.set(layer, (count.get(layer) ?? 0) + 1);
-        noteIds.push(id);
+/** 층마다 쉼표로 이은 향 id → 모르는 향, 앞 층에 이미 담은 향을 버리고 층마다 MAX_LAYER_NOTES개까지 */
+function cleanLayerNotes(raw: Partial<Record<ScentLayerId, string>>): LayerNotes {
+    const seen = new Set<string>();
+    const notes: Record<ScentLayerId, string[]> = { top: [], middle: [], base: [] };
+    for (const { id: layerId } of SCENT_LAYERS) {
+        for (const id of (raw[layerId] ?? "").split(",")) {
+            if (!SCENT_NOTE_BY_ID.has(id) || seen.has(id) || notes[layerId].length >= MAX_LAYER_NOTES) continue;
+            seen.add(id);
+            notes[layerId].push(id);
+        }
     }
-    return noteIds;
+    return notes;
+}
+
+/** 옛 링크(?notes=)는 향마다 흔한 층으로 나눈다 */
+function legacyLayerNotes(raw: string): Partial<Record<ScentLayerId, string>> {
+    const ids = raw.split(",");
+    return Object.fromEntries(
+        SCENT_LAYERS.map((layer) => [layer.id, ids.filter((id) => LAYER_BY_NOTE_ID.get(id) === layer.id).join(",")]),
+    );
 }
 
 /** 쿼리스트링을 상태로 바꾼다. 모르는 병·향·단계는 버리고 기본값을 쓴다(주소를 손으로 고쳐도 깨지지 않는다). */
@@ -61,23 +73,28 @@ export function parseBlendParams(params: BlendSearchParams): BlendState {
     const bottle = firstValue(params.bottle);
     const color = firstValue(params.color);
     const step = firstValue(params.step);
-    const noteIds = cleanNoteIds(firstValue(params.notes) ?? "");
+    const hasLayers = SCENT_LAYERS.some((layer) => firstValue(params[layer.id]));
+    const notes = cleanLayerNotes(
+        hasLayers
+            ? Object.fromEntries(SCENT_LAYERS.map((layer) => [layer.id, firstValue(params[layer.id])]))
+            : legacyLayerNotes(firstValue(params.notes) ?? ""),
+    );
 
     return {
-        step: resolveStep(step && STEPS.has(step) ? (step as BlendStep) : "bottle", noteIds),
+        step: resolveStep(step && STEPS.has(step) ? (step as BlendStep) : "bottle", notes),
         bottleId: bottle && BOTTLE_IDS.has(bottle) ? bottle : DEFAULT_BOTTLE_ID,
         colorId: color && isPerfumeColorId(color) ? color : DEFAULT_COLOR_ID,
-        noteIds,
+        notes,
     };
 }
 
-/** 상태를 쿼리스트링으로 바꾼다. 병 단계면 step을, 기본 색이면 color를, 고른 향이 없으면 notes를 뺀다. id는 영문 소문자·하이픈뿐이라 그대로 쓴다. */
-export function toBlendSearch({ step, bottleId, colorId, noteIds }: BlendState): string {
+/** 상태를 쿼리스트링으로 바꾼다. 병 단계면 step을, 기본 색이면 color를, 빈 층은 뺀다. id는 영문 소문자·하이픈뿐이라 그대로 쓴다. */
+export function toBlendSearch({ step, bottleId, colorId, notes }: BlendState): string {
     const parts = [
         step === "bottle" ? null : `step=${step}`,
         `bottle=${bottleId}`,
         colorId === DEFAULT_COLOR_ID ? null : `color=${colorId}`,
-        noteIds.length > 0 ? `notes=${noteIds.join(",")}` : null,
+        ...SCENT_LAYERS.map((layer) => (notes[layer.id].length > 0 ? `${layer.id}=${notes[layer.id].join(",")}` : null)),
     ];
     return `?${parts.filter(Boolean).join("&")}`;
 }
@@ -88,14 +105,14 @@ export function toBlendSearch({ step, bottleId, colorId, noteIds }: BlendState):
  */
 export function parseBlendSearch(search: string): BlendState {
     const params = new URLSearchParams(search);
-    const get = (key: string) => params.get(key) ?? undefined;
-    return parseBlendParams({ step: get("step"), bottle: get("bottle"), color: get("color"), notes: get("notes") });
+    const keys = ["step", "bottle", "color", "notes", ...SCENT_LAYERS.map((layer) => layer.id)] as const;
+    return parseBlendParams(Object.fromEntries(keys.map((key) => [key, params.get(key) ?? undefined])));
 }
 
 /** 결과를 나눌 때 쓰는 제목 — 공유 시트와 링크 미리보기(og:title)가 같은 문장을 쓴다 */
-export function blendResultTitle(noteIds: readonly string[]) {
+export function blendResultTitle(notes: LayerNotes) {
     // 처음 향 → 중심 향 → 남는 향 순서로 읽힌다
-    const names = SCENT_LAYERS.flatMap((layer) => notesInLayer(noteIds, layer.id)).map(scentNoteName).join(", ");
+    const names = allNoteIds(notes).map(scentNoteName).join(", ");
     return `${names}${withRo(names)} 만든 나만의 향수`;
 }
 
@@ -108,5 +125,5 @@ function withRo(word: string) {
 }
 
 /** 단계에 맞는 페이지 제목 — 결과면 고른 향을 담는다 */
-export const blendPageTitle = ({ step, noteIds }: Pick<BlendState, "step" | "noteIds">) =>
-    step === "result" ? blendResultTitle(noteIds) : BLEND_PAGE_TITLE;
+export const blendPageTitle = ({ step, notes }: Pick<BlendState, "step" | "notes">) =>
+    step === "result" ? blendResultTitle(notes) : BLEND_PAGE_TITLE;

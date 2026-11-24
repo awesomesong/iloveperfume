@@ -6,7 +6,7 @@ import ScentPicker from "./ScentPicker";
 import PageIntro from "@/src/app/components/PageIntro";
 import { DEFAULT_BOTTLE_ID } from "@/src/app/lib/blend/bottleShapes";
 import { DEFAULT_COLOR_ID } from "@/src/app/lib/blend/perfumeColors";
-import { SCENT_LAYERS, getScentLayer, type ScentLayerId } from "@/src/app/lib/blend/scentNotes";
+import { EMPTY_LAYER_NOTES, SCENT_LAYERS, getScentLayer, type LayerNotes, type ScentLayerId } from "@/src/app/lib/blend/scentNotes";
 import {
     BLEND_PATH,
     blendPageTitle,
@@ -64,7 +64,7 @@ const BlendGame = ({ initial }: Props) => {
     const goTo = useCallback(
         (step: BlendStep, patch?: Partial<BlendState>) => {
             const next = { ...latest.current, ...patch };
-            latest.current = { ...next, step: resolveStep(step, next.noteIds) };
+            latest.current = { ...next, step: resolveStep(step, next.notes) };
             setView(latest.current);
             writeUrl("push");
         },
@@ -92,9 +92,9 @@ const BlendGame = ({ initial }: Props) => {
     );
 
     const handleNotesSelect = useCallback(
-        (noteIds: readonly string[]) => {
-            if (latest.current.noteIds === noteIds) return;
-            latest.current = { ...latest.current, noteIds };
+        (notes: LayerNotes) => {
+            if (latest.current.notes === notes) return;
+            latest.current = { ...latest.current, notes };
             writeUrl("replace");
         },
         [writeUrl],
@@ -104,7 +104,7 @@ const BlendGame = ({ initial }: Props) => {
     const handleNext = useCallback(() => goTo(nextStep(latest.current.step)), [goTo]);
     const handleBack = useCallback(() => goTo(prevStep(latest.current.step)), [goTo]);
     const handleRestart = useCallback(
-        () => goTo("bottle", { bottleId: DEFAULT_BOTTLE_ID, colorId: DEFAULT_COLOR_ID, noteIds: [] }),
+        () => goTo("bottle", { bottleId: DEFAULT_BOTTLE_ID, colorId: DEFAULT_COLOR_ID, notes: EMPTY_LAYER_NOTES }),
         [goTo],
     );
 
@@ -115,7 +115,7 @@ const BlendGame = ({ initial }: Props) => {
             // 이 페이지를 떠나는 뒤로 가기(다른 페이지로 돌아감)도 여기로 온다 — 그 주소는 건드리지 않는다
             if (window.location.pathname !== BLEND_PATH) return;
             const { step } = parseBlendSearch(window.location.search);
-            latest.current = { ...latest.current, step: resolveStep(step, latest.current.noteIds) };
+            latest.current = { ...latest.current, step: resolveStep(step, latest.current.notes) };
             setView(latest.current);
             writeUrl("replace");
         };
@@ -154,7 +154,7 @@ const BlendGame = ({ initial }: Props) => {
             <BlendResult
                 bottleId={view.bottleId}
                 colorId={view.colorId}
-                noteIds={view.noteIds}
+                notes={view.notes}
                 onBack={handleBack}
                 onRestart={handleRestart}
             >
@@ -172,7 +172,7 @@ const BlendGame = ({ initial }: Props) => {
             layer={layer}
             bottleId={view.bottleId}
             colorId={view.colorId}
-            initialNoteIds={view.noteIds}
+            initialNotes={view.notes}
             onSelect={handleNotesSelect}
             onBack={handleBack}
             onNext={handleNext}

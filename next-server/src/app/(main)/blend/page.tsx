@@ -31,7 +31,7 @@ export async function generateMetadata({ searchParams }: Props, parent: Resolvin
 }
 
 // 스타일 기준은 docs/design-system.md "나만의 향수 만들기 패턴" 참고
-// 고른 병·향·단계는 쿼리스트링(?step=&bottle=&notes=)에 있다 — 새로고침해도 그대로 그린다
+// 고른 병·향·단계는 쿼리스트링(?step=&bottle=&color=&top=&middle=&base=)에 있다 — 새로고침해도 그대로 그린다
 export default async function BlendPage({ searchParams }: Props) {
   const initial = parseBlendParams(await searchParams);
   return (
