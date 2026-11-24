@@ -1,5 +1,6 @@
 import type { Metadata, ResolvingMetadata } from 'next';
 import BlendGame from '@/src/app/components/blend/BlendGame';
+import BottleDefs from '@/src/app/components/blend/BottleDefs';
 import { BLEND_PAGE_TITLE, blendPageTitle, parseBlendParams, type BlendSearchParams } from '@/src/app/lib/blend/blendParams';
 
 type Props = { searchParams: Promise<BlendSearchParams> };
@@ -30,11 +31,13 @@ export async function generateMetadata({ searchParams }: Props, parent: Resolvin
 }
 
 // 스타일 기준은 docs/design-system.md "나만의 향수 만들기 패턴" 참고
-// 고른 병·향·단계는 쿼리스트링(?step=&bottle=&notes=)에 있다 — 새로고침해도 그대로 그린다
+// 고른 병·향·단계는 쿼리스트링(?step=&bottle=&color=&top=&middle=&base=)에 있다 — 새로고침해도 그대로 그린다
 export default async function BlendPage({ searchParams }: Props) {
   const initial = parseBlendParams(await searchParams);
   return (
     <div className="px-4 pt-8 pb-4 md:p-8 max-w-[1440px] w-full mx-auto">
+      {/* 병 그림들이 함께 쓰는 그라데이션 — 페이지에 한 번만 둔다 */}
+      <BottleDefs />
       <BlendGame initial={initial} />
     </div>
   );

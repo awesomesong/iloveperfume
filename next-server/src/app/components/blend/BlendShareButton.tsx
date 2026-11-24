@@ -4,10 +4,12 @@ import toast from "react-hot-toast";
 import { HiArrowUpOnSquare } from "react-icons/hi2";
 import Button from "@/src/app/components/Button";
 import { BLEND_PATH, blendResultTitle, toBlendSearch } from "@/src/app/lib/blend/blendParams";
+import type { LayerNotes } from "@/src/app/lib/blend/scentNotes";
 
 type Props = {
     bottleId: string;
-    noteIds: readonly string[];
+    colorId: string;
+    notes: LayerNotes;
 };
 
 /** 클립보드 API가 막힌 곳(일부 앱 내 브라우저)을 위한 옛 복사 방식 */
@@ -43,24 +45,24 @@ async function copyLink(url: string) {
 }
 
 /**
- * 결과 공유 — 링크에 병·향이 담겨 있어, 받은 사람도 같은 결과 화면을 연다.
+ * 결과 공유 — 링크에 병·색·향이 담겨 있어, 받은 사람도 같은 결과 화면을 연다.
  * 휴대폰은 기기 공유 시트(카카오톡·메시지 등)를 띄우고, 없으면 링크를 복사한다.
  */
-const BlendShareButton = ({ bottleId, noteIds }: Props) => {
+const BlendShareButton = ({ bottleId, colorId, notes }: Props) => {
     const handleShare = useCallback(async () => {
-        const url = `${window.location.origin}${BLEND_PATH}${toBlendSearch({ step: "result", bottleId, noteIds })}`;
+        const url = `${window.location.origin}${BLEND_PATH}${toBlendSearch({ step: "result", bottleId, colorId, notes })}`;
         if (typeof navigator.share !== "function") {
             await copyLink(url);
             return;
         }
         try {
-            await navigator.share({ title: blendResultTitle(noteIds), url });
+            await navigator.share({ title: blendResultTitle(notes), url });
         } catch (error) {
             // 사용자가 공유 시트를 닫은 것은 실패가 아니다
             if (error instanceof DOMException && error.name === "AbortError") return;
             await copyLink(url);
         }
-    }, [bottleId, noteIds]);
+    }, [bottleId, colorId, notes]);
 
     return (
         <Button variant="ilp" onClick={handleShare} className="w-full">
