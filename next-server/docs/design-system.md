@@ -545,6 +545,21 @@ function contrast(hex1, hex2) {
 
 ---
 
+## 6-4. 내 스캔 기록 패턴 (`/profile`)
+
+> 직접 찍은 사진이라 비율이 제각각이고 배경이 지저분하다. 향수 카드(6-2)의 세로 사진 칸·테두리 대신 정사각형 사진 격자와 글자 위계만 쓴다. 새 색은 없다.
+
+| 요소 | 클래스 / 컴포넌트 | 규칙 |
+|------|-------------------|------|
+| 영역 | `MyScanList` (`section.scan-history`) | 프로필 정보 아래, 위에 가는 선(`--color-card-border`). 최대 1440px. 제목 "내가 스캔한 향수" 옆에 전체 개수 |
+| 격자 | `ul.scan-history__grid` | `auto-fill`로 사진 최소 크기만 정한다: 모바일 136px·간격 12px(320px 이상 2열, 더 좁으면 1열) → 768px부터 200px·16px(768px 3열, 1024px 4열, 1280px 5열, 1440px 6열) |
+| 사진 | `.scan-history__thumb` | 정사각형, 가운데를 채워 자른다(`object-cover`), 모서리 12px, 불러오는 동안 `--color-accent-pale` |
+| 글자 | `.scan-history__name` → `.scan-history__meta` × 2 | 이름(14px·500·primary, 자르지 않고 줄바꿈) → 브랜드 → 날짜(13px 보조색). 브랜드와 날짜는 가운뎃점으로 잇지 않고 줄을 나눈다(좁은 칸에서 점이 줄 앞에 걸림). 날짜는 `formatNewsTime` |
+| 링크 | `.scan-history__link` | 스캔 결과로 간다. hover는 이름 밑줄만, 포커스는 액센트 외곽선 |
+| 없음 | — | "아직 스캔한 향수가 없어요. 향수 스캔하기" |
+
+---
+
 ## 7. 카드 토큰
 
 ```css
