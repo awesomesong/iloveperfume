@@ -76,7 +76,7 @@ export default function ScanResult({ data, ownership, isLoggedIn }: Props) {
       FragranceDetail 톤으로 통일 — 카드(border + bg + padding) wrapping 제거.
       그라데이션 헤딩 + border-t 섹션 구분 + 톤 다운된 본문으로 정보 위계 표현.
     */
-    <div className="mx-auto w-full max-w-5xl flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12">
+    <div className="w-full flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12">
       {/* 좌: 이미지 + 액션 버튼 — sticky로 스크롤 중에도 항상 보임 */}
       <div className="w-full max-w-md mx-auto lg:max-w-none lg:w-[400px] lg:mx-0 lg:shrink-0 lg:sticky lg:top-[calc(var(--header-height)+1.5rem)]">
         <div
