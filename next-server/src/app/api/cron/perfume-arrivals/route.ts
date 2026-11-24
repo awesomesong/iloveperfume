@@ -14,7 +14,7 @@ export const maxDuration = 60;
  * - 스케줄: vercel.json (매일 1회)
  * - 수동 실행: curl -H "Authorization: Bearer $CRON_SECRET" <origin>/api/cron/perfume-arrivals
  * - 저장 없이 결과만 확인: ?dryRun=1
- * - 수집 대상 관리만 따로 실행(수집은 하지 않음): ?maintain=discover|resolve|probe (&limit=처리할 수)
+ * - 수집 대상 관리만 따로 실행(수집은 하지 않음): ?maintain=discover|resolve|probe|measure (&limit=처리할 수)
  *   평소에는 크론이 수집 뒤 남는 시간에 한 단계씩 하므로 필요 없다. 처음 채울 때나 한꺼번에 돌릴 때 쓴다.
  *   Vercel에서는 실행 시간 제한 안에서만 하고, 로컬에서는 넉넉히 돈다.
  * - 기존 향수 채우기(신제품 수집은 하지 않음): ?backfill=1 (&limit=LLM에 넘길 향수 수, &dryRun=1)
@@ -22,7 +22,7 @@ export const maxDuration = 60;
  *   크론은 /api/cron/perfume-retailer로 하루 한 번 조금씩 한다.
  *   크론은 /api/cron/perfume-backfill로 하루 한 묶음씩 하고, 처음 채울 때는 로컬에서 limit을 크게 주어 돌린다.
  */
-const MAINTENANCE_STEPS: readonly MaintenanceStep[] = ["discover", "resolve", "probe"];
+const MAINTENANCE_STEPS: readonly MaintenanceStep[] = ["discover", "resolve", "probe", "measure"];
 const MANUAL_MAINTENANCE_MS = process.env.VERCEL ? 50_000 : 10 * 60_000;
 
 export async function GET(req: NextRequest) {
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
   const dryRun = params.get("dryRun") === "1";
   const step = MAINTENANCE_STEPS.find((name) => name === params.get("maintain"));
   if (params.has("maintain") && !step) {
-    return NextResponse.json({ message: "maintain 값은 discover, resolve, probe 중 하나여야 합니다." }, { status: 400 });
+    return NextResponse.json({ message: "maintain 값은 discover, resolve, probe, measure 중 하나여야 합니다." }, { status: 400 });
   }
   const limit = Number(params.get("limit"));
   const manualLimit = Number.isInteger(limit) && limit > 0 ? limit : undefined;

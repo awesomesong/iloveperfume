@@ -268,6 +268,9 @@ model ArrivalSource {
   lastCollectedAt DateTime?
   // 기존 향수(신제품 기간이 지난 것) 채우기를 끝낸 시각. null이면 아직 채울 것이 남았다
   backfilledAt    DateTime?
+  // 국내 인지도 — 네이버 블로그에서 "{브랜드 한글 표기} 향수 시향"으로 찾은 글 수. null이면 아직 재지 않았다
+  awareness       Int?
+  awarenessAt     DateTime?
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   seenUrls        ArrivalSeenUrl[]

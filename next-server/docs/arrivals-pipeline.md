@@ -50,6 +50,7 @@ LLM이 쓰는 것은 이름 표기(제목과 대조)와 소개문뿐이다. 노�
 | 위치 | 역할 |
 |------|------|
 | `config.ts` | 판매처, 제외 단어, 기간, 한도 등 운영 값 — **조정은 여기서** (수집 대상 브랜드는 여기 없다) |
+| `awareness.ts` | 브랜드의 국내 인지도 측정(네이버 블로그 글 수) |
 | `text.ts` | 글자 처리 공용 함수 — 악센트 제거, 비교용 키, 글 길이(한·중·일 보정), HTML → 일반 텍스트 |
 | `perfumeSignals.ts` | 향수 단품 판별 규칙 하나 — 수집 필터·사이트 판정·판매처 브랜드 찾기가 모두 이것을 쓴다 |
 | `robots.ts` · `siteData.ts` | 외부 사이트 읽기 — robots.txt, 사이트맵, 상품 페이지(JSON-LD·Open Graph), Shopify 상품 목록 |
@@ -293,7 +294,20 @@ curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3001/api/cron/per
 현재 상태는 DB에서 본다: `ArrivalSource`의 `status`·`reason`(왜 켜졌거나 꺼졌는지), `ArrivalBrandLead`의 `status`·`note`.
 특정 사이트를 수집에서 빼려면 그 행을 지우지 말고(지우면 다시 찾아 등록된다) `status = INACTIVE`, `nextProbeAt`을 먼 미래로 둔다.
 
+## 국내 인지도 (`awareness.ts`)
+
+국내 판매처에 입점했어도 국내에서 거의 알려지지 않은 브랜드가 많다(니치 편집숍이 판매처라서). 그래서 **국내에 알려진 브랜드만, 알려진 순서로** 수집한다.
+
+- 측정: 네이버 블로그 검색에서 `{브랜드 한글 표기} 향수 시향`으로 찾은 글 수(`ArrivalSource.awareness`). 브랜드당 검색 API 1회, LLM은 쓰지 않는다. 관리 단계 `measure`가 재고 `AWARENESS_REFRESH_DAYS`(30일)마다 다시 잰다.
+- 기존 향수 채우기는 한 실행에 인지도 상위 브랜드 `BACKFILL_BRANDS_PER_RUN`(5)곳에서 나눠 꺼내 한 묶음(10건)으로 LLM에 넘긴다(5곳 × 2건). 한 브랜드만 10건 채우지 않고 실행마다 여러 브랜드가 고르게 들어온다. 다 채운 브랜드 자리는 다음 브랜드가 잇는다.
+- 기준: `MIN_AWARENESS`(1,000) 미만이거나 아직 재지 않은 브랜드는 수집하지 않는다 — 신제품(`loadSourcesForRun`), 기존 향수 채우기(`loadBackfillSources`), 출시 기사·판매처 경로(`loadClosedBrands`) 모두. 기존 향수 채우기는 인지도가 높은 브랜드부터 한 곳씩 끝낸다.
+- 2026-11-25 실측(등록부 59개 브랜드): 기준 이상 23개 — 수집 가능 11(조말론 39,021 · 딥디크 32,960 · 메모 파리 14,205 · 이솝 · 톰포드 · 크리드 · 프레데릭 말 · 킬리안 · 로에베 · 아로 · 미우미우 1,046), 공식 사이트가 막힌 브랜드 12(바이레도 · 디올 · 산타 마리아 노벨라 · 에르메스 등). 기준 미만 31개(BDK 242, 보아디시아 46 등).
+- 판매량·판매 순위를 쓰지 않는 이유: 받아 올 곳이 없다. 네이버 쇼핑 검색 API는 종료됐고(ADR-0003), 데이터랩은 브랜드 목록을 주지 않으며, 올리브영·SSG·롯데온·더현대·무신사·11번가 등은 robots.txt로 자동 수집을 금지한다. 컬리·29CM은 읽을 수 있지만 일반 쇼핑몰이라 향수 비율이 너무 낮다.
+- 한계: 한글 표기가 일반 단어인 브랜드는 많게 나온다("메모"). 한글 표기가 길거나 드문 표기로 등록된 브랜드는 적게 나온다(구찌가 "구찌 알케미스트 가든"으로 등록돼 기준 미만). 표기는 `ArrivalSource.aliases`의 첫 한글 표기를 쓴다.
+
 ## DB 마이그레이션
+
+- `20261126000000_arrival_awareness` — `ArrivalSource.awareness`, `awarenessAt` 추가. 적용 뒤 `?maintain=measure&limit=100`을 한 번 돌려야 수집이 다시 시작된다(재지 않은 브랜드는 수집하지 않으므로).
 
 - `20261117000000_fragrance_arrivals` — `Fragrance.source`, `Fragrance.officialUrl`(unique), `FragranceBlockedUrl` 추가.
 - `20261125000000_arrival_backfill` — `Fragrance.firstSeenAt`, `ArrivalSource.backfilledAt` 추가. 지금까지 수집된 향수는 `firstSeenAt`을 수집한 날로 채운다(모두 신제품으로 들어왔으므로).
