@@ -316,6 +316,11 @@ export type ScentLayer = {
     id: ScentLayerId;
     /** 화면에 보이는 이름 */
     name: string;
+    /**
+     * 뿌린 뒤 언제 나는 향인지 — 아직 안 고른 층 자리에 보인다.
+     * 탑 5~20분, 미들 15~30분 뒤부터 몇 시간, 베이스 몇 시간~며칠(향수 노트 안내 글 기준, 농도·피부에 따라 다름)
+     */
+    hint: string;
     /** 이 층의 향만 담은 계열들 (계열 순서는 SCENT_FAMILIES와 같다) */
     families: readonly ScentFamily[];
 };
@@ -323,9 +328,9 @@ export type ScentLayer = {
 /** 고르는 순서대로 */
 export const SCENT_LAYERS: readonly ScentLayer[] = (
     [
-        { id: "top", name: "처음 향" },
-        { id: "middle", name: "중심 향" },
-        { id: "base", name: "남는 향" },
+        { id: "top", name: "처음 향", hint: "뿌리자마자 나는 향" },
+        { id: "middle", name: "중심 향", hint: "30분쯤 지나 나는 향" },
+        { id: "base", name: "남는 향", hint: "몇 시간 뒤까지 남는 향" },
     ] as const
 ).map((layer) => ({
     ...layer,

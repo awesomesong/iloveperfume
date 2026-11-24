@@ -5,7 +5,8 @@ import BottlePicker from "./BottlePicker";
 import ScentPicker from "./ScentPicker";
 import PageIntro from "@/src/app/components/PageIntro";
 import { DEFAULT_BOTTLE_ID } from "@/src/app/lib/blend/bottleShapes";
-import { MAX_LAYER_NOTES, SCENT_LAYERS, getScentLayer, type ScentLayerId } from "@/src/app/lib/blend/scentNotes";
+import { DEFAULT_COLOR_ID } from "@/src/app/lib/blend/perfumeColors";
+import { SCENT_LAYERS, getScentLayer, type ScentLayerId } from "@/src/app/lib/blend/scentNotes";
 import {
     BLEND_PATH,
     blendPageTitle,
@@ -20,9 +21,9 @@ import {
 
 /** 층마다 제목 한 문장 — 그 층이 어떤 향인지 제목만 읽어도 알 수 있게 */
 const LAYER_TITLES: Record<ScentLayerId, string> = {
-    top: "처음 뿌렸을 때 날 향을 골라 주세요.",
-    middle: "향의 중심이 될 향을 골라 주세요.",
-    base: "오래 남을 향을 골라 주세요.",
+    top: "처음 뿌렸을 때 날 향을 한두 가지 골라 주세요.",
+    middle: "향의 중심이 될 향을 한두 가지 골라 주세요.",
+    base: "오래 남을 향을 한두 가지 골라 주세요.",
 };
 
 type Props = {
@@ -45,7 +46,7 @@ function readInitialState(initial: BlendState): BlendState {
 
 /**
  * 나만의 향수 만들기 — 단계와 고른 값을 주소 쿼리스트링에 담는다.
- * - 병·향을 고를 때: 주소만 덮어쓴다(replaceState). 이 컴포넌트는 다시 그려지지 않는다.
+ * - 병·색·향을 고를 때: 주소만 덮어쓴다(replaceState). 이 컴포넌트는 다시 그려지지 않는다.
  * - 단계를 넘길 때: 주소를 새로 쌓는다(pushState). 브라우저 뒤로 가기로 이전 단계에 간다.
  */
 const BlendGame = ({ initial }: Props) => {
@@ -81,6 +82,15 @@ const BlendGame = ({ initial }: Props) => {
         [writeUrl],
     );
 
+    const handleColorSelect = useCallback(
+        (colorId: string) => {
+            if (latest.current.colorId === colorId) return;
+            latest.current = { ...latest.current, colorId };
+            writeUrl("replace");
+        },
+        [writeUrl],
+    );
+
     const handleNotesSelect = useCallback(
         (noteIds: readonly string[]) => {
             if (latest.current.noteIds === noteIds) return;
@@ -94,7 +104,7 @@ const BlendGame = ({ initial }: Props) => {
     const handleNext = useCallback(() => goTo(nextStep(latest.current.step)), [goTo]);
     const handleBack = useCallback(() => goTo(prevStep(latest.current.step)), [goTo]);
     const handleRestart = useCallback(
-        () => goTo("bottle", { bottleId: DEFAULT_BOTTLE_ID, noteIds: [] }),
+        () => goTo("bottle", { bottleId: DEFAULT_BOTTLE_ID, colorId: DEFAULT_COLOR_ID, noteIds: [] }),
         [goTo],
     );
 
@@ -127,7 +137,13 @@ const BlendGame = ({ initial }: Props) => {
 
     if (view.step === "bottle") {
         return (
-            <BottlePicker initialBottleId={view.bottleId} onSelect={handleBottleSelect} onNext={handleNext}>
+            <BottlePicker
+                initialBottleId={view.bottleId}
+                initialColorId={view.colorId}
+                onSelect={handleBottleSelect}
+                onColorSelect={handleColorSelect}
+                onNext={handleNext}
+            >
                 <PageIntro title="나만의 향수를 담을 병을 골라 주세요." className="blend-picker__head" />
             </BottlePicker>
         );
@@ -137,6 +153,7 @@ const BlendGame = ({ initial }: Props) => {
         return (
             <BlendResult
                 bottleId={view.bottleId}
+                colorId={view.colorId}
                 noteIds={view.noteIds}
                 onBack={handleBack}
                 onRestart={handleRestart}
@@ -148,12 +165,13 @@ const BlendGame = ({ initial }: Props) => {
 
     // 층이 바뀌면 key로 새로 열어, 검색어는 비우고 고른 향은 최신 값으로 시작한다
     const layer = getScentLayer(view.step);
-    const eyebrow = `${SCENT_LAYERS.indexOf(layer) + 1} / ${SCENT_LAYERS.length} · ${layer.name} · 1~${MAX_LAYER_NOTES}가지`;
+    const eyebrow = `${SCENT_LAYERS.indexOf(layer) + 1} / ${SCENT_LAYERS.length} · ${layer.name}`;
     return (
         <ScentPicker
             key={view.step}
             layer={layer}
             bottleId={view.bottleId}
+            colorId={view.colorId}
             initialNoteIds={view.noteIds}
             onSelect={handleNotesSelect}
             onBack={handleBack}

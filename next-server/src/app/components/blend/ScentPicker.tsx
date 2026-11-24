@@ -2,23 +2,26 @@
 import {
     useCallback,
     useEffect,
+    useId,
     useMemo,
     useRef,
     useState,
     type ChangeEvent,
+    type MouseEvent,
     type ReactNode,
 } from "react";
 import toast from "react-hot-toast";
-import { HiMagnifyingGlass } from "react-icons/hi2";
+import { HiMagnifyingGlass, HiXMark } from "react-icons/hi2";
 import BottlePreview from "./BottlePreview";
 import BlendStepActions from "./BlendStepActions";
-import ScentFamilyNav, { familySectionId } from "./ScentFamilyNav";
+import ScentFamilyNav from "./ScentFamilyNav";
 import ScentOption from "./ScentOption";
 import ScentPyramid from "./ScentPyramid";
 import {
     MAX_LAYER_NOTES,
     filterScentFamilies,
     notesInLayer,
+    type ScentFamily,
     type ScentLayer,
 } from "@/src/app/lib/blend/scentNotes";
 
@@ -26,6 +29,7 @@ type Props = {
     /** 지금 고르는 층 — 이 층의 향만 보여주고, 층마다 MAX_LAYER_NOTES개까지 고른다 */
     layer: ScentLayer;
     bottleId: string;
+    colorId: string;
     initialNoteIds: readonly string[];
     /** 향을 고르거나 뺄 때마다 — 주소(쿼리스트링)에 남긴다 */
     onSelect: (noteIds: readonly string[]) => void;
@@ -36,14 +40,18 @@ type Props = {
 };
 
 /**
- * 향 고르기 — 한 층(처음·중심·남는 향)의 향을 계열별로 펼쳐 두고 바로 고른다(층마다 1~2개).
- * 향을 고르면 바뀐 칸과 고른 향 칩만 다시 그린다. 스타일은 globals.css의 .blend-scent*.
+ * 향 고르기 — 한 층(처음·중심·남는 향)의 향을 고른다(층마다 1~2개).
+ * 위: 제목·검색 / 가운데: 왼쪽 계열 목록 + 오른쪽 그 계열의 향(이 칸만 스크롤) / 아래: 지금 층에서 고른 향·버튼.
+ * 검색어가 있으면 오른쪽에 모든 계열의 맞는 향을 보여 준다. 스타일은 globals.css의 .blend-scent*.
  */
-const ScentPicker = ({ layer, bottleId, initialNoteIds, onSelect, onBack, onNext, children }: Props) => {
+const ScentPicker = ({ layer, bottleId, colorId, initialNoteIds, onSelect, onBack, onNext, children }: Props) => {
     const [noteIds, setNoteIds] = useState(initialNoteIds);
     const [query, setQuery] = useState("");
-    // 최신 선택은 ref로 읽어, 핸들러를 한 번만 만든다 — 165칸이 고를 때마다 다시 그려지지 않는다
+    const [familyId, setFamilyId] = useState(() => layer.families[0]?.id ?? "");
+    // 최신 선택은 ref로 읽어, 핸들러를 한 번만 만든다 — 향 칸이 고를 때마다 다시 그려지지 않는다
     const noteIdsRef = useRef(noteIds);
+    const listRef = useRef<HTMLDivElement>(null);
+    const listId = useId();
 
     useEffect(() => {
         noteIdsRef.current = noteIds;
@@ -51,7 +59,17 @@ const ScentPicker = ({ layer, bottleId, initialNoteIds, onSelect, onBack, onNext
     }, [noteIds, onSelect]);
 
     const selected = useMemo(() => new Set(noteIds), [noteIds]);
-    const families = useMemo(() => filterScentFamilies(layer.families, query), [layer, query]);
+    const isSearching = query.trim() !== "";
+    const results = useMemo(() => filterScentFamilies(layer.families, query), [layer, query]);
+    const shownFamilies: readonly ScentFamily[] = useMemo(
+        () => (isSearching ? results : layer.families.filter((family) => family.id === familyId)),
+        [isSearching, results, layer, familyId],
+    );
+    const pickedCounts = useMemo(
+        () => new Map(layer.families.map((family) => [family.id, family.notes.filter((scent) => selected.has(scent.id)).length])),
+        [layer, selected],
+    );
+    const resultCount = results.reduce((sum, family) => sum + family.notes.length, 0);
 
     const handleToggle = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         const { value, checked } = event.target;
@@ -64,10 +82,23 @@ const ScentPicker = ({ layer, bottleId, initialNoteIds, onSelect, onBack, onNext
         );
     }, [layer]);
 
+    const handleRemove = useCallback((noteId: string) => {
+        setNoteIds((current) => current.filter((id) => id !== noteId));
+    }, []);
+
+    // 계열을 누르면 검색을 끝내고 그 계열의 맨 위부터 보여 준다
+    const handleFamilySelect = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+        setFamilyId(event.currentTarget.value);
+        setQuery("");
+        listRef.current?.scrollTo({ top: 0 });
+    }, []);
 
     const handleQueryChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setQuery(event.target.value);
+        listRef.current?.scrollTo({ top: 0 });
     }, []);
+
+    const handleQueryClear = useCallback(() => setQuery(""), []);
 
     const handleNext = useCallback(() => {
         if (notesInLayer(noteIdsRef.current, layer.id).length === 0) {
@@ -80,49 +111,71 @@ const ScentPicker = ({ layer, bottleId, initialNoteIds, onSelect, onBack, onNext
     return (
         <section className="blend-scent">
             {children}
-            <div className="blend-scent__tools">
-                <label className="blend-search">
-                    <span className="sr-only">향 이름 검색</span>
-                    <HiMagnifyingGlass className="blend-search__icon" aria-hidden />
-                    <input
-                        type="search"
-                        value={query}
-                        onChange={handleQueryChange}
-                        placeholder="향 이름 검색"
-                        className="blend-search__input"
-                        autoComplete="off"
-                        enterKeyHint="search"
-                    />
-                </label>
-                <ScentFamilyNav families={families} />
-            </div>
-            <div className="blend-scent__list">
-                {families.length === 0 && <p className="blend-scent__empty">‘{query.trim()}’에 맞는 향이 없어요.</p>}
-                {families.map((family) => (
-                    <section key={family.id} id={familySectionId(family.id)} className="blend-family">
-                        <h3 id={`${familySectionId(family.id)}-title`} className="blend-family__title">
-                            {family.name}
+            <label className="blend-search">
+                <span className="sr-only">향 이름 검색</span>
+                <HiMagnifyingGlass className="blend-search__icon" aria-hidden />
+                <input
+                    type="search"
+                    value={query}
+                    onChange={handleQueryChange}
+                    placeholder="향 이름 검색"
+                    className="blend-search__input"
+                    autoComplete="off"
+                    enterKeyHint="search"
+                />
+                {isSearching && (
+                    <button type="button" onClick={handleQueryClear} className="blend-search__clear" aria-label="검색어 지우기">
+                        <HiXMark aria-hidden />
+                    </button>
+                )}
+            </label>
+            <div className="blend-scent__body">
+                <ScentFamilyNav
+                    families={layer.families}
+                    selectedId={isSearching ? null : familyId}
+                    pickedCounts={pickedCounts}
+                    listId={listId}
+                    onSelect={handleFamilySelect}
+                />
+                <div ref={listRef} id={listId} className="blend-scent__list">
+                    {isSearching && (
+                        <h3 className="blend-scent__list-title">
+                            검색 결과<span className="blend-scent__list-count">{resultCount}가지</span>
                         </h3>
-                        <div
-                            role="group"
-                            aria-labelledby={`${familySectionId(family.id)}-title`}
-                            className="blend-family__notes"
-                        >
-                            {family.notes.map((scent) => (
-                                <ScentOption
-                                    key={scent.id}
-                                    scent={scent}
-                                    checked={selected.has(scent.id)}
-                                    onChange={handleToggle}
-                                />
-                            ))}
-                        </div>
-                    </section>
-                ))}
+                    )}
+                    {isSearching && resultCount === 0 && (
+                        <p className="blend-scent__empty">‘{query.trim()}’에 맞는 향이 없어요.</p>
+                    )}
+                    {shownFamilies.map((family) => {
+                        const titleId = `${listId}-${family.id}`;
+                        return (
+                            <section key={family.id} className="blend-family" aria-labelledby={titleId}>
+                                {isSearching ? (
+                                    <h4 id={titleId} className="blend-family__label">{family.name}</h4>
+                                ) : (
+                                    <h3 id={titleId} className="blend-scent__list-title">
+                                        {family.name}
+                                        <span className="blend-scent__list-count">{family.notes.length}가지</span>
+                                    </h3>
+                                )}
+                                <div role="group" aria-labelledby={titleId} className="blend-family__notes">
+                                    {family.notes.map((scent) => (
+                                        <ScentOption
+                                            key={scent.id}
+                                            scent={scent}
+                                            checked={selected.has(scent.id)}
+                                            onChange={handleToggle}
+                                        />
+                                    ))}
+                                </div>
+                            </section>
+                        );
+                    })}
+                </div>
             </div>
             <aside className="blend-scent__aside" aria-label="고른 향">
-                <BottlePreview bottleId={bottleId} />
-                <ScentPyramid noteIds={noteIds} />
+                <BottlePreview bottleId={bottleId} colorId={colorId} />
+                <ScentPyramid noteIds={noteIds} currentLayerId={layer.id} onRemove={handleRemove} />
                 <BlendStepActions secondaryLabel="이전" onSecondary={onBack} onNext={handleNext} />
             </aside>
         </section>

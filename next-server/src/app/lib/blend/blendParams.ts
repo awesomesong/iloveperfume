@@ -1,4 +1,5 @@
 import { BOTTLE_SHAPES, DEFAULT_BOTTLE_ID } from "./bottleShapes";
+import { DEFAULT_COLOR_ID, isPerfumeColorId } from "./perfumeColors";
 import {
     LAYER_BY_NOTE_ID,
     MAX_LAYER_NOTES,
@@ -16,15 +17,16 @@ export const BLEND_PAGE_TITLE = "나만의 향수 만들기";
 export const BLEND_STEPS = ["bottle", "top", "middle", "base", "result"] as const;
 export type BlendStep = (typeof BLEND_STEPS)[number];
 
-/** 지금 단계와 고른 값 — 주소의 쿼리스트링(?step=&bottle=&notes=)과 1:1로 대응한다 */
+/** 지금 단계와 고른 값 — 주소의 쿼리스트링(?step=&bottle=&color=&notes=)과 1:1로 대응한다 */
 export type BlendState = {
     step: BlendStep;
     bottleId: string;
+    colorId: string;
     noteIds: readonly string[];
 };
 
 type ParamValue = string | string[] | undefined;
-export type BlendSearchParams = Partial<Record<"step" | "bottle" | "notes", ParamValue>>;
+export type BlendSearchParams = Partial<Record<"step" | "bottle" | "color" | "notes", ParamValue>>;
 
 const STEPS = new Set<string>(BLEND_STEPS);
 const BOTTLE_IDS = new Set(BOTTLE_SHAPES.map((shape) => shape.id));
@@ -57,19 +59,26 @@ function cleanNoteIds(raw: string): string[] {
 /** 쿼리스트링을 상태로 바꾼다. 모르는 병·향·단계는 버리고 기본값을 쓴다(주소를 손으로 고쳐도 깨지지 않는다). */
 export function parseBlendParams(params: BlendSearchParams): BlendState {
     const bottle = firstValue(params.bottle);
+    const color = firstValue(params.color);
     const step = firstValue(params.step);
     const noteIds = cleanNoteIds(firstValue(params.notes) ?? "");
 
     return {
         step: resolveStep(step && STEPS.has(step) ? (step as BlendStep) : "bottle", noteIds),
         bottleId: bottle && BOTTLE_IDS.has(bottle) ? bottle : DEFAULT_BOTTLE_ID,
+        colorId: color && isPerfumeColorId(color) ? color : DEFAULT_COLOR_ID,
         noteIds,
     };
 }
 
-/** 상태를 쿼리스트링으로 바꾼다. 병 단계면 step을, 고른 향이 없으면 notes를 뺀다. id는 영문 소문자·하이픈뿐이라 그대로 쓴다. */
-export function toBlendSearch({ step, bottleId, noteIds }: BlendState): string {
-    const parts = [step === "bottle" ? null : `step=${step}`, `bottle=${bottleId}`, noteIds.length > 0 ? `notes=${noteIds.join(",")}` : null];
+/** 상태를 쿼리스트링으로 바꾼다. 병 단계면 step을, 기본 색이면 color를, 고른 향이 없으면 notes를 뺀다. id는 영문 소문자·하이픈뿐이라 그대로 쓴다. */
+export function toBlendSearch({ step, bottleId, colorId, noteIds }: BlendState): string {
+    const parts = [
+        step === "bottle" ? null : `step=${step}`,
+        `bottle=${bottleId}`,
+        colorId === DEFAULT_COLOR_ID ? null : `color=${colorId}`,
+        noteIds.length > 0 ? `notes=${noteIds.join(",")}` : null,
+    ];
     return `?${parts.filter(Boolean).join("&")}`;
 }
 
@@ -80,7 +89,7 @@ export function toBlendSearch({ step, bottleId, noteIds }: BlendState): string {
 export function parseBlendSearch(search: string): BlendState {
     const params = new URLSearchParams(search);
     const get = (key: string) => params.get(key) ?? undefined;
-    return parseBlendParams({ step: get("step"), bottle: get("bottle"), notes: get("notes") });
+    return parseBlendParams({ step: get("step"), bottle: get("bottle"), color: get("color"), notes: get("notes") });
 }
 
 /** 결과를 나눌 때 쓰는 제목 — 공유 시트와 링크 미리보기(og:title)가 같은 문장을 쓴다 */

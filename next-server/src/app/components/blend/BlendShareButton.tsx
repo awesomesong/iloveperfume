@@ -7,6 +7,7 @@ import { BLEND_PATH, blendResultTitle, toBlendSearch } from "@/src/app/lib/blend
 
 type Props = {
     bottleId: string;
+    colorId: string;
     noteIds: readonly string[];
 };
 
@@ -43,12 +44,12 @@ async function copyLink(url: string) {
 }
 
 /**
- * 결과 공유 — 링크에 병·향이 담겨 있어, 받은 사람도 같은 결과 화면을 연다.
+ * 결과 공유 — 링크에 병·색·향이 담겨 있어, 받은 사람도 같은 결과 화면을 연다.
  * 휴대폰은 기기 공유 시트(카카오톡·메시지 등)를 띄우고, 없으면 링크를 복사한다.
  */
-const BlendShareButton = ({ bottleId, noteIds }: Props) => {
+const BlendShareButton = ({ bottleId, colorId, noteIds }: Props) => {
     const handleShare = useCallback(async () => {
-        const url = `${window.location.origin}${BLEND_PATH}${toBlendSearch({ step: "result", bottleId, noteIds })}`;
+        const url = `${window.location.origin}${BLEND_PATH}${toBlendSearch({ step: "result", bottleId, colorId, noteIds })}`;
         if (typeof navigator.share !== "function") {
             await copyLink(url);
             return;
@@ -60,7 +61,7 @@ const BlendShareButton = ({ bottleId, noteIds }: Props) => {
             if (error instanceof DOMException && error.name === "AbortError") return;
             await copyLink(url);
         }
-    }, [bottleId, noteIds]);
+    }, [bottleId, colorId, noteIds]);
 
     return (
         <Button variant="ilp" onClick={handleShare} className="w-full">

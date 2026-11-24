@@ -1,5 +1,6 @@
 import type { Metadata, ResolvingMetadata } from 'next';
 import BlendGame from '@/src/app/components/blend/BlendGame';
+import BottleDefs from '@/src/app/components/blend/BottleDefs';
 import { BLEND_PAGE_TITLE, blendPageTitle, parseBlendParams, type BlendSearchParams } from '@/src/app/lib/blend/blendParams';
 
 type Props = { searchParams: Promise<BlendSearchParams> };
@@ -35,6 +36,8 @@ export default async function BlendPage({ searchParams }: Props) {
   const initial = parseBlendParams(await searchParams);
   return (
     <div className="px-4 pt-8 pb-4 md:p-8 max-w-[1440px] w-full mx-auto">
+      {/* 병 그림들이 함께 쓰는 그라데이션 — 페이지에 한 번만 둔다 */}
+      <BottleDefs />
       <BlendGame initial={initial} />
     </div>
   );

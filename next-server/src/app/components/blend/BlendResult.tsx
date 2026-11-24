@@ -13,6 +13,7 @@ import { BLEND_RECOMMENDATION_LIMIT } from "@/src/app/lib/blend/blendRecommendat
 
 type Props = {
     bottleId: string;
+    colorId: string;
     noteIds: readonly string[];
     onBack: () => void;
     onRestart: () => void;
@@ -24,7 +25,7 @@ type Props = {
  * 결과 — 내가 만든 병과 고른 향, 그리고 비슷한 실제 향수(최대 4개).
  * 같은 향 조합은 react-query가 기억해 두어, 이전으로 갔다 와도 다시 요청하지 않는다.
  */
-const BlendResult = ({ bottleId, noteIds, onBack, onRestart, children }: Props) => {
+const BlendResult = ({ bottleId, colorId, noteIds, onBack, onRestart, children }: Props) => {
     const { data, status, error } = useQuery({
         queryKey: ["blend-recommend", noteIds],
         queryFn: () => fetchBlendRecommendations(noteIds),
@@ -36,13 +37,13 @@ const BlendResult = ({ bottleId, noteIds, onBack, onRestart, children }: Props) 
             {children}
             <div className="blend-result__aside">
                 <div className="blend-result__summary">
-                    <BottlePreview bottleId={bottleId} />
+                    <BottlePreview bottleId={bottleId} colorId={colorId} />
                     <div className="blend-result__notes">
                         <ScentPyramid noteIds={noteIds} />
                     </div>
                 </div>
                 <div className="blend-result__actions">
-                    <BlendShareButton bottleId={bottleId} noteIds={noteIds} />
+                    <BlendShareButton bottleId={bottleId} colorId={colorId} noteIds={noteIds} />
                     <BlendStepActions
                         secondaryLabel="이전"
                         onSecondary={onBack}
