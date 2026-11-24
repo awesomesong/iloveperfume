@@ -3,6 +3,7 @@ import {
   FEED_MAX_PAGES,
   FEED_PAGE_SIZE,
   LARGE_CATALOG_SIZE,
+  MIN_BODY_LENGTH,
   REQUEST_GAP_MS,
   SITEMAP_NEW_URL_LIMIT,
   SITEMAP_PAGES_PER_RUN,
@@ -17,14 +18,15 @@ import {
   fetchText,
   isPast,
   isRateLimited,
+  notesPassage,
   parseProductPage,
   readSitemap,
   sleep,
   type ProductPage,
   type ShopifyProduct,
 } from "./siteData";
-import { htmlToText } from "./text";
-import { UNKNOWN_FIRST_SEEN, type ArrivalSource, type RawArrival } from "./types";
+import { effectiveTextLength, htmlToText } from "./text";
+import { UNKNOWN_FIRST_SEEN, type ArrivalCandidate, type ArrivalSource, type RawArrival } from "./types";
 
 /**
  * 수집 — 등록된 공식 사이트에서 제품을 읽어 온다. 방식은 두 가지고 결과 모양(RawArrival)은 같다.
@@ -279,6 +281,46 @@ export async function collectSitemapBacklog(
   marked.push(...changed.map(({ url, perfume }) => ({ url, perfume: perfume === true })));
   await store.save(source.id, { added: [], marked, baseline: false });
   return { collected, opened, pending: waiting.length - skipped - opened };
+}
+
+// ───────── 짧은 소개문 보충 ─────────
+
+/**
+ * 소개문이 짧은 후보는 상품 페이지에서 소개문(구조화 데이터)과 노트 주변 글을 읽어 보충한다.
+ * - ready: 소개문이 충분한 후보 (원래 충분했거나 보충된 것)
+ * - unread: 시간이 다 되거나 요청이 막혀 아직 읽지 못한 후보 — 다음에 다시 본다
+ * 읽고도 짧은 후보는 어느 쪽에도 넣지 않는다(근거가 없어 등록하지 않는다). 출시 기사 후보는 건드리지 않는다.
+ */
+export async function fillThinBodies(
+  candidates: readonly ArrivalCandidate[],
+  deadline: number,
+): Promise<{ ready: ArrivalCandidate[]; unread: ArrivalCandidate[] }> {
+  const ready: ArrivalCandidate[] = [];
+  const unread: ArrivalCandidate[] = [];
+  let blocked = false;
+  let fetches = 0;
+  for (const candidate of candidates) {
+    if (candidate.article || effectiveTextLength(candidate.bodyText) >= MIN_BODY_LENGTH) {
+      ready.push(candidate);
+      continue;
+    }
+    if (blocked || isPast(deadline)) {
+      unread.push(candidate);
+      continue;
+    }
+    if (fetches++ > 0) await sleep(REQUEST_GAP_MS);
+    const fetched = await fetchText(candidate.officialUrl, "text/html");
+    if (!fetched || isRateLimited(fetched.status)) {
+      blocked = true;
+      unread.push(candidate);
+      continue;
+    }
+    if (fetched.status !== 200) continue;
+    const described = parseProductPage(candidate.officialUrl, fetched.text)?.description ?? "";
+    const bodyText = [described.length > candidate.bodyText.length ? described : candidate.bodyText, notesPassage(fetched.text)].filter(Boolean).join("\n\n");
+    if (effectiveTextLength(bodyText) >= MIN_BODY_LENGTH) ready.push({ ...candidate, bodyText });
+  }
+  return { ready, unread };
 }
 
 // ───────── 전체 ─────────

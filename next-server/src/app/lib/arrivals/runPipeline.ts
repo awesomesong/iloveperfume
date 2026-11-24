@@ -1,5 +1,5 @@
-import { COLLECT_BUDGET_MS, MAINTENANCE_BUDGET_MS, MAINTENANCE_START_LIMIT_MS } from "./config";
-import { collectArrivals } from "./collectArrivals";
+import { COLLECT_BUDGET_MS, MAINTENANCE_BUDGET_MS, MAINTENANCE_START_LIMIT_MS, THIN_BODY_BUDGET_MS } from "./config";
+import { collectArrivals, fillThinBodies } from "./collectArrivals";
 import { excludeExisting, filterByRules, pickForRun } from "./filterArrivals";
 import { describeArrivals } from "./describeArrivals";
 import { maintainSources, type MaintenanceResult } from "./maintainSources";
@@ -47,7 +47,8 @@ export async function runArrivalsPipeline(
 
   const rules = filterByRules(collected, now);
   const fresh = await excludeExisting(rules.kept);
-  const candidates = [...pickForRun(fresh, now), ...news.candidates];
+  const { ready } = await fillThinBodies(pickForRun(fresh, now), Date.now() + THIN_BODY_BUDGET_MS);
+  const candidates = [...ready, ...news.candidates];
   const validation = await describeArrivals(candidates);
   const { rejected } = validation;
 
