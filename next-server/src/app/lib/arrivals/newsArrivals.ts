@@ -207,7 +207,7 @@ export async function collectLaunchNews(
   const searched = await Promise.all(
     brands.map((brand) =>
       collectNews([`${searchName(brand)} 향수 출시`])
-        .then((items) => pickLaunchArticles(brand, items, now))
+        .then(({ items }) => pickLaunchArticles(brand, items, now))
         .catch((e) => {
           console.error(`[arrivals] news search failed: ${brand.brand}`, e);
           return [] as LaunchArticle[][];

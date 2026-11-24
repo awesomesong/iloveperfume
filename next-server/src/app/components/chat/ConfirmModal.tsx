@@ -6,7 +6,6 @@ import { ModalProps } from "@/src/app/types/common";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { FiAlertTriangle } from "react-icons/fi";
-import { useSocket } from "../../context/socketContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatErrorMessage } from "@/src/app/lib/react-query/utils";
 import { deleteConversation } from "@/src/app/lib/deleteConversations";
@@ -22,7 +21,6 @@ import toast from "react-hot-toast";
 import { withToastParams } from "../../lib/withToastParams";
 
 const ConfirmModal: React.FC<ModalProps> = ({ isOpen, onCloseModal, name }) => {
-  const socket = useSocket();
   const router = useRouter();
   const { conversationId } = useConversation();
   const { setUnreadCount } = useUnreadStore();
@@ -42,24 +40,9 @@ const ConfirmModal: React.FC<ModalProps> = ({ isOpen, onCloseModal, name }) => {
         return;
       }
 
-      // ✅ 시스템 메시지가 있으면 소켓으로 전송하고 TanStack Query 캐시 업데이트
+      // ✅ 시스템 메시지·room.event는 API(DELETE /api/conversations/[id])가 남은 참여자에게 직접 보낸다.
+      // 여기서는 이 탭의 TanStack Query 캐시만 정리한다.
       if (event.type === "member.left" && event.systemMessage) {
-        // 1) 시스템 메시지를 서버로 전송 (서버에서 대화방 참여자들에게 브로드캐스트)
-        if (socket) {
-          socket.emit("send:message", {
-            newMessage: {
-              ...event.systemMessage,
-              isAIResponse: false, // ✅ 누락된 필드 추가
-              isError: false,      // ✅ 누락된 필드 추가
-              conversation: {
-                isGroup: true,
-                userIds: event.recipients || [],
-              }
-            }
-          });
-        }
-
-        // 2) TanStack Query 캐시에 시스템 메시지 추가
         upsertMessageSortedInCache(queryClient, String(conversationId), event.systemMessage);
       }
 
@@ -74,7 +57,6 @@ const ConfirmModal: React.FC<ModalProps> = ({ isOpen, onCloseModal, name }) => {
       const totalUnread = setTotalUnreadFromList(queryClient);
       if (totalUnread !== undefined) setUnreadCount(totalUnread);
 
-      if (socket) socket.emit("room.event", event); // 서버/클라 규격에 맞춰 payload 유지
       router.push(withToastParams("/conversations", "success", "대화방이 삭제되었습니다."));
     } catch (error) {
       toast.error(
@@ -92,7 +74,6 @@ const ConfirmModal: React.FC<ModalProps> = ({ isOpen, onCloseModal, name }) => {
     queryClient,
     router,
     setUnreadCount,
-    socket,
   ]);
 
   return (

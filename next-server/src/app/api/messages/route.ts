@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/src/app/lib/apiAuth";
 import prisma from "@/prisma/db";
 import { containsProhibited } from "@/src/app/utils/aiPolicy";
+import { messageEvent, queueSocketEvents } from "@/src/app/lib/socketServer/emitSocketEvents";
 
 export const runtime = "nodejs";
 
@@ -60,6 +61,8 @@ export async function POST(req: NextRequest) {
       type: true,
       createdAt: true,
       conversationId: true,
+      isAIResponse: true,
+      isError: true,
       sender: { select: { id: true, name: true, email: true, image: true } },
     } as const;
 
@@ -98,18 +101,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 응답
-    return NextResponse.json({
-      newMessage: {
-        ...result,
-        serverCreatedAtMs: new Date(result.createdAt).getTime(),
-        // ✅ conversation 정보 포함
-        conversation: {
-          isGroup: conv.userIds.length > 2,
-          userIds: conv.userIds,
-        },
+    const newMessage = {
+      ...result,
+      serverCreatedAtMs: new Date(result.createdAt).getTime(),
+      // ✅ conversation 정보 포함
+      conversation: {
+        isGroup: conv.userIds.length > 2,
+        userIds: conv.userIds,
       },
-    });
+    };
+
+    // 실시간 전달: 참여자는 DB의 userIds 기준 (보낸 사람의 다른 탭 포함, 보낸 탭은 같은 id로 중복 제거)
+    // 멱등 경로(P2002)에서 다른 방·다른 사람의 메시지가 돌아온 경우는 보내지 않는다
+    if (result.conversationId === conv.id && result.sender?.id === user.id) {
+      queueSocketEvents([messageEvent(result, newMessage.conversation, conv.userIds)]);
+    }
+
+    // 응답
+    return NextResponse.json({ newMessage });
   } catch (err) {
     console.error("[POST /api/messages] error:", err);
     return NextResponse.json({ message: "서버 오류" }, { status: 500 });

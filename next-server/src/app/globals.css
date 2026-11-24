@@ -69,12 +69,21 @@ blockquote{
   --guide-card-surface-border: var(--color-card-border);
   --color-accent-line: #b094e0;
   --color-select-option-text: #2d2040;
+  /* 흰 글자를 올리는 솔리드 액센트 배경 (제출 버튼) — white 9.28:1 */
+  --color-accent-solid: #3d3d8f;
+  /* var(--color-accent) 배경 위 글자색 — white on #3d3d8f 9.28:1 */
+  --color-on-accent: #ffffff;
+  /* 온라인 상태 점 (장식, aria-hidden) */
+  --color-status-online: #4ade80;
+  /* 이미지 슬라이더 좌우 버튼 */
+  --slider-nav-bg: rgba(26, 18, 16, 0.9);
+  --slider-nav-bg-hover: #1a1210;
+  --slider-nav-icon: #ffffff;
   /* 선택 메뉴는 항상 밝은 배경 — 모드 무관 고정값 */
   --color-select-hover: #c8c8de;
   --color-select-selected: #3d3d8f;
   --color-shadow-soft: rgba(0, 0, 0, 0.06);
   --color-shadow-hover: rgba(180, 150, 240, 0.18);
-  --color-glow: #fffcfa;
   --footer-border: rgba(90, 75, 120, 0.22);
   --footer-badge-bg: rgba(176, 148, 224, 0.08);
   --footer-badge-border: rgba(176, 148, 224, 0.28);
@@ -94,6 +103,8 @@ blockquote{
   --points-ball-5: #d4c8e4;
   /* 채팅 말풍선 — 라이트: own 미디엄 인디고(page 3.33:1 ✅) / other 아이보리+border+shadow */
   --chat-bubble-own: #7a80cc;
+  /* 내 메시지 말풍선 위 글자 — 라이트: primary(4.70:1 ✅) */
+  --chat-bubble-own-text: var(--color-text-primary);
   /* 드랍다운 메뉴 배경 — 라이트: 인디고 페일 / dark: 라이트 인디고(어두운 텍스트용, 13.7:1 ✅) */
   --ilp-select-menu-bg: #eaeaf8;
   --chat-bubble-ai: var(--color-card-bg);
@@ -128,8 +139,9 @@ blockquote{
   --color-accent-muted: #5c64a4;
   --color-accent-pale: #222228;
   --color-accent-border: rgba(122, 128, 204, 0.45);
-  --color-text-primary: #f0ece6;
-  --color-text-secondary: #b0a8a0;
+  /* 다크 글자색 — 순백에 가까운 글자의 눈부심을 줄이려 대비를 16:1 → 12.55:1로 낮춤 (AA 4.5:1 충족) */
+  --color-text-primary: #d6d2cc;
+  --color-text-secondary: #a09a93;
   --color-card-bg: #1a1a18;
   --color-card-border: rgba(200, 200, 200, 0.2);
   --guide-card-surface-bg: var(--color-ivory-soft);
@@ -137,10 +149,17 @@ blockquote{
   --color-accent-line: #5c64a4;
   --color-select-option-text: #2d2040;
   --color-avatar-dark-bg: #4455b8;
+  /* white on #4466cc 5.23:1 */
+  --color-accent-solid: #4466cc;
+  /* #111110 on #7a80cc 5.21:1 (흰 글자는 3.63:1 미달) */
+  --color-on-accent: #111110;
+  --color-status-online: #4ade80;
+  --slider-nav-bg: rgba(248, 246, 243, 0.95);
+  --slider-nav-bg-hover: #ffffff;
+  --slider-nav-icon: #2d1e18;
   --color-hero-dark-bg: #0c0a14;
   --color-shadow-soft: rgba(0, 0, 0, 0.28);
   --color-shadow-hover: rgba(0, 0, 0, 0.2);
-  --color-glow: rgba(255, 255, 255, 0.5);
   --footer-border: rgba(200, 200, 200, 0.16);
   --footer-badge-bg: rgba(200, 200, 200, 0.08);
   --footer-badge-border: rgba(200, 200, 200, 0.2);
@@ -157,6 +176,8 @@ blockquote{
   --points-ball-5: #b0b0b0;
   /* 채팅 말풍선 — 다크: own 미디엄 인디고(page 3.10:1 ✅) / other 카드+border+shadow */
   --chat-bubble-own: #5c64a4;
+  /* 내 메시지 말풍선 위 글자 — 다크: 본문색(#d6d2cc)은 3.66:1로 미달이라 밝은 색 유지(4.68:1 ✅) */
+  --chat-bubble-own-text: #f0ece6;
   --ilp-select-menu-bg: #e8e8f8;
   --chat-bubble-ai: var(--color-card-bg);
   --chat-bubble-other: var(--color-card-bg);
@@ -366,6 +387,13 @@ h6 {
   line-height: 1.5;
   margin-top: 0.5rem;
   word-break: keep-all;
+}
+/* 제목 위 작은 글자 — 단계·분류 같은 위치 정보 */
+.page-intro__eyebrow {
+  margin-bottom: 0.375rem;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
 }
 @media (min-width: 768px) {
   .page-intro {
@@ -583,6 +611,551 @@ h6 {
   .fragrance-list {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 20px;
+  }
+}
+
+/* ===== 나만의 향수 만들기 (/blend) — 병 모양 선택 =====
+   모바일: 제목 → 미리보기 → 가로로 넘기는 선택지 → 버튼.
+   768px부터: 왼쪽 큰 미리보기 / 오른쪽 제목·선택지(4열)·버튼. */
+.blend-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "preview" "options" "actions";
+  gap: 1rem;
+}
+.page-intro.blend-picker__head {
+  grid-area: head;
+  padding: 0;
+  text-align: left;
+}
+.blend-picker__head .page-intro__title {
+  word-break: keep-all;
+}
+.blend-preview {
+  grid-area: preview;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(240px, 42dvh, 360px);
+  border-radius: 18px;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+}
+.dark .blend-preview {
+  border-color: var(--color-accent-border);
+}
+.blend-preview .blend-bottle {
+  width: auto;
+  height: 82%;
+}
+.blend-preview .blend-bottle__edge {
+  stroke-width: 2;
+}
+.blend-options {
+  grid-area: options;
+  position: relative;
+  display: flex;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* 모바일: 화면 가장자리까지 넘겨, 오른쪽 끝 칸이 잘려 보이게 한다 */
+  margin-left: -1rem;
+  margin-right: -1rem;
+  padding: 0.25rem 1rem;
+}
+.blend-options::-webkit-scrollbar {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .blend-options {
+    scroll-behavior: smooth;
+  }
+}
+.blend-option {
+  position: relative;
+  flex: 0 0 5.5rem;
+  cursor: pointer;
+}
+.blend-option__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.75rem 0.25rem 0.5rem;
+  border-radius: 12px;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.blend-option__card .blend-bottle {
+  width: auto;
+  height: 3.5rem;
+}
+.blend-option__input:checked + .blend-option__card {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+.blend-option__input:focus-visible + .blend-option__card {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.blend-actions {
+  grid-area: actions;
+  display: flex;
+  gap: 0.5rem;
+}
+/* 병 그림 — 새 색 없이 기존 토큰을 섞어 쓴다 */
+.blend-bottle {
+  display: block;
+  overflow: visible;
+}
+.blend-bottle__glass {
+  fill: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+.blend-bottle__liquid {
+  fill: color-mix(in srgb, var(--color-accent) 38%, transparent);
+}
+.blend-bottle__shine {
+  fill: var(--color-ivory);
+  opacity: 0.55;
+}
+.dark .blend-bottle__shine {
+  opacity: 0.2;
+}
+.blend-bottle__edge {
+  fill: none;
+  stroke: var(--color-accent-muted);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.blend-bottle__cap {
+  fill: var(--color-text-primary);
+}
+@media (min-width: 768px) {
+  .blend-picker {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "preview head"
+      "preview options"
+      "preview actions";
+    column-gap: 2.5rem;
+    row-gap: 1.5rem;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .blend-preview {
+    height: clamp(420px, 68dvh, 600px);
+  }
+  .blend-options {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-content: start;
+    gap: 0.75rem;
+    overflow: visible;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0;
+  }
+  .blend-option__card {
+    padding-top: 1rem;
+    font-size: 0.875rem;
+  }
+  .blend-option__card .blend-bottle {
+    height: 4.5rem;
+  }
+}
+
+/* ===== 나만의 향수 만들기 (/blend) — 향 고르기 =====
+   한 층(처음·중심·남는 향)의 향을 계열 소제목 + 열 맞춘 글자 칸으로 펼친다. 세 층이 같은 화면을 쓴다.
+   모바일: 제목 → 검색·계열 줄 → 향 목록(3열) → 아래에 붙는 "고른 향"(층별 세 줄) 막대.
+   768px부터: 왼쪽에 붙어 있는 병·고른 향·버튼 / 오른쪽 제목·검색·향 목록(4열). */
+.blend-scent {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "tools" "list" "aside";
+  gap: 1rem;
+}
+.page-intro.blend-scent__head {
+  grid-area: head;
+  padding: 0 0 1rem;
+  border-bottom: 1px solid var(--color-text-primary);
+  text-align: left;
+}
+.blend-scent__head .page-intro__title {
+  font-weight: 500;
+  word-break: keep-all;
+}
+.blend-scent__tools {
+  grid-area: tools;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.blend-search {
+  position: relative;
+  display: block;
+}
+.blend-search__icon {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 1.125rem;
+  height: 1.125rem;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+.blend-search__input {
+  width: 100%;
+  height: 2.75rem;
+  padding: 0 0 0 1.75rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-card-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  /* 16px 미만이면 iOS가 입력할 때 화면을 확대한다 */
+  font-size: 1rem;
+}
+.dark .blend-search__input {
+  border-bottom-color: var(--color-accent-border);
+}
+.blend-search__input::placeholder {
+  color: var(--color-text-secondary);
+}
+.blend-search__input:focus-visible {
+  outline: none;
+  border-bottom-color: var(--color-text-primary);
+}
+.blend-family-nav {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* 모바일: 화면 가장자리까지 넘겨 옆으로 민다 */
+  margin: 0 -1rem;
+  padding: 0.125rem 1rem;
+}
+.blend-family-nav::-webkit-scrollbar {
+  display: none;
+}
+.blend-family-nav__link {
+  flex: 0 0 auto;
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.blend-family-nav__link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+@media (hover: hover) {
+  .blend-family-nav__link:hover {
+    color: var(--color-text-primary);
+  }
+}
+.blend-scent__list {
+  grid-area: list;
+  min-width: 0;
+}
+.blend-scent__empty {
+  padding: 2.5rem 0;
+  color: var(--color-text-secondary);
+  text-align: center;
+  word-break: keep-all;
+}
+.blend-family {
+  scroll-margin-top: calc(var(--header-height) + 1rem);
+}
+.blend-family + .blend-family {
+  margin-top: 1.75rem;
+}
+.blend-family__title {
+  margin-bottom: 0.25rem;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+.blend-family__notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.25rem;
+}
+.blend-scent-option {
+  display: block;
+  cursor: pointer;
+}
+.blend-scent-option__label {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 100%;
+  min-height: 2.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--color-card-border);
+  color: var(--color-text-primary);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+.blend-scent-option__label::before {
+  content: "";
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 1px solid var(--color-text-secondary);
+  border-radius: 50%;
+}
+.dark .blend-scent-option__label {
+  border-bottom-color: var(--color-accent-border);
+}
+@media (hover: hover) {
+  .blend-scent-option:hover .blend-scent-option__label::before {
+    border-color: var(--color-text-primary);
+  }
+}
+/* 고른 칸: .action-btn과 같은 반전색 (4-1 기본 텍스트 대비 15:1) */
+/* 고른 줄: 동그라미를 채우고 글자를 굵게 — 칸 전체를 칠하지 않는다 */
+.blend-scent-option__input:checked + .blend-scent-option__label {
+  font-weight: 700;
+}
+.blend-scent-option__input:checked + .blend-scent-option__label::before {
+  border-color: var(--color-text-primary);
+  background: var(--color-text-primary);
+  box-shadow: inset 0 0 0 2px var(--bg-page);
+}
+.blend-scent-option__input:focus-visible + .blend-scent-option__label {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+/* 모바일: 화면 아래에 붙는 막대 — 병 미리보기는 숨긴다 */
+.blend-scent__aside {
+  grid-area: aside;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0 -1rem;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-card-border);
+  background: var(--bg-page);
+}
+.dark .blend-scent__aside {
+  border-top-color: var(--color-accent-border);
+}
+.blend-scent__aside .blend-preview {
+  display: none;
+}
+/* 모바일 막대에서는 표를 촘촘하게 — 선 없이 세 줄 */
+.blend-scent__aside .blend-pyramid__row {
+  padding: 0.125rem 0;
+  border-bottom-style: none;
+  font-size: 0.875rem;
+}
+/* 고른 향 — 층별 표("처음 향 | 베르가못, 레몬"). 향 고르기와 결과가 함께 쓴다 */
+.blend-pyramid {
+  display: flex;
+  flex-direction: column;
+}
+.blend-pyramid__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-card-border);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+.dark .blend-pyramid__row {
+  border-bottom-color: var(--color-accent-border);
+}
+.blend-pyramid__label {
+  flex: none;
+  color: var(--color-text-secondary);
+}
+.blend-pyramid__notes {
+  color: var(--color-text-primary);
+  text-align: right;
+  word-break: keep-all;
+}
+.blend-pyramid__notes--empty {
+  color: var(--color-text-secondary);
+}
+/* 떠 있는 채팅 버튼이 모바일 막대의 "다음" 버튼을 가리지 않게 이 화면에서만 숨긴다 */
+@media (max-width: 767px) {
+  body:has(.blend-scent) .chat-fab {
+    display: none;
+  }
+}
+@media (min-width: 768px) {
+  .blend-scent {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.7fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "aside head"
+      "aside tools"
+      "aside list";
+    column-gap: 2.5rem;
+    row-gap: 1.25rem;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .blend-family-nav {
+    flex-wrap: wrap;
+    gap: 0.375rem 1.25rem;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .blend-family__title {
+    font-size: 0.875rem;
+  }
+  .blend-family__notes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 2rem;
+  }
+  .blend-scent-option__label {
+    min-height: 3rem;
+    font-size: 1rem;
+  }
+  /* 데스크톱: 왼쪽 칸이 화면에 붙어 따라온다 */
+  .blend-scent__aside {
+    align-self: start;
+    top: calc(var(--header-height) + 1.5rem);
+    bottom: auto;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    border-top: 0;
+    background: none;
+  }
+  .blend-scent__aside .blend-preview {
+    display: flex;
+    height: clamp(240px, 36dvh, 340px);
+  }
+  .blend-scent__aside .blend-pyramid__row {
+    padding: 0.5rem 0;
+    border-bottom-style: solid;
+    font-size: 0.9375rem;
+  }
+}
+
+/* ===== 나만의 향수 만들기 (/blend) — 결과 =====
+   모바일: 제목 → 작은 병·고른 향 한 줄 → 추천 향수(2열) → 공유·버튼.
+   768px부터: 왼쪽에 붙어 있는 병·고른 향·버튼 / 오른쪽 제목·추천 향수(4열).
+   카드는 향수 목록과 같은 FragranceCard + ul.fragrance-list (6-2). */
+.blend-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "summary" "list" "actions";
+  gap: 1rem;
+}
+.page-intro.blend-result__head {
+  grid-area: head;
+  padding: 0;
+  text-align: left;
+}
+.blend-result__head .page-intro__title {
+  word-break: keep-all;
+}
+/* 모바일에서는 감싸는 칸을 없애, 요약과 버튼이 각자 자리(위·아래)로 간다 */
+.blend-result__aside {
+  display: contents;
+}
+.blend-result__summary {
+  grid-area: summary;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+.blend-result__summary .blend-preview {
+  flex: 0 0 4rem;
+  height: 5.5rem;
+  border-radius: 12px;
+}
+.blend-result__notes {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+/* 공유(주요) 한 줄 → 이전·다시 만들기(보조) 한 줄 */
+.blend-result__actions {
+  grid-area: actions;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.blend-result__list {
+  grid-area: list;
+  min-width: 0;
+}
+.blend-result .product-fragrance-name {
+  word-break: keep-all;
+}
+.blend-result-card__reason {
+  margin-top: 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  word-break: keep-all;
+}
+@media (min-width: 768px) {
+  .blend-result {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.7fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "aside head"
+      "aside list";
+    column-gap: 2.5rem;
+    row-gap: 1.25rem;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .blend-result__aside {
+    grid-area: aside;
+    align-self: start;
+    position: sticky;
+    top: calc(var(--header-height) + 1.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .blend-result__summary {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .blend-result__summary .blend-preview {
+    flex: none;
+    height: clamp(240px, 36dvh, 340px);
+    border-radius: 18px;
+  }
+  .blend-result .fragrance-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
   }
 }
 
@@ -1367,13 +1940,6 @@ h6 {
 .product-fragrance-name {
   color: var(--color-text-primary);
 }
-.product-fragrance-accent-line {
-  background: var(--color-accent-line);
-}
-.product-fragrance-glow {
-  background: radial-gradient(circle, var(--color-glow) 0%, transparent 70%);
-}
-
 .product-title-layout {
   @apply flex 
   items-center 
@@ -1655,6 +2221,23 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
 
 /* react-select dark mode */
 @layer components {
+  /* 이미지 슬라이더 좌우 버튼 — 라이트: 어두운 원 / 다크: 밝은 원 */
+  .slider-nav-btn {
+    background: var(--slider-nav-bg);
+    color: var(--slider-nav-icon);
+  }
+  .slider-nav-btn:hover {
+    background: var(--slider-nav-bg-hover);
+  }
+
+  /* 버튼 안 인라인 로딩 표시 — InlineSpinner 전용. 글자색(currentColor)을 따른다 */
+  .inline-spinner {
+    display: block;
+    border-radius: 9999px;
+    border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+    border-top-color: currentColor;
+    animation: ilp-spin 1s linear infinite;
+  }
   /* .ilp-select-container {
   } */
   .ilp-select-container .ilp-select__control {
@@ -2163,26 +2746,6 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   min-height: 0;
 }
 
-/* 병 주변 글로우 — 오로라 퍼플/라벤더 */
-.ilp-bottle-glow {
-  position: absolute;
-  width: 80%;
-  height: 80%;
-  background: radial-gradient(ellipse,
-    rgba(160, 130, 255, 0.22) 0%,
-    rgba(110,  88, 220, 0.10) 50%,
-    transparent 72%
-  );
-  border-radius: 50%;
-  animation: ilp-glow-pulse 4s ease-in-out infinite;
-  z-index: -1;
-}
-
-@keyframes ilp-glow-pulse {
-  0%, 100% { transform: scale(1);    opacity: 0.75; }
-  50%       { transform: scale(1.22); opacity: 1; }
-}
-
 /* 향수 이미지 — 높이에 비례해 크기 제한, 항상 보이게 */
 .ilp-bottle-img {
   width: auto !important;
@@ -2205,13 +2768,6 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
   align-items: center;
   gap: 0.35em;
   min-height: 0;
-}
-
-/* 장식 분리선 — 라벤더/퍼플 */
-.ilp-deco-line {
-  width: clamp(60px, 12vw, 120px);
-  height: 1px;
-  background: var(--color-accent-border);
 }
 
 /* 메인 타이틀 — 라이트: 진한 라벤더(아이보리 대비), 다크: 밝은 라벤더 */
@@ -2559,4 +3115,8 @@ div[data-slot="input-wrapper"].textfield-textarea-wrapper {
     width: 380px;
     max-width: 380px;
   }
+}
+
+@keyframes ilp-spin {
+  to { transform: rotate(360deg); }
 }

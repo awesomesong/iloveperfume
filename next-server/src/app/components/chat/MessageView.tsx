@@ -22,7 +22,6 @@ import {
   replaceOptimisticMessage,
   compareMessages,
   type MessagesPage,
-  normalizeMessage,
 } from "@/src/app/lib/react-query/chatCache";
 import { useFailedMessages } from "@/src/app/hooks/useFailedMessages";
 import { useAIStream } from "@/src/app/hooks/useAIStream";
@@ -64,7 +63,7 @@ const areEqual = (prev: MessageBoxProps, next: MessageBoxProps) => {
     prev.showDateDivider === next.showDateDivider &&
     prev.isAIChat === next.isAIChat &&
     prev.conversationId === next.conversationId &&
-    prev.currentUser?.email === next.currentUser?.email &&
+    prev.currentUser?.id === next.currentUser?.id &&
     prev.seenUsersForLastMessage === next.seenUsersForLastMessage // ✅ 참조 비교로 빠른 탈출
   ) {
     return true;
@@ -109,7 +108,7 @@ const areEqual = (prev: MessageBoxProps, next: MessageBoxProps) => {
       p.isWaiting !== n.isWaiting ||
       p.isTyping !== n.isTyping ||
       p.isError !== n.isError ||
-      p.sender?.email !== n.sender?.email ||
+      p.sender?.id !== n.sender?.id ||
       p.sender?.name !== n.sender?.name ||
       p.sender?.image !== n.sender?.image ||
       p.conversation?.isGroup !== n.conversation?.isGroup
@@ -123,7 +122,7 @@ const areEqual = (prev: MessageBoxProps, next: MessageBoxProps) => {
     prev.showDateDivider !== next.showDateDivider ||
     prev.isAIChat !== next.isAIChat ||
     prev.conversationId !== next.conversationId ||
-    prev.currentUser?.email !== next.currentUser?.email
+    prev.currentUser?.id !== next.currentUser?.id
   ) return false;
 
   // 5) seenUsersForLastMessage 배열 내용 비교 (참조가 다를 때만)
@@ -187,7 +186,8 @@ const MessageView: React.FC<MessageBoxProps> = ({
   const currentUserId = String(currentUser?.id ?? "");
   const senderId = String(data?.sender?.id ?? "");
   const isAIMessage = data.isAIResponse;
-  const isOwn = !isAIMessage && currentUser?.email === data?.sender?.email;
+  // 발신자 id로 판별 (소켓으로 받은 메시지에는 발신자 이메일이 없다)
+  const isOwn = !isAIMessage && !!currentUserId && currentUserId === senderId;
 
   const filteredSeenUsers = useMemo(() => {
     // ✅ 핵심: isLastOwn가 false면 무조건 빈 배열 반환
@@ -274,19 +274,12 @@ const MessageView: React.FC<MessageBoxProps> = ({
     window.dispatchEvent(new CustomEvent("chat:new-content"));
   }, []);
 
-  // ✅ AI 응답 완료 시 다른 브라우저/탭에 전달
-  const handleAIComplete = useCallback((finalMessage: FullMessageType) => {
-    if (socket) {
-      socket.emit("send:message", { newMessage: finalMessage });
-    }
-  }, [socket]);
-
   // AI 스트림 요청 훅
+  // (AI 답변의 다른 탭 전달은 /api/ai/stream이 저장 후 소켓 서버로 직접 보낸다)
   const { requestAI } = useAIStream({
     conversationId,
     aiAgentType: "assistant",
     onNewContent: notifyNewContent,
-    onComplete: handleAIComplete,
   });
 
   const { mutateAsync: resendMessage } = useMutation({
@@ -322,24 +315,7 @@ const MessageView: React.FC<MessageBoxProps> = ({
         });
       }
 
-      // 소켓으로 메시지 브로드캐스트 (소켓 서버가 기대하는 구조로 전송)
-      if (socket && responseData.newMessage) {
-        // ✅ responseData.newMessage.conversation에서 참여자 정보 가져오기
-        const conversation = responseData.newMessage.conversation;
-        const userIds = conversation?.userIds || [];
-
-        // 소켓 전송용 메시지 정규화 (FullMessageType 구조 보장)
-        const socketMessage = normalizeMessage({
-          ...responseData.newMessage,
-          conversation: {
-            isGroup: userIds.length > 2,
-            userIds: userIds,
-          }
-        });
-        socket.emit("send:message", {
-          newMessage: socketMessage,
-        });
-      }
+      // 실시간 전달은 /api/messages가 저장 직후 소켓 서버로 직접 보낸다
     },
     onError: () => {
       // 실패 시 다시 에러 상태로 표시

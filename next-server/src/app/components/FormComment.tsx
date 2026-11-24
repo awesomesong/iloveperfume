@@ -8,7 +8,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createNoticesComments } from "@/src/app/lib/createNoticesComments";
 import { CommentType } from "@/src/app/types/comments";
 import { Author } from "@/src/app/types/notice";
-import { useSocket } from "../context/socketContext";
 import toast from "react-hot-toast";
 import {
   prependNoticeCommentFirstPage,
@@ -17,7 +16,6 @@ import {
   noticesCommentsKey,
   incrementNoticeDetailCommentsCount,
 } from "@/src/app/lib/react-query/noticeCache";
-import { SOCKET_EVENTS } from "../lib/react-query/utils";
 
 type FormCommentProps = {
   noticeId: string;
@@ -55,7 +53,6 @@ const FormComment = ({
     Boolean(onSubmit) ? true : false,
   );
   const queryClient = useQueryClient();
-  const socket = useSocket();
 
   // 한글 입력 조합 상태 관리
   const { isComposing, handleCompositionStart, handleCompositionEnd } =
@@ -99,21 +96,7 @@ const FormComment = ({
         ...result.newComment,
         author: authorData,
       });
-
-      // 소켓 브로드캐스트 (다른 사용자들에게만)
-      try {
-        socket?.emit(SOCKET_EVENTS.NOTICE_COMMENT_NEW, {
-          noticeId: bid,
-          comment: {
-            ...result.newComment,
-            author: {
-              name: authorData.name,
-              email: authorData.email,
-              image: authorData.image,
-            },
-          },
-        });
-      } catch {}
+      // 다른 사용자 화면 반영은 API가 저장 후 소켓 서버로 직접 보낸다
     },
     onError: (error, { noticeId: bid, comment }, context) => {
       // 에러 시 롤백

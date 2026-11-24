@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/src/app/lib/apiAuth";
 import { getCurrentUser } from "@/src/app/lib/session";
 import { isNoticeStatus } from "@/src/app/lib/news/categories";
+import { queueSocketEvents } from "@/src/app/lib/socketServer/emitSocketEvents";
 
 export const runtime = "nodejs";
 
@@ -82,6 +83,13 @@ export async function PATCH(req: Request, { params }: ParamsProp) {
             data: { status },
             select: { id: true, status: true },
         });
+
+        // 내린 글은 다른 접속자의 목록·상세에서도 즉시 제거 (내린 관리자 화면은 이미 반영함)
+        if (notice.status === "HIDDEN") {
+            queueSocketEvents([
+                { kind: "broadcast", event: "notice:deleted", payload: { noticeId: notice.id }, exceptUserIds: [auth.user.id] },
+            ]);
+        }
 
         return NextResponse.json(
             { message: status === "PUBLISHED" ? "글을 다시 게시했습니다." : "글을 내렸습니다.", notice },

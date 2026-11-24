@@ -88,8 +88,7 @@ export default function EditableItemRow({
                 className={clsx(
                   rowActionBase,
                   "bg-[var(--color-accent-pale)] text-[var(--color-text-secondary)] hover:bg-[var(--color-accent-border)] hover:text-[var(--color-text-primary)]",
-                  // eslint-disable-next-line no-restricted-syntax
-                  "dark:bg-[#9d8fb8] dark:text-[#1f1b29] dark:hover:bg-[#b5a8cc]",
+                  "dark:bg-[var(--color-accent-light)] dark:text-[var(--color-card-bg)] dark:hover:bg-[var(--color-text-primary)] dark:hover:text-[var(--color-card-bg)]",
                   "disabled:opacity-50 disabled:cursor-not-allowed"
                 )}
               >

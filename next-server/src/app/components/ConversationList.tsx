@@ -46,7 +46,8 @@ const ConversationList = memo(function ConversationList() {
     staleTime: 30_000,
     gcTime: 5 * 60_000,
     refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    // 네트워크가 돌아오면 소켓도 다시 연결되고, SocketState가 재접속 때 목록을 다시 받는다 (중복 요청 방지)
+    refetchOnReconnect: false,
     refetchOnMount: true,
     retry: 1,
     retryOnMount: true,

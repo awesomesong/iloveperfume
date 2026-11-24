@@ -22,7 +22,7 @@ import { validateFragranceContent } from "@/src/app/lib/validateFragranceContent
 import type { FragranceType } from "@/src/app/types/fragrance";
 import PointsLoading from "./PointsLoading";
 import TextField, { formClassNames } from "./TextField";
-import { HiSparkles } from "react-icons/hi2";
+import { HiCheckCircle, HiPhoto } from "react-icons/hi2";
 import ImageSlider from "./ImageSlider";
 import ImageModal from "./ImageModal";
 
@@ -95,7 +95,7 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
             !!(current.description ?? "").trim() &&
             !!(current.notes ?? "").trim();
         if (allFilled) {
-            toast("등록폼이 모두 입력되어 있어 AI 분석을 건너뜁니다.", { icon: "✨" });
+            toast("등록폼이 모두 입력되어 있어 AI 분석을 건너뜁니다.");
             return;
         }
         setIsAnalyzing(true);
@@ -123,7 +123,7 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                 setValue("notes", result.notes);
                 setFormData((p) => ({ ...p, notes: result.notes }));
             }
-            toast.success("AI가 향수 정보를 자동으로 입력했습니다.", { icon: "✨" });
+            toast.success("AI가 향수 정보를 자동으로 입력했습니다.");
         } catch (error: unknown) {
             toast.error(error instanceof Error ? error.message : "AI 분석 중 오류가 발생했습니다.");
         } finally {
@@ -296,8 +296,7 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                         onDrop={(e) => handleDrop(e, isDisabled)}
                         className={clsx(
                             "fragrance-img-size transition-all duration-300 group mx-auto sm:self-start",
-                            // eslint-disable-next-line no-restricted-syntax
-                            isDragging ? "bg-[#f5edf0]/50 scale-[1.01]" : "bg-[var(--color-card-bg)]",
+                            isDragging ? "bg-[var(--color-accent-pale)] scale-[1.01]" : "bg-[var(--color-card-bg)]",
                             imageError && "ring-2 ring-red-400/60 dark:ring-red-400/50 rounded-[28px]",
                             previewImages.length === 0 && "!overflow-visible"
                         )}
@@ -386,8 +385,7 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                                     className={clsx(
                                         "group relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-300 cursor-pointer",
                                         i === sliderIndex
-                                            // eslint-disable-next-line no-restricted-syntax
-                                            ? "border-[#d4b8b0] shadow-md scale-[1.08] z-10"
+                                            ? "border-[var(--color-accent)] shadow-md scale-[1.08] z-10"
                                             : "border-transparent opacity-50 hover:opacity-100 hover:scale-[1.03]"
                                     )}
                                     onClick={() => selectImage(i)}
@@ -419,7 +417,7 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                 <div className="fragrance-form-right gap-12">
                     {scanPrefilled && !isAnalyzing && (
                         <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[var(--color-accent-pale)] dark:bg-[var(--color-card-bg)] border border-[var(--color-card-border)]">
-                            <HiSparkles className="text-[var(--color-accent)] w-4 h-4 shrink-0" />
+                            <HiCheckCircle className="text-[var(--color-accent)] w-4 h-4 shrink-0" />
                             <p className="text-[0.75rem] tracking-[0.15em] uppercase text-[var(--color-text-primary)] font-medium">
                                 스캔 결과에서 자동 입력됐습니다.
                             </p>
@@ -427,7 +425,7 @@ const FormFragrance = ({ id, isEdit, initialData }: FormFragranceProps) => {
                     )}
                     {isAnalyzing && (
                         <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[var(--color-accent-pale)] dark:bg-[var(--color-card-bg)] border border-[var(--color-card-border)]">
-                            <HiSparkles className="text-[var(--color-accent)] w-4 h-4 shrink-0 animate-pulse" />
+                            <HiPhoto className="text-[var(--color-accent)] w-4 h-4 shrink-0 animate-pulse" />
                             <p className="text-[0.75rem] tracking-[0.15em] uppercase text-[var(--color-text-primary)] font-medium">
                                 AI가 이미지를 분석하고 있습니다.
                             </p>

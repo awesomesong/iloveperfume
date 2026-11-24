@@ -1,0 +1,158 @@
+# 채팅 WebSocket 점검 결과와 최적화 계획
+
+작성일: 2026-11-19 · 대상: `socket-server/server.js`(Fly.io), `next-server`의 소켓 클라이언트
+
+## 측정 방법
+
+`socket-server/scripts/ws-audit.js`가 로컬에 `server.js`를 띄우고 문제를 재현한다. 운영 서버에는 접속하지 않는다. 최적화 전과 후에 같은 스크립트를 돌려 `pass` 값으로 비교한다.
+
+```bash
+NODE_PATH=next-server/node_modules node socket-server/scripts/ws-audit.js          # 전체 (약 60초)
+NODE_PATH=next-server/node_modules node socket-server/scripts/ws-audit.js --quick  # half-open 측정 생략
+```
+
+### 현재 기준값 (2026-11-19, 수정 전)
+
+| 항목 | 결과 | pass |
+|---|---|---|
+| 익명 연결이 온라인 사용자 이메일 수신 | `alice@example.com` 노출 | false |
+| `auth.userId`만으로 사칭 | 사칭 소켓이 피해자 메시지 수신 | false |
+| 위조 `send:message` (없는 방, 임의 참여자) | 피해자에게 전달됨 | false |
+| 비멤버의 `room.deleted` | 피해자에게 전달됨 | false |
+| 메시지 1건당 서버 로그 | 10줄, 본문 포함 | false |
+| half-open 감지 시간 | 55초 | — |
+| 그 사이 보낸 메시지 3건 중 소켓 복구 | 0건 | — |
+
+## 문제점 (근거 포함)
+
+### S. 보안 — 우선순위 가장 높음
+
+**S1. 연결 인증이 없다.** 서버는 `socket.handshake.auth`의 `userId`·`useremail`을 그대로 믿는다(`server.js:305-319`). 클라이언트는 세션 값을 그대로 넣을 뿐 서명된 값이 아니다(`context/socketContext.tsx:37`). 다른 사람의 userId를 알면 그 사람의 개인 룸(`user:<id>`)에 들어가 메시지·읽음 상태·대화방 이벤트를 모두 받는다. 재현: `impersonation`.
+
+**S2. 클라이언트가 보낸 내용을 그대로 중계한다.** 메시지는 Next API가 DB에 저장한 뒤, 클라이언트가 다시 `send:message`로 소켓 서버에 보낸다(`chat/Form.tsx:226`, `chat/MessageView.tsx:280,339`, `chat/AIChatForm.tsx:70,274`, `chat/DraftForm.tsx:132-134`, `chat/ConfirmModal.tsx:49`). 소켓 서버의 권한 검사는 "페이로드에 적힌 `conversation.userIds`에 내가 있는가"뿐이라(`server.js:480-488`), 참여자 목록·본문·발신자 이름을 모두 위조할 수 있다. 같은 이유로:
+- `room.deleted`는 누구나 보낼 수 있다(`server.js:656-658`). 받은 쪽 클라이언트는 대화방을 지운 것처럼 처리한다(`hooks/useOtherUser.ts:146`).
+- `notice:*`, `fragrance:review:*`는 검증 없이 전체 사용자에게 브로드캐스트된다(`server.js:555-597`).
+- `join:room`은 멤버 확인 없이 아무 방에나 들어간다(`server.js:424-443`). `read:state`의 `isMember`(`server.js:529`)도 이 join 기록만 보므로 실제로는 검사가 아니다.
+
+**S3. 이메일 노출.** 연결 직후 모든 소켓(익명 포함)에 온라인 사용자 이메일 목록을 보내고(`server.js:349`, `62-66`), 접속·퇴장 때 `io.emit`으로 이메일을 전체에 뿌린다(`server.js:407`, `633`). 클라이언트는 userId만 쓴다(`hooks/useActiveUser.ts:14-29`). 신규 가입 알림도 이메일을 전체에 보낸다(`server.js:269`).
+
+### R. 신뢰성
+
+**R1. 끊긴 연결 사이의 메시지가 사라진다.** 서버는 "온라인이면 바로 보내고, 오프라인이면 메모리 큐에 넣는다"(`server.js:502-510`). 그런데 모바일 네트워크 전환·터널처럼 응답 없이 끊긴 연결은 `pingInterval 25s + pingTimeout 30s`(`server.js:212-213`) 동안 계속 온라인으로 보인다. 그 사이 메시지는 죽은 연결로 보내지고 큐에도 안 들어간다. 재현: 55초, 3건 중 0건 복구.
+클라이언트도 재접속 때 다시 불러오지 않는다. 메시지 쿼리는 `refetchOnReconnect: false`, `refetchOnWindowFocus: false`(`chat/Body.tsx:91-92`)이고, 재접속 처리(`components/SocketState.tsx:415-447`)는 대화 목록이 이미 있으면 재조회하지 않는다. 주석이 "서버 큐잉으로 메시지 복구 - 워터마크 불필요"라고 밝히듯 서버 큐에만 의존한다.
+
+**R2. 메모리 큐는 재시작하면 사라지고, 정리되지 않는다.** `messageQueue`(`server.js:10`)는 배포·재시작 때 비워진다. 다시 접속하지 않는 사용자의 큐는 지워지지 않고, `globalRoomRev`(`server.js:69`)는 `room.deleted` 때만 지워져 계속 늘어난다. 큐가 `receive:message`를 보낼 때는 그 시점에 이미 join한 방만 보내는데(`server.js:383`), 재접속 직후에는 `online:user`와 `join:room` 순서가 정해져 있지 않아 대부분 빠진다.
+
+**R3. 머신이 2대 이상이면 메시지가 엇갈린다.** 모든 상태가 프로세스 메모리에 있고 어댑터(Redis 등)가 없다. `fly.toml`은 머신당 `hard_limit = 100` 연결이다(탭마다 연결 1개). 100을 넘거나 Fly가 머신을 2대 띄운 경우, 서로 다른 머신에 붙은 사용자끼리는 메시지·접속 상태가 전달되지 않는다. **운영 머신 수는 아직 확인하지 못했다** — `fly machines list -a socket-server-muddy-shadow-6983`로 확인 필요.
+
+### E. 효율
+
+**E1. 로그가 과하고 본문이 남는다.** 메시지 1건에 10줄, 발신자 이름과 본문까지 기록한다(`server.js:461-492`, `521`). 웹훅 시크릿이 틀리면 받은 값을 그대로 로그에 남긴다(`server.js:254`).
+
+**E2. 메시지 전체 객체를 소켓으로 보낸다.** 저장된 메시지 전체와 `conversation.userIds`를 그대로 실어 보낸다. 목록 갱신(`receive:conversation`)에는 미리보기 필드만 있으면 된다.
+
+**E3. `online:user` 재전송이 잦다.** 포커스·`visibilitychange`·`pageshow`·`online` 때마다 다시 보낸다(`components/SocketComponents.tsx:70-110`). 이미 연결된 소켓이면 서버는 큐 조회와 로그만 반복한다.
+
+**E4. 기타.** `process.stdout.setEncoding`(`server.js:6-7`)은 쓰기 스트림에는 의미가 없고, stdout이 파일이면 서버가 시작하자마자 죽는다(로컬 재현 중 확인). `join:room`·`send:message`에는 속도 제한이 없다(`room.event`에만 200ms, `server.js:645-649`).
+
+## 최적화 계획
+
+순서는 보안 → 메시지 유실 → 효율. 각 단계는 `ws-audit.js`의 해당 항목이 `pass: true`가 되는 것을 완료 기준으로 한다.
+
+### 1단계 — 연결 인증 (S1, S3)
+- Next에 `GET /api/socket/token` 추가: 로그인 사용자에게 `userId`와 만료(예: 5분)를 담은 HMAC 서명 토큰 발급. 비밀값은 새 환경변수 `SOCKET_AUTH_SECRET`(Next·Fly 양쪽).
+- 소켓 서버에 `io.use` 미들웨어: 토큰 검증 실패 시 연결 거부. `socket.data.userId`는 토큰에서만 설정. `online:user`의 userId·email 인자는 무시.
+- 클라이언트 `auth`를 콜백 형태로 바꿔 재연결 때마다 새 토큰을 받는다(socket.io-client는 `auth`에 함수를 받음).
+- presence 이벤트·스냅샷에서 이메일 제거, userId만 전송. 신규 가입 알림도 이메일 제외.
+- 완료 기준: `anonymousSeesEmails`, `impersonation` pass. (스크립트에 정상 사용자 토큰 발급을 추가해야 함)
+
+#### 1단계 구현 메모 (2026-11-19)
+- 토큰: `base64url({sub, exp}).base64url(HMAC-SHA256)`, 유효 5분. 발급 `lib/socketAuth/signSocketToken.ts`, 검증 `socket-server/socketAuth.js`의 `verifySocketToken`, 감사 스크립트의 `signToken` — 형식을 바꾸면 세 곳을 같이 바꾼다. 발급·검증 호환은 `cd socket-server && npm test`로 확인한다.
+- 서버는 연결 시 토큰의 userId로 개인 룸 조인·접속 상태 등록을 끝낸다. `online:user`는 페이로드를 무시하고 큐 전달만 한다(3단계에서 큐 제거, 4단계에서 재전송 제거). 신원 없는 연결은 모드와 상관없이 거부한다.
+- 소켓 서버 환경변수: `SOCKET_AUTH_SECRET`, `SOCKET_AUTH_REQUIRED`.
+  - `REQUIRED`가 `"true"`가 아니면 호환 모드: 토큰 없는 구버전 클라이언트는 `auth.userId`로 연결을 허용(소켓 ID만 로그). 토큰이 있는데 틀리거나 만료되면 항상 거부.
+  - 비밀값이 없으면: `REQUIRED=true`면 전부 거부 + 에러 로그, 아니면 토큰을 검증하지 않고 호환 모드로만 동작.
+- 배포 순서: ① 소켓 서버 배포(`SOCKET_AUTH_SECRET`만 설정) → ② Next 배포(`SOCKET_AUTH_SECRET` 같은 값) → ③ 열려 있던 구버전 탭이 정리된 뒤 `fly secrets set SOCKET_AUTH_REQUIRED=true`.
+- 새 클라이언트는 토큰과 함께 토큰에서 꺼낸 `userId`를 보낸다. 순서가 뒤바뀌어 새 클라이언트가 구버전 서버에 붙어도 개인 룸 이벤트(메시지·읽음·방 이벤트)는 계속 받게 하기 위함이다. 이메일은 보내지 않으므로 그 사이 구버전 서버에서는 접속 상태 표시와 오프라인 큐 전달이 멈춘다 — 그래서 ①을 먼저 한다. ③ 이후 `lib/socket.ts`의 `userId` 동봉은 지운다.
+
+### 2단계 — 서버가 직접 전달 (S2)
+- 메시지 저장 API(`api/messages/route.ts` 등)가 저장 직후 소켓 서버의 내부 엔드포인트(예: `POST /internal/message`)를 호출한다. 참여자 목록은 DB 기준. 이미 `api/user-registered`(`lib/auth.ts:127`, `x-webhook-secret`)에서 쓰는 방식과 같다.
+- 클라이언트의 `send:message` 송신 제거, 소켓 서버의 `send:message` 핸들러 제거.
+- `room.event`, 공지·리뷰 이벤트도 각각의 API가 처리 후 내부 엔드포인트로 알린다.
+- `join:room`은 서버가 대화방 멤버인지 확인한다(내부 API 조회 또는 토큰에 담기 어려우므로 Next에 `GET /api/conversations/:id/members` 내부 호출 + 짧은 캐시).
+- 완료 기준: `forgedMessage`, `roomDeletedByStranger` pass. 실제 브라우저 2개로 1:1·그룹·AI 채팅 송수신, 읽음 표시, 나가기 확인.
+- 부수 효과: 전송 경로가 "API → 클라이언트 → 소켓"에서 "API → 소켓"으로 줄어 상대방 수신 지연이 한 구간 줄어든다. 전후 지연은 서버 수신 시각 기준으로 측정해 기록한다.
+
+#### 2단계 구현 메모 (2026-11-20)
+- 내부 엔드포인트: 소켓 서버 `POST /internal/emit`, 헤더 `x-webhook-secret` = `WEBHOOK_SECRET`(가입 알림과 같은 값, 해시 후 `timingSafeEqual` 비교). 본문 `{ events: [...] }`(최대 10개, 순서대로 전달). 종류는 `message`(참여자별 `receive:conversation` — 오프라인이면 기존 메모리 큐, 시스템 메시지가 아니면 `receive:message`), `room.event`(rev는 소켓 서버가 매김), `users`(`conversation:new`·`read:state`만), `broadcast`(공지·댓글·리뷰 7개 이름만, `exceptUserIds`로 보낸 사람 제외). 검증 로직은 `socket-server/internalEmit.js`, 테스트는 `socket-server/test/internalEmit.test.js`. `/api/user-registered`도 같은 비교로 바꾸고 틀린 시크릿을 로그에 남기지 않게 했다.
+- Next 쪽: `lib/socketServer/emitSocketEvents.ts`의 `queueSocketEvents`(응답 후 `after()`로 전송)·`sendSocketEvents`(이미 `after()` 안일 때). 타임아웃 2초, 실패해도 API 응답은 그대로(로그에 상태 코드와 이벤트 종류만). 주소는 `SOCKET_SERVER_URL` → `NEXT_PUBLIC_SOCKET_URL` → 운영 주소 순(`lib/socketServer/socketServerUrl.ts`, 가입 알림도 같은 함수 사용).
+- 수신자는 모두 DB 기준: 메시지·첫 메시지·AI 답변은 `conversation.userIds`, 나가기/삭제는 트랜잭션의 남은 멤버 + 나간 사람(다른 탭 정리), 읽음은 마지막 메시지 발신자 + 읽은 사람 본인(다른 탭 안 읽은 수 동기화, 시스템 메시지면 보내지 않음).
+- `receive:message`는 대화방 룸 대신 참여자 개인 룸으로 보낸다(클라이언트 `Body.tsx`가 conversationId로 거름). 대화방 룸으로는 아무것도 보내지 않으므로 `join:room`의 DB 멤버 확인은 하지 않았다(계획과 다름 — 확인할 필요가 없어짐). 대신 `join:room`/`leave:room`에서 `user:`로 시작하는 이름을 막는다 — 이전에는 `join:room("user:<남의 id>")`로 남의 개인 룸 이벤트를 모두 받을 수 있었다(감사 스크립트 `impersonation`에 추가).
+- 보낸 탭 중복 방지: HTTP에는 소켓 ID가 없어 보낸 탭도 자기 메시지를 받는다. 메시지 ID를 클라이언트의 낙관적 ID(`messageId`)로 저장하므로 `upsertMessageSortedInCache`·`bumpConversationOnNewMessage`가 같은 id로 합친다(안 읽은 수는 내 메시지라 그대로). 공지·댓글·리뷰는 같은 처리가 없어 보낸 사람(`exceptUserIds`)을 제외한다 — 보낸 사람의 다른 탭은 새로고침 전까지 반영되지 않는다(이전에는 반영됨).
+- 소켓 서버에서 `send:message`, `conversation:new`, `read:state`, `room.event`, `notice:*`, `fragrance:review:*` 핸들러를 없앴다. 남은 클라이언트 이벤트: `online:user`, `join:room`, `leave:room`.
+- 호환: 이벤트 이름·페이로드 형식은 그대로라 열려 있던 구버전 탭도 받기는 정상. 구버전 탭이 보내는 중계는 무시되므로 그 탭에서 보낸 메시지는 저장되고(API가 대신 전달) 화면 갱신도 정상이다. 공지·댓글·리뷰는 원래 API 저장 후 클라이언트가 중계했으므로 이제 API가 보낸다.
+- 배포 순서: main 머지 시 소켓 서버(GitHub Actions)와 Next(Vercel)가 거의 동시에 배포된다. 엇갈린 몇 분 동안은 실시간 전달만 빠진다(저장은 정상) — Next가 먼저면 내부 호출이 404(경고 로그만), 소켓 서버가 먼저면 구버전 Next 탭의 중계가 무시된다. 새 환경변수는 없다(`WEBHOOK_SECRET`이 양쪽에 이미 있어야 함, `SOCKET_SERVER_URL`은 선택).
+- 완료 기준 측정(2026-11-20): `anonymousSeesEmails`·`impersonation`·`forgedMessage`·`roomDeletedByStranger`·`internalEndpoint`·`logging` 모두 pass. half-open은 그대로(55초, 0/3 — 3단계).
+
+### 3단계 — 메시지 유실 방지 (R1, R2)
+- 복구 기준을 DB로 바꾼다. 재접속(`connect`) 시 활성 대화방 메시지와 대화 목록을 무효화해 다시 불러온다. 가능하면 "마지막으로 받은 메시지 ID 이후"만 받는 API로 양을 줄인다.
+- 서버 메모리 큐(`messageQueue`)와 관련 로직 제거. `globalRoomRev`는 TTL 정리 추가 또는 제거.
+- 완료 기준: half-open 동안 보낸 3건이 재접속 후 화면에 모두 보인다(브라우저에서 네트워크 끊기로 확인).
+
+### 4단계 — 효율 (E1~E4)
+- 로그를 메시지당 0~1줄, 본문·이메일·시크릿 제외로 정리. `setEncoding` 제거.
+- `receive:conversation` 페이로드를 미리보기 필드로 줄이고 전후 바이트 수를 기록.
+- `online:user` 재전송 제거(1단계 후 서버가 연결 시 자동 등록).
+- `join:room` 속도 제한.
+- 완료 기준: `logging` pass, 페이로드 크기 전후 수치 기록.
+
+#### 3·4단계 구현 메모 (2026-11-20)
+- 전제: 운영 Fly에 `SOCKET_AUTH_REQUIRED=true` 설정 후 토큰 없는 연결이 `unauthorized`로 거부되는 것을 확인(2026-11-20). 그래서 호환 모드를 지웠다 — 서버는 토큰만 신원으로 쓰고(`SOCKET_AUTH_REQUIRED` 플래그 제거, 비밀값이 없으면 전부 거부), 클라이언트 `lib/socket.ts`는 `{ token }`만 보낸다. Fly에 남은 `SOCKET_AUTH_REQUIRED`는 더 이상 읽지 않는다.
+- **복구 기준을 DB로(3단계)**: 서버 메모리 큐(`messageQueue`)와 온라인 여부 분기, 클라이언트의 `online:user` 송신(`SocketComponents.tsx` 삭제)과 서버 핸들러를 없앴다. 대신 소켓 `connect` 때 **연결 전에 받아 둔 캐시가 있으면** DB에서 다시 맞춘다(첫 연결 포함 — 새로고침 때 "조회~연결" 사이 공백도 이전엔 큐가 메웠다).
+  - 대화 목록: `SocketState.handleSocketConnect(true)`가 목록을 `refetchQueries`(받는 동안 실시간 메시지는 기존 버퍼). 연결 시점에 첫 조회가 진행 중이면 그것도 다시 받는다. 재조회가 실패하면 버퍼를 기존 캐시로 비우고 실시간 처리로 돌아간다(버퍼 모드에 갇히지 않게).
+  - 열린 방: `Body.tsx`가 최신 페이지(50건)만 받아 `chatCache.mergeLatestMessagesPage`로 병합 — 캐시에 없는 id만 넣어 낙관적·실패 메시지와 보낸 탭의 표시 시각을 그대로 둔다. 50건보다 많이 밀려 이어지지 않으면 최신 페이지를 첫 페이지로 다시 세운다.
+  - 다른 방 메시지 캐시는 요청 없이 stale 표시만(다시 열 때 받음). 브라우저 `refetchOnReconnect`는 목록·메시지 모두 끄고 이 경로 하나로 처리.
+  - 소켓이 이미 연결된 채 화면을 옮기면 connect가 없으므로 추가 요청 없음.
+- **half-open 감지**: `pingInterval 15s / pingTimeout 10s`. 감사 스크립트 측정 55초 → 24.7초. 그 사이 메시지는 서버가 복구하지 않고 위의 재조회가 복구한다.
+- **room.event rev**: 방별 `globalRoomRev` Map 대신 서버 전역 카운터 `max(now, last+1)` — 메모리가 늘지 않는다. 클라이언트는 방별 마지막 rev를 기억하고 끊김 때 초기화하므로 그대로.
+- **메시지 이벤트 하나로(E2)**: 서버는 메시지마다 `receive:conversation`만 보낸다(시스템 메시지 포함). `receive:message`(같은 객체를 한 번 더 보내던 것)는 없앴고, `Body.tsx`의 읽음 처리는 `receive:conversation`에서 시스템 메시지를 빼고 동작한다.
+- **페이로드 축소(E2)**: `emitSocketEvents.toSocketMessage`가 클라이언트가 실제로 읽는 필드만 보낸다(id·conversationId·type·createdAt·body, 이미지일 때 image, AI 답변일 때 isAIResponse, sender id·name·image, conversation isGroup·userIds). 발신자 이메일·`serverCreatedAtMs`·`isError`·`clientMessageId`를 뺐다. 내 메시지 판별은 이메일 대신 발신자 id로 바꿨다(`SocketState`·`Body`·`MessageView`). 1:1 메시지 1건 642B → 466B(-27%), 메시지당 이벤트가 2개 → 1개라 수신 바이트는 약 1,284B → 466B.
+- **접속 상태 묶어 보내기**: `online:user`/`leave:user` 즉시 브로드캐스트 대신 1초마다 바뀐 사용자만 `presence:delta {online, offline}`로 보낸다(`socket-server/presence.js`, 창 안에서 켜졌다 꺼진 사용자도 현재 상태로 포함). 연결 스냅샷 `get:onlineUsers`는 자기 자신도 포함. 멤버 목록(`/chatMember`)이 전체 사용자의 접속 표시를 쓰므로 "대화 상대에게만"으로 줄이지는 않았다.
+
+  | 동시 연결 | 이벤트 수 (이전 추정 → 지금) | 바이트 (이전 추정 → 지금) | 연결 후 RSS |
+  |---|---|---|---|
+  | 200 | 20,100 → 200 | 864KB → 587KB | 75.5MB |
+  | 1,000 | 500,500 → 1,000 | 22.0MB → 15.9MB | 114.2MB |
+
+  이벤트 수는 N² → N으로 줄었지만 바이트는 여전히 N²에 비례한다(각 delta에 N개 id, 스냅샷 합계도 1,000명에 13.4MB). 수천 명 이상이면 위 "확장 단계"의 범위 축소가 필요하다.
+- **`join:room` 제한(E4)**: 소켓당 10초에 30회, 대화방 룸 100개(`socket-server/joinLimiter.js`). 대화방 룸으로 보내는 이벤트가 없어 `roomMembers` 캐시도 지웠다(나가기·삭제 때 `socketsLeave`).
+- **로그(E1)**: 정상 경로는 시작 1줄 + `/internal/emit` 요청당 1줄(종류·수신자 수). 인증 실패는 사유만(같은 사유 10초에 1줄), 나머지는 `SOCKET_DEBUG=1`일 때만.
+- 검증(로컬, 2026-11-20): `npm test` 42개 통과, 감사 스크립트 전 항목 pass. 브라우저 두 탭(같은 계정, AI 방)에서 실시간 수신은 `receive:conversation` 1건씩·질문→답 순서 유지, 소켓 서버를 끈 채 다른 탭에서 보낸 질문·답이 재접속 후 순서대로 나타남(재접속 요청: 토큰·목록·열린 방 각 1건), 새로고침 때 목록·메시지 추가 요청 없음.
+- 배포: 서버와 클라이언트 이벤트 형식이 함께 바뀐다(`presence:delta`, `receive:message` 제거). 배포가 엇갈린 몇 분, 또는 새로고침 전 구버전 탭에서는 접속 표시·열린 방 자동 읽음이 멈출 수 있다(메시지 저장·목록은 정상).
+
+### 운영 확인 (R3) — 2026-11-19 확인
+- `fly machines list` 결과: 머신 1대(`nrt`, shared-cpu-1x, 512MB). 지금은 머신이 갈라져 메시지가 엇갈리는 문제는 없다.
+- 대신 `hard_limit = 100`이 실제 한계다. 머신이 1대뿐이라 101번째 연결(탭)은 다른 곳으로 갈 수 없고, Fly 프록시에서 대기하다 실패할 수 있다.
+
+#### 연결 수별 서버 메모리 (로컬 측정, 유휴 연결, 메시지 트래픽 없음)
+
+| 연결 수 | RSS |
+|---|---|
+| 0 | 63.6MB |
+| 100 | 75.9MB |
+| 500 | 101.1MB |
+| 1,000 | 101.4MB |
+| 2,000 | 121.4MB |
+
+연결 2,000개에 약 58MB(연결당 약 30KB)이다. 512MB 머신에서 100개 제한은 메모리의 2~3%만 쓰는 값이다. 단, macOS 로컬·유휴 상태 측정이므로 메시지가 오가는 상태에서 다시 확인해야 한다.
+
+#### 연결 수가 늘 때 문제가 되는 것: 접속 상태(presence) 브로드캐스트
+2,000명이 접속한 상태에서 1명이 들어오면:
+- 들어온 사람은 2,000명분 스냅샷(이메일 포함 87.8KB)을 받고,
+- 서버는 `online:user`를 2,000개 소켓 모두에 보낸다.
+
+한 명이 들어올 때마다 전체에 보내므로, 배포처럼 모두가 한꺼번에 재접속하면 N명 × N건(2,000명이면 약 400만 건)이 몰린다. 메모리보다 이쪽이 먼저 한계가 된다.
+
+#### 확장 단계
+1. **머신 1대 유지 (수천 연결까지):** 1~4단계 + `hard_limit` 상향(예: soft 800 / hard 1000, 트래픽 부하 측정 후 확정) + presence를 "나와 대화 중인 사용자"에게만 보내도록 축소. 배포 때마다 전원이 재접속하므로 3단계(재접속 시 DB 재조회)가 전제다.
+2. **머신 2대 이상:** `@socket.io/redis-adapter`로 `io.to(room).emit`을 머신 간에 공유하고, 프로세스 메모리에 있는 접속 상태(`onlineUsersMap`, `userIdToSocketsMap`)를 Redis로 옮긴다. 2단계의 내부 엔드포인트는 어느 머신이 받아도 어댑터를 통해 전체에 전달된다. transports가 websocket 전용이라 sticky session은 필요 없다.

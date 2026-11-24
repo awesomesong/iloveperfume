@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/prisma/db";
 import { randomUUID } from "crypto";
 import { containsProhibited, validatePrompt } from "@/src/app/utils/aiPolicy";
+import { messageEvent, queueSocketEvents } from "@/src/app/lib/socketServer/emitSocketEvents";
 
 export const runtime = "nodejs";
 
@@ -90,14 +91,26 @@ function fireUpdateLastMessage(convId: string, lastMessageAt: Date, lastMessageI
 }
 
 function buildResponse(conv: ConvShape, msg: MsgShape, existingConversation: boolean) {
-  return NextResponse.json({
-    conversation: { ...conv, existingConversation },
-    newMessage: {
-      ...msg,
-      serverCreatedAtMs: new Date(msg.createdAt).getTime(),
-      conversation: { isGroup: !!conv.isGroup, userIds: conv.userIds ?? [] },
-    },
-  });
+  const conversation = { ...conv, existingConversation };
+  const newMessage = {
+    ...msg,
+    serverCreatedAtMs: new Date(msg.createdAt).getTime(),
+    conversation: { isGroup: !!conv.isGroup, userIds: conv.userIds ?? [] },
+  };
+
+  // 실시간 전달 (참여자는 DB의 userIds 기준): 새 대화방이면 conversation:new를 먼저, 이어서 첫 메시지
+  const userIds = conv.userIds ?? [];
+  queueSocketEvents([
+    ...(existingConversation
+      ? []
+      : [{ kind: "users" as const, event: "conversation:new" as const, payload: { ...conversation, firstMessage: newMessage }, userIds }]),
+    // 멱등 경로(P2002)에서 다른 방의 메시지가 돌아온 경우는 보내지 않는다
+    ...(msg.conversationId === conv.id
+      ? [messageEvent(msg, newMessage.conversation, userIds)]
+      : []),
+  ]);
+
+  return NextResponse.json({ conversation, newMessage });
 }
 
 /**

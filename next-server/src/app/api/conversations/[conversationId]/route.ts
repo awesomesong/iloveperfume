@@ -1,6 +1,7 @@
 import prisma from "@/prisma/db";
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/src/app/lib/apiAuth";
+import { messageEvent, queueSocketEvents, type SocketEmitEvent } from "@/src/app/lib/socketServer/emitSocketEvents";
 
 interface ParamsProp {
   params: Promise<{
@@ -179,7 +180,6 @@ export async function DELETE(req: Request, { params }: ParamsProp) {
               select: {
                 id: true,
                 name: true,
-                email: true,
                 image: true,
               },
             },
@@ -207,7 +207,33 @@ export async function DELETE(req: Request, { params }: ParamsProp) {
       });
     }
 
-    // ✅ 3) 응답 페이로드에 이벤트 정보 포함 (클라이언트에서 소켓 발송용)
+    // ✅ 실시간 전달 (수신자는 트랜잭션에서 계산한 DB 기준 값)
+    // - 그룹방 나가기: 남은 사람에게 시스템 메시지 → 남은 사람 + 나간 사람(다른 탭 정리용)에게 member.left
+    // - 방 삭제: 남은 사람 + 나간 사람(다른 탭 정리용)에게 room.deleted
+    const remaining = result.recipients ?? [];
+    const notifyUserIds = [...new Set([...remaining, user.id])];
+    const socketEvents: SocketEmitEvent[] = [];
+    if (result.event === "member.left" && result.systemMessage && remaining.length > 0) {
+      const sm = result.systemMessage;
+      socketEvents.push(
+        messageEvent(sm, { isGroup: true, userIds: remaining }, remaining),
+      );
+    }
+    socketEvents.push(
+      result.event === "member.left"
+        ? {
+            kind: "room.event",
+            conversationId,
+            type: "member.left",
+            userId: user.id,
+            remainingUserIds: remaining,
+            userIds: notifyUserIds,
+          }
+        : { kind: "room.event", conversationId, type: "room.deleted", userId: user.id, userIds: notifyUserIds },
+    );
+    queueSocketEvents(socketEvents);
+
+    // ✅ 3) 응답 페이로드에 이벤트 정보 포함 (보낸 탭의 캐시 정리용 — 소켓 전달은 위에서 서버가 한다)
     const response = {
       ok: true, 
       event: {

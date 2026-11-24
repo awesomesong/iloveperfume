@@ -162,7 +162,7 @@ export default SelectBox;
 
 {/* <Select 
     isDisabled={isLoading}
-    placeholder={<div className='text-gray-400'>카테고리를 선택해주세요.</div>}
+    placeholder={<div className='text-[var(--color-text-secondary)]'>카테고리를 선택해주세요.</div>}
     name='category'
     menuPortalTarget={document.body} 
     options={options} 

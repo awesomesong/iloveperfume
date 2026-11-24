@@ -4,10 +4,8 @@ import type { Socket } from "socket.io-client";
 import { getSocket } from "@/src/app/lib/socket";
 import { useSession } from "next-auth/react";
 
-type ExtendedSocket = Omit<Socket, 'auth'> & {
-  auth: { useremail: string; userId: string };
-  __prevAuth?: { useremail?: string; userId?: string };
-};
+// 마지막으로 연결한 사용자 — 사용자가 바뀌면 새 토큰으로 다시 연결하기 위해 기억한다
+type TrackedSocket = Socket & { __prevUserId?: string };
 
 const SocketContext = createContext<Socket | null>(null);
 
@@ -23,35 +21,32 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  // ✅ 세션 변화에 따라 auth 주입 + (재)연결
+  // ✅ 세션 변화에 따라 (재)연결
+  // 인증 정보는 lib/socket.ts의 auth 콜백이 연결할 때마다 /api/socket/token에서 받아 온다.
   useEffect(() => {
     if (!socket) return;
 
-    const email = session?.user?.email ?? "";
     const userId = session?.user?.id ?? "";
-    const authed = status === "authenticated" && !!email && !!userId;
+    const authed = status === "authenticated" && !!userId;
+    const tracked = socket as TrackedSocket;
 
     if (authed) {
-      // 최신 auth 적용 (handshake.auth)
-      const extendedSocket = socket as unknown as ExtendedSocket;
-      extendedSocket.auth = { useremail: email, userId };
-
-      // 이전 auth와 달라졌다면 재연결로 핸드셰이크 갱신
-      const prev = extendedSocket.__prevAuth;
-      const changed = !prev || prev.useremail !== email || prev.userId !== userId;
+      // 사용자가 바뀌었다면 재연결로 새 사용자의 토큰을 받게 한다
+      const changed = tracked.__prevUserId !== userId;
 
       if (changed) {
         if (socket.connected) socket.disconnect();
         socket.connect();
-        extendedSocket.__prevAuth = { useremail: email, userId };
+        tracked.__prevUserId = userId;
       } else if (!socket.connected) {
         socket.connect();
       }
     } else {
       // 세션 정보 없으면 연결 해제
       if (socket.connected) socket.disconnect();
+      tracked.__prevUserId = undefined;
     }
-  }, [socket, status, session?.user?.email, session?.user?.id]);
+  }, [socket, status, session?.user?.id]);
 
   // ✅ 언마운트 시 정리
   useEffect(() => {

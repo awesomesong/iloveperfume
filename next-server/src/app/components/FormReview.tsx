@@ -11,7 +11,6 @@ import useComposition from "@/src/app/hooks/useComposition";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFragranceReviews } from "@/src/app/lib/createFragranceReviews";
 import { FragranceReviewsDataProps, FragranceReviewType } from "@/src/app/types/fragrance";
-import { useSocket } from "../context/socketContext";
 import toast from "react-hot-toast";
 import {
   prependReview,
@@ -19,7 +18,6 @@ import {
   removeReviewById,
   fragranceReviewsKey,
 } from "@/src/app/lib/react-query/reviewsCache";
-import { SOCKET_EVENTS } from "@/src/app/lib/react-query/utils";
 
 type FormReviewProps = {
   id: string;
@@ -55,7 +53,6 @@ const FormReview = ({
   const [review, setReview] = useState<string>(initialText);
   const [stateReview, setStateReview] = useState(Boolean(onSubmit) ? true : false);
   const queryClient = useQueryClient();
-  const socket = useSocket();
 
   // 한글 입력 조합 상태 관리
   const { isComposing, handleCompositionStart, handleCompositionEnd } =
@@ -106,20 +103,7 @@ const FormReview = ({
         ...newData.newReview,
         author: user,
       });
-      // 소켓 브로드캐스트(리뷰 생성) - 다른 사용자들에게만 전송
-      try {
-        socket?.emit(SOCKET_EVENTS.FRAGRANCE_REVIEW_NEW, {
-          fragranceSlug: id,
-          review: {
-            ...newData.newReview,
-            author: {
-              name: user.name ?? "",
-              email: user.email ?? "",
-              image: user.image ?? null,
-            },
-          },
-        });
-      } catch { }
+      // 다른 사용자 화면 반영은 API가 저장 후 소켓 서버로 직접 보낸다
     },
     onError: (error, { id, text }, context) => {
       // 에러 시 롤백
