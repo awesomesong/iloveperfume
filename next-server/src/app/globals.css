@@ -614,6 +614,73 @@ h6 {
   }
 }
 
+/* ===== 프로필 — 내 스캔 기록 =====
+   정사각형 사진 격자 + 아래 글자(이름 → 브랜드 → 날짜). 카드 테두리·그림자 없이 글자 위계로만 구분한다.
+   열 수는 사진 최소 크기로 정해진다: 모바일 136px(320px 이상 2열, 더 좁으면 1열),
+   768px부터 200px(768px 3열 → 1024px 4열 → 1280px 5열 → 1440px 6열). */
+.scan-history {
+  width: 100%;
+  max-width: 1440px;
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-card-border);
+}
+.scan-history__grid {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  gap: 20px 12px;
+}
+.scan-history__link {
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+}
+.scan-history__link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+/* 직접 찍은 사진이라 비율이 제각각 — 정사각형으로 가운데를 채운다 */
+.scan-history__thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-accent-pale);
+}
+.scan-history__name {
+  margin-top: 0.625rem;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: anywhere; /* 띄어쓰기 없는 긴 영문 이름도 칸 안에서 줄바꿈 — 자르지 않는다 */
+}
+.scan-history__link:hover .scan-history__name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* 브랜드·날짜는 줄을 나눈다 — 좁은 칸에서 가운뎃점이 줄 앞에 걸리지 않게 */
+.scan-history__meta {
+  margin-top: 0.125rem;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 768px) {
+  .scan-history__grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 28px 16px;
+  }
+}
+
 /* ===== 나만의 향수 만들기 (/blend) — 병 모양 선택 =====
    모바일: 제목 → 미리보기 → 가로로 넘기는 선택지 → 버튼.
    768px부터: 왼쪽 큰 미리보기 / 오른쪽 제목·선택지(4열)·버튼. */

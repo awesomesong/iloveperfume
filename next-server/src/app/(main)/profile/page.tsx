@@ -1,4 +1,5 @@
 import AvatarProfile from "@/src/app/components/AvatarProfile";
+import MyScanList from "@/src/app/components/scan/MyScanList";
 import { getCurrentUser } from "@/src/app/lib/session";
 
 // 사용자별 세션 데이터를 매 요청마다 조회해야 하므로 SSR로 고정
@@ -8,7 +9,7 @@ const Profile = async () => {
 
     if( user ){
         return (
-            <div className="flex flex-col items-center py-16 max-md:py-12 px-4">
+            <div className="flex flex-col items-center w-full py-16 max-md:py-12 px-4 md:px-8">
                 <AvatarProfile user={user} />
                 <div className="mt-2 pt-6 w-full max-w-sm flex flex-col items-center gap-1 text-center">
                     <p className="text-lg font-semibold text-[var(--color-text-primary)] tracking-tight">
@@ -18,6 +19,7 @@ const Profile = async () => {
                         {user.email}
                     </p>
                 </div>
+                {user.email && <MyScanList userEmail={user.email} />}
             </div>
         )
     }

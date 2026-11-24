@@ -8,6 +8,7 @@ import { HiOutlineArrowRight, HiOutlineCamera, HiOutlinePlus } from 'react-icons
 import Button from '@/src/app/components/Button';
 import ShopLinkCard from './ShopLinkCard';
 import SimilarGallery from './SimilarGallery';
+import ScanSaveNotice, { type ScanOwnership } from './ScanSaveNotice';
 import { useScanPrefillStore } from '@/src/app/store/scanPrefillStore';
 
 interface MatchedFragrance {
@@ -33,9 +34,12 @@ export interface ScanResultData {
 
 interface Props {
   data: ScanResultData;
+  /** 이 스캔이 누구 기록인지 — 저장 안내 줄에 쓴다 */
+  ownership: ScanOwnership;
+  isLoggedIn: boolean;
 }
 
-export default function ScanResult({ data }: Props) {
+export default function ScanResult({ data, ownership, isLoggedIn }: Props) {
   const { brand, name, imageUrl, imageWidth, imageHeight, matchedFragrance } = data;
   const [imgLoaded, setImgLoaded] = useState(false);
   const router = useRouter();
@@ -123,6 +127,7 @@ export default function ScanResult({ data }: Props) {
             </Button>
           </Link>
         </div>
+        <ScanSaveNotice scanId={data.scanId} ownership={ownership} isLoggedIn={isLoggedIn} />
       </div>
 
       {/* 우: 정보 영역 */}
