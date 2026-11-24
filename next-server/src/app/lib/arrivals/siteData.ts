@@ -137,6 +137,21 @@ export function looksLikeProductUrl(url: string): boolean {
   }
 }
 
+/** 상품 페이지 본문에서 노트 목록이 시작되는 표현 (영·불·한) */
+const NOTES_LABEL = /olfactory notes|notes olfactives|(?:top|head|heart|base) notes?|notes? de (?:t[êe]te|c[œo]e?ur|fond)|(?:탑|톱|미들|하트|베이스)\s*노트/i;
+const NOTES_BEFORE = 300;
+const NOTES_AFTER = 1_200;
+
+/**
+ * 상품 페이지 본문에서 노트 목록과 그 앞뒤 글을 꺼낸다. 노트 표현이 없으면 빈 문자열.
+ * 소개문을 구조화 데이터에 싣지 않고 화면에만 적는 스토어(BDK — 목록에는 "Absolu de Parfum"만 있다)에서 쓴다.
+ */
+export function notesPassage(html: string): string {
+  const text = htmlToText(html.replace(/<(script|style|noscript)\b[\s\S]*?<\/\1>/gi, " ")).replace(/\s+/g, " ");
+  const at = text.search(NOTES_LABEL);
+  return at < 0 ? "" : text.slice(Math.max(0, at - NOTES_BEFORE), at + NOTES_AFTER).trim();
+}
+
 /** 구조화 데이터의 글자 값을 일반 텍스트로 — 태그가 엔티티로 한 번 더 감싸인 경우("&lt;br&gt;")가 있어 두 번 푼다 */
 const plainText = (value: unknown) => htmlToText(htmlToText(asText(value)));
 

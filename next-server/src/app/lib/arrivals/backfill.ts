@@ -1,5 +1,5 @@
 import { BACKFILL_BATCH_BUDGET_MS, BACKFILL_BATCH_SIZE, BACKFILL_PAGES_BUDGET_MS } from "./config";
-import { collectShopify, collectSitemapBacklog, type SeenStore } from "./collectArrivals";
+import { collectShopify, collectSitemapBacklog, fillThinBodies, type SeenStore } from "./collectArrivals";
 import { describeArrivals } from "./describeArrivals";
 import { excludeExisting, filterByRules } from "./filterArrivals";
 import { saveAsFragrances } from "./saveAsFragrances";
@@ -37,8 +37,11 @@ async function shopifyReader(source: ArrivalSource, store: SeenStore, now: Date,
   const finished = new Set((await store.load(source.id)).filter((entry) => entry.perfume === false).map((entry) => entry.url));
   const queue = (await excludeExisting(backlog)).filter((candidate) => !finished.has(candidate.officialUrl));
   return async (size) => {
-    const candidates = queue.splice(0, size);
-    return { candidates, considered: candidates.map((c) => c.officialUrl), exhausted: queue.length === 0, stalled: false };
+    const taken = queue.splice(0, size);
+    const { ready, unread } = await fillThinBodies(taken, Date.now() + BACKFILL_PAGES_BUDGET_MS);
+    queue.unshift(...unread); // 상품 페이지를 아직 읽지 못한 후보는 다음 묶음에서 다시 본다
+    const considered = taken.filter((candidate) => !unread.includes(candidate)).map((candidate) => candidate.officialUrl);
+    return { candidates: ready, considered, exhausted: queue.length === 0, stalled: considered.length === 0 && unread.length > 0 };
   };
 }
 
@@ -47,8 +50,10 @@ const sitemapReader =
   (source: ArrivalSource, store: SeenStore, now: Date): BacklogReader =>
   async (size) => {
     const { collected, opened, pending } = await collectSitemapBacklog(source, store, size, Date.now() + BACKFILL_PAGES_BUDGET_MS);
-    const candidates = await excludeExisting(filterByRules(collected, now).backlog);
-    return { candidates, considered: collected.map((raw) => raw.url), exhausted: pending === 0, stalled: opened === 0 && pending > 0 };
+    const { ready, unread } = await fillThinBodies(await excludeExisting(filterByRules(collected, now).backlog), Date.now() + BACKFILL_PAGES_BUDGET_MS);
+    const waiting = new Set(unread.map((candidate) => candidate.officialUrl));
+    const considered = collected.map((raw) => raw.url).filter((url) => !waiting.has(url));
+    return { candidates: ready, considered, exhausted: pending === 0 && unread.length === 0, stalled: opened === 0 && pending > 0 };
   };
 
 /** 일시적인 탈락 — 판정이 끝난 것이 아니라서 다음에 다시 본다 */

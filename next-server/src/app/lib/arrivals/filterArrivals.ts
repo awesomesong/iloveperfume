@@ -169,10 +169,8 @@ export function filterByRules(raw: RawArrival[], now: Date = new Date()): RuleFi
       if (isNew) dropped.noImage += 1;
       continue;
     }
-    if (effectiveTextLength(rep.bodyText) < MIN_BODY_LENGTH) {
-      if (isNew) dropped.shortBody += 1;
-      continue;
-    }
+    // 소개문이 짧아도 버리지 않는다 — 상품 페이지에서 보충한다(fillThinBodies). 여기서는 수만 센다
+    if (isNew && effectiveTextLength(rep.bodyText) < MIN_BODY_LENGTH) dropped.shortBody += 1;
 
     const brandNames = brandNamesOf(rep);
     (isNew ? kept : backlog).push({

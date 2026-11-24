@@ -91,6 +91,8 @@ export const COLLECT_BUDGET_MS = 14_000;
 export const REQUEST_GAP_MS = 1_000;
 export const FEED_TIMEOUT_MS = 8_000;
 
+/** 신제품 수집에서 소개문이 짧은 후보의 상품 페이지를 읽는 데 쓰는 시간 */
+export const THIN_BODY_BUDGET_MS = 8_000;
 /** 기존 향수 채우기에서 LLM 1회 호출에 넘기는 후보 수 — 통과한 것을 모두 저장할 수 있게 MAX_SAVE_PER_RUN과 같게 둔다 */
 export const BACKFILL_BATCH_SIZE = 10;
 /** 채우기 한 묶음에서 상품 페이지를 여는 데 쓰는 시간 (사이트맵 방식) */
