@@ -52,7 +52,7 @@ export default async function ScanResultPage({ params }: Props) {
   const ownership = !scan.userEmail ? 'none' : scan.userEmail === viewerEmail ? 'mine' : 'other';
 
   return (
-    <div className="px-4 pt-8 pb-4 md:p-8 max-w-[1440px] w-full mx-auto">
+    <div className="px-4 pt-8 pb-4 md:p-8 w-full">
       <div className="text-center">
         {/* Brand — label 역할: 흐리게, 굵기 없이, 자간 넓게 */}
         <p className="text-[13px] lg:text-sm font-normal tracking-[0.3em] uppercase text-fg-secondary mb-2">
