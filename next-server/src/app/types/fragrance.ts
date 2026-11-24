@@ -9,6 +9,15 @@ export const FRAGRANCE_SOURCES = ['USER', 'AI_AGENT'] as const satisfies readonl
 export const isFragranceSource = (value: unknown): value is FragranceSource =>
   typeof value === 'string' && (FRAGRANCE_SOURCES as readonly string[]).includes(value);
 
+/** 공식 사이트에 처음 등장한 뒤 이 기간까지 "신제품"으로 본다 — 수집 파이프라인·목록 탭·카드 표시가 함께 쓴다 */
+export const NEW_ARRIVAL_DAYS = 60;
+
+export const newArrivalSince = (now: number = Date.now()) => new Date(now - NEW_ARRIVAL_DAYS * 24 * 60 * 60 * 1000);
+
+/** 신제품인지 — 기존 향수 채우기로 들어온 예전 향수와 사용자 등록 향수는 아니다 */
+export const isNewArrival = (fragrance: { firstSeenAt?: Date | string | null }, now?: number) =>
+  !!fragrance.firstSeenAt && new Date(fragrance.firstSeenAt) >= newArrivalSince(now);
+
 /** /fragrance 목록 탭 — "ALL"은 출처 구분 없이 전체 */
 export type FragranceListFilter = 'ALL' | FragranceSource;
 

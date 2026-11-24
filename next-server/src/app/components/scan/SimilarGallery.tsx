@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { resolveImageSrc } from '@/src/app/lib/imageSrc';
 import { HiOutlineArrowTopRightOnSquare } from 'react-icons/hi2';
 import { buildNaverSearchUrl } from '@/src/app/lib/scan/naverShopping';
 
@@ -83,6 +84,7 @@ export default function SimilarGallery({ scanId }: Props) {
                         src={item.images[0]}
                         alt={`${item.brand} ${item.name}`}
                         fill
+                        unoptimized={resolveImageSrc(item.images[0]).unoptimized}
                         sizes="(max-width: 768px) 33vw, 200px"
                         className="object-contain p-3 transition-transform duration-300 group-hover:scale-[1.03]"
                       />

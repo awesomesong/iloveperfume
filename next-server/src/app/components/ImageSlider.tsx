@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { HiChevronLeft, HiChevronRight, HiPhoto } from 'react-icons/hi2';
 import clsx from 'clsx';
+import { resolveImageSrc } from '@/src/app/lib/imageSrc';
 
 export type ImageSliderItem = string | { src: string; name?: string } | { url: string };
 
@@ -10,13 +11,6 @@ function getImageSrc(item: ImageSliderItem): string {
   if (typeof item === 'string') return item;
   if ('url' in item) return item.url;
   return item.src;
-}
-
-/** Cloudinary URL이면 f_auto,q_auto 변환을 삽입해 CDN에서 직접 최적화 */
-function optimizeCloudinarySrc(src: string): { src: string; unoptimized: boolean } {
-  if (!src.includes('res.cloudinary.com')) return { src, unoptimized: false };
-  if (/\/upload\/[a-z]_/.test(src)) return { src, unoptimized: true };
-  return { src: src.replace('/upload/', '/upload/f_auto,q_auto/'), unoptimized: true };
 }
 
 export type ImageSliderProps = {
@@ -125,7 +119,7 @@ const ImageSlider = ({
               transition={{ type: 'spring', stiffness: 260, damping: 34 }}
             >
               {images.map((item, i) => {
-                const opt = optimizeCloudinarySrc(getImageSrc(item));
+                const opt = resolveImageSrc(getImageSrc(item));
                 return (
                   <div key={i} className="w-full h-full flex-[0_0_100%] flex items-center justify-center">
                     <Image
@@ -151,7 +145,7 @@ const ImageSlider = ({
             transition={{ type: 'spring', stiffness: 260, damping: 34 }}
           >
             {images.map((item, i) => {
-              const opt = optimizeCloudinarySrc(getImageSrc(item));
+              const opt = resolveImageSrc(getImageSrc(item));
               return (
                 <div key={i} className="w-full h-full flex-[0_0_100%] flex items-center justify-center">
                   <Image

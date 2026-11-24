@@ -4,7 +4,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import { getFragrances } from "@/src/app/lib/getFragrances";
 import { fragranceListKeyBySource } from "@/src/app/lib/react-query/fragranceCache";
-import type { FragranceListFilter, FragranceWithAuthor } from "@/src/app/types/fragrance";
+import { isNewArrival, type FragranceListFilter, type FragranceWithAuthor } from "@/src/app/types/fragrance";
 import CircularProgress from "@/src/app/components/CircularProgress";
 import FragranceCard from "@/src/app/components/fragrance/FragranceCard";
 import { FragranceCardSkeleton } from "@/src/app/components/FragranceSkeleton";
@@ -26,7 +26,7 @@ const EMPTY_MESSAGE: Record<FragranceListFilter, string> = {
 const TAB_PREFIX = "fragrance";
 const PANEL_ID = "fragrance-tabpanel";
 
-/** 목록 카드 — 수집된 향수에만 "신제품" 줄을 덧붙인다 */
+/** 목록 카드 — 처음 등장한 지 얼마 안 된 수집 향수에만 "신제품" 줄을 덧붙인다 */
 const FragranceListCard = memo(function FragranceListCard({ fragrance }: { fragrance: FragranceWithAuthor }) {
     return (
         <FragranceCard
@@ -35,7 +35,7 @@ const FragranceListCard = memo(function FragranceListCard({ fragrance }: { fragr
             name={fragrance.name}
             image={fragrance.images?.[0]}
         >
-            {fragrance.source === "AI_AGENT" && (
+            {isNewArrival(fragrance) && (
                 <p className="meta-line justify-center mt-2">
                     <span>신제품</span>
                 </p>

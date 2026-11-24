@@ -60,57 +60,9 @@ const nextConfig = {
     images: {
         formats: ['image/avif', 'image/webp'],
         minimumCacheTTL: 60 * 60 * 24 * 30,
-        remotePatterns: [
-          {
-            protocol: 'http',
-            hostname: 'k.kakaocdn.net',
-          },
-          {
-            protocol: 'https',
-            hostname: 'k.kakaocdn.net',
-          },
-          {
-            protocol: 'https',
-            hostname: 'post-phinf.pstatic.net',
-          },
-          {
-            protocol: 'https',
-            hostname: 'shop-phinf.pstatic.net',
-          },
-          {
-            protocol: 'https',
-            hostname: 'shopping-phinf.pstatic.net',
-          },
-          {
-            protocol: 'https',
-            hostname: 'mjcong.co.kr',
-          },
-          {
-            protocol: 'https',
-            hostname: 'lh3.googleusercontent.com',
-          },
-          {
-            protocol: 'https',
-            hostname: 'res.cloudinary.com',
-          },
-          {
-            protocol: 'http',
-            hostname: 'res.cloudinary.com',
-          },
-          {
-            protocol: 'https',
-            hostname: 'img1.kakaocdn.net',
-          },
-          {
-            protocol: 'http',
-            hostname: 'img1.kakaocdn.net',
-          },
-          // 수집된 향수(source = AI_AGENT)의 공식 사이트 제품 이미지 — 재호스팅 없이 그대로 링크한다
-          {
-            protocol: 'https',
-            hostname: 'cdn.shopify.com',
-          },
-        ],
+        // next/image가 최적화해 주는 이미지 호스트 — 목록은 image-hosts.json (src/app/lib/imageSrc.ts와 함께 쓴다).
+        // 목록에 없는 호스트(수집된 향수의 브랜드 공식 사이트 이미지 등)는 최적화 없이 원본 주소로 그린다.
+        remotePatterns: require('./image-hosts.json'),
     },
     logging: {
       fetches: {

@@ -12,6 +12,8 @@
  * - 여러 단어가 한 덩어리로 굳은 것만 구로 적는다(예: "tonka bean" → 통카빈).
  *   나머지는 단어별 표기를 띄어 이어 붙인다(예: green + apple → "그린 애플").
  */
+import { stripAccents } from "./text";
+
 const MATERIAL_TERMS: readonly (readonly [en: string, ko: string])[] = [
   // 시트러스
   ["bergamot", "베르가못"],
@@ -346,9 +348,7 @@ const MAX_PHRASE_WORDS = Math.max(...[...TERM_MAP.keys()].map((key) => key.split
 
 /** 악센트·대소문자·기호를 무시한 단어 목록 (추출 방식 단어 제외) */
 export function noteWords(text: string): string[] {
-  return text
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
+  return stripAccents(text)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .split(" ")
