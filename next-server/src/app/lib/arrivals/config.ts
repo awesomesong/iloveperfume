@@ -71,6 +71,17 @@ export const NON_OFFICIAL_DOMAINS = [
 
 // ───────── 수집 ─────────
 
+/**
+ * 국내 인지도 기준 — 네이버 블로그에서 "{브랜드 한글 표기} 향수 시향"으로 찾은 글 수(`awareness.ts`).
+ * 이 값보다 적은 브랜드는 국내에 거의 알려지지 않은 것으로 보고 수집하지 않는다(신제품·기존 향수·출시 기사 모두).
+ * 2026-11-25 실측: 조말론 39,010 · 딥디크 32,960 · 톰포드 12,206 · 킬리안 4,993 · 미우미우 1,046 / 프라고나르 814 · BDK 242 · 보아디시아 46
+ */
+export const MIN_AWARENESS = 1000;
+/** 인지도를 다시 재는 주기 */
+export const AWARENESS_REFRESH_DAYS = 30;
+/** 한 번에 인지도를 재는 브랜드 수 (브랜드당 검색 API 1회) */
+export const AWARENESS_BATCH = 30;
+
 /** 1회 실행에서 읽는 수집 대상 수 — 넘치면 날마다 순환한다 */
 export const MAX_SOURCES_PER_RUN = 15;
 /** Shopify 상품 목록 한 페이지의 제품 수 (최대 250) */

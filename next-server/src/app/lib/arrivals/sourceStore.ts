@@ -1,9 +1,11 @@
 import prisma from "@/prisma/db";
 import type { ArrivalSource as SourceRow } from "@prisma/client";
 import {
+  AWARENESS_REFRESH_DAYS,
   MAX_COLLECT_FAILURES,
   MAX_SOURCES_PER_RUN,
   MEMBER_LEAD_SOURCE,
+  MIN_AWARENESS,
   NEWS_BRANDS_PER_RUN,
   REPROBE_DAYS,
   RESOLVE_MAX_ATTEMPTS,
@@ -29,10 +31,13 @@ const CHUNK = 1000;
 
 // ───────── 수집 ─────────
 
+/** 국내에 알려진 브랜드만 수집한다 — 인지도를 아직 재지 않은 브랜드(null)도 잴 때까지 기다린다 */
+const KNOWN_IN_KOREA = { awareness: { gte: MIN_AWARENESS } } as const;
+
 /** 이번 실행에서 읽을 수집 대상 — 가장 오래 읽지 않은 것부터. 대상이 한도보다 많으면 날마다 순환한다 */
 export async function loadSourcesForRun(): Promise<ArrivalSource[]> {
   const rows = await prisma.arrivalSource.findMany({
-    where: { status: "ACTIVE", kind: { not: null } },
+    where: { status: "ACTIVE", kind: { not: null }, ...KNOWN_IN_KOREA },
     orderBy: [{ lastCollectedAt: { sort: "asc", nulls: "first" } }, { host: "asc" }],
     take: MAX_SOURCES_PER_RUN,
   });
@@ -43,17 +48,44 @@ const toSource = (row: SourceRow): ArrivalSource[] =>
   row.kind ? [{ id: row.id, brand: row.brand, aliases: row.aliases, host: row.host, kind: row.kind, baselineAt: row.baselineAt }] : [];
 
 /**
- * 기존 향수를 아직 다 채우지 않은 수집 대상 — 주소 순으로 한 곳씩 끝낸다.
+ * 기존 향수를 아직 다 채우지 않은 수집 대상 — 국내 인지도가 높은 브랜드부터 한 곳씩 끝낸다.
  * 사이트맵 방식은 기준선(지금 있는 상품 주소)을 기록한 뒤부터 대상이다.
  */
 export async function loadBackfillSources(): Promise<ArrivalSource[]> {
   const rows = await prisma.arrivalSource.findMany({
-    where: { status: "ACTIVE", backfilledAt: null, OR: [{ kind: "SHOPIFY" }, { kind: "SITEMAP", baselineAt: { not: null } }] },
-    orderBy: { host: "asc" },
+    where: { status: "ACTIVE", backfilledAt: null, ...KNOWN_IN_KOREA, OR: [{ kind: "SHOPIFY" }, { kind: "SITEMAP", baselineAt: { not: null } }] },
+    orderBy: [{ awareness: "desc" }, { host: "asc" }],
     take: MAX_SOURCES_PER_RUN,
   });
   return rows.flatMap(toSource);
 }
+
+// ───────── 국내 인지도 ─────────
+
+export type AwarenessTarget = { brandKey: string; brand: string; aliases: string[] };
+
+const awarenessDue = (now: Date) => ({ OR: [{ awarenessAt: null }, { awarenessAt: { lt: daysLater(now, -AWARENESS_REFRESH_DAYS) } }] });
+
+/** 인지도를 재야 할 브랜드 — 아직 재지 않았거나 잰 지 오래된 것. 같은 브랜드의 사이트는 하나로 묶는다 */
+export async function loadAwarenessTargets(now: Date, limit: number): Promise<AwarenessTarget[]> {
+  const rows = await prisma.arrivalSource.findMany({
+    where: awarenessDue(now),
+    orderBy: [{ awarenessAt: { sort: "asc", nulls: "first" } }, { brandKey: "asc" }],
+    select: { brandKey: true, brand: true, aliases: true },
+  });
+  const brands = new Map<string, AwarenessTarget>();
+  for (const row of rows) {
+    const found = brands.get(row.brandKey);
+    if (found) found.aliases = [...new Set([...found.aliases, ...row.aliases])];
+    else brands.set(row.brandKey, { ...row });
+  }
+  return [...brands.values()].slice(0, limit);
+}
+
+export const countAwarenessTargets = (now: Date) => prisma.arrivalSource.count({ where: awarenessDue(now) });
+
+export const saveAwareness = (brandKey: string, awareness: number, now: Date) =>
+  prisma.arrivalSource.updateMany({ where: { brandKey }, data: { awareness, awarenessAt: now } });
 
 export const markBackfilled = (sourceId: string, now: Date) =>
   prisma.arrivalSource.update({ where: { id: sourceId }, data: { backfilledAt: now } });
@@ -132,13 +164,15 @@ export type ClosedBrand = NewsBrand & { hosts: string[] };
 export async function loadClosedBrands(): Promise<ClosedBrand[]> {
   const rows = await prisma.arrivalSource.findMany({
     orderBy: [{ brandKey: "asc" }, { rank: "asc" }, { host: "asc" }],
-    select: { id: true, brand: true, brandKey: true, aliases: true, status: true, reason: true, host: true },
+    select: { id: true, brand: true, brandKey: true, aliases: true, status: true, reason: true, host: true, awareness: true },
   });
   const groups = new Map<string, typeof rows>();
   for (const row of rows) groups.set(row.brandKey, [...(groups.get(row.brandKey) ?? []), row]);
 
   return [...groups.values()]
     .filter((group) => group.every((row) => row.status !== "ACTIVE" && row.reason !== null))
+    .filter((group) => (group[0].awareness ?? 0) >= MIN_AWARENESS)
+    .sort((a, b) => (b[0].awareness ?? 0) - (a[0].awareness ?? 0))
     .map((group) => ({
       sourceId: group[0].id,
       brand: group[0].brand,

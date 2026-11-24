@@ -1,4 +1,5 @@
-import { RESOLVE_BATCH_SIZE, RETAILERS } from "./config";
+import { measureAwareness } from "./awareness";
+import { AWARENESS_BATCH, RESOLVE_BATCH_SIZE, RETAILERS } from "./config";
 import { discoverBrandLeads } from "./discoverBrands";
 import { probeSource } from "./probeSource";
 import { resolveBrandSites } from "./resolveBrandSites";
@@ -6,12 +7,15 @@ import { isPast } from "./siteData";
 import {
   applyProbeVerdict,
   applyResolveResult,
+  countAwarenessTargets,
   countDueProbes,
   countPendingLeads,
   deferIfCovered,
+  loadAwarenessTargets,
   loadDueProbes,
   loadMemberBrandLeads,
   loadPendingLeads,
+  saveAwareness,
   saveLeads,
 } from "./sourceStore";
 
@@ -20,18 +24,19 @@ import {
  *   discover: 판매처·회원 등록에서 브랜드 후보를 모은다
  *   resolve : 후보 브랜드의 공식 사이트를 웹 검색으로 찾아 등록한다 (판정 대기)
  *   probe   : 등록된 사이트를 읽을 수 있는지 판정해 켜거나 끈다
- * 크론은 수집을 마친 뒤 남는 시간에 한 단계만 한다(뒤 단계부터 — 판정할 것이 있으면 판정, 없으면 찾기).
- * 처음 채울 때나 한꺼번에 돌릴 때는 단계를 지정해 따로 실행한다(?maintain=discover|resolve|probe).
+ *   measure : 등록된 브랜드의 국내 인지도를 잰다 — 기준에 못 미치는 브랜드는 수집하지 않는다
+ * 크론은 수집을 마친 뒤 남는 시간에 한 단계만 한다(뒤 단계부터 — 판정할 것이 있으면 판정, 잴 것이 있으면 재기, 없으면 찾기).
+ * 처음 채울 때나 한꺼번에 돌릴 때는 단계를 지정해 따로 실행한다(?maintain=discover|resolve|probe|measure).
  */
 
-export type MaintenanceStep = "discover" | "resolve" | "probe";
+export type MaintenanceStep = "discover" | "resolve" | "probe" | "measure";
 
 export type MaintenanceOptions = {
   /** 이 시각(ms)을 넘기지 않는다 */
   deadline: number;
   /** 지정하면 그 단계만, 없으면 할 일이 있는 단계를 고른다 */
   step?: MaintenanceStep;
-  /** discover: 읽을 판매처 상품 페이지 수, resolve: 브랜드 수, probe: 사이트 수 */
+  /** discover: 읽을 판매처 상품 페이지 수, resolve·measure: 브랜드 수, probe: 사이트 수 */
   limit?: number;
   now?: Date;
 };
@@ -83,10 +88,29 @@ async function runProbe({ deadline, limit = PROBE_BATCH, now = new Date() }: Mai
   return { probed: verdicts.length, activated: verdicts.filter((v) => v.status === "ACTIVE").length, verdicts, due: await countDueProbes(now) };
 }
 
+async function runMeasure({ deadline, limit = AWARENESS_BATCH, now = new Date() }: MaintenanceOptions) {
+  const measured: Record<string, unknown>[] = [];
+  for (const target of await loadAwarenessTargets(now, limit)) {
+    if (isPast(deadline)) break;
+    const awareness = await measureAwareness(target);
+    if (awareness === null) break; // 검색 API가 응답하지 않으면 다음 실행에서 이어서 잰다
+    await saveAwareness(target.brandKey, awareness, now);
+    measured.push({ brand: target.brand, awareness });
+  }
+  return { measured, due: await countAwarenessTargets(now) };
+}
+
 export async function maintainSources(options: MaintenanceOptions): Promise<MaintenanceResult> {
   const now = options.now ?? new Date();
   const step: MaintenanceStep =
-    options.step ?? ((await countDueProbes(now)) > 0 ? "probe" : (await countPendingLeads()) > 0 ? "resolve" : "discover");
-  const run = { discover: runDiscover, resolve: runResolve, probe: runProbe }[step];
+    options.step ??
+    ((await countDueProbes(now)) > 0
+      ? "probe"
+      : (await countAwarenessTargets(now)) > 0
+        ? "measure"
+        : (await countPendingLeads()) > 0
+          ? "resolve"
+          : "discover");
+  const run = { discover: runDiscover, resolve: runResolve, probe: runProbe, measure: runMeasure }[step];
   return { step, summary: await run({ ...options, now }) };
 }
