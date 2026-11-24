@@ -1,7 +1,8 @@
-import { NON_OFFICIAL_DOMAINS, OPENAI_MODEL, RESOLVE_TIMEOUT_MS } from "./config";
+import { NON_OFFICIAL_DOMAINS, RESOLVE_TIMEOUT_MS } from "./config";
 import type { BrandLead } from "./discoverBrands";
 import { fetchText } from "./siteData";
 import { stripAccents } from "./text";
+import { webSearchJson } from "./webSearch";
 
 /**
  * 브랜드 → 공식 사이트 찾기. 브랜드 후보(한글 표기일 수 있다)의 영문 공식명과 공식 웹사이트를 웹 검색으로 찾고,
@@ -12,7 +13,6 @@ import { stripAccents } from "./text";
  * 한국 공식몰이나 향수 전용 사이트는 읽을 수 있는 경우가 많다(이솝·조 말론 런던·톰 포드).
  */
 
-const OPENAI_RESPONSES_API = "https://api.openai.com/v1/responses";
 
 const SYSTEM_PROMPT = `향수 브랜드의 표기(한글일 수 있다)와 예시 상품명을 받는다. 브랜드마다 웹 검색으로 아래를 찾는다.
 - brandEn: 영문 공식 브랜드명.
@@ -109,41 +109,17 @@ async function searchSites(
   apiKey: string,
   timeoutMs: number,
 ): Promise<{ sites: RawSite[]; sourceDomains: Set<string> }> {
-  const res = await fetch(OPENAI_RESPONSES_API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      tools: [{ type: "web_search" }],
-      include: ["web_search_call.action.sources"],
-      input: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: JSON.stringify({ brands: leads.map(({ key, name, examples }) => ({ key, name, examples })) }),
-        },
-      ],
-      text: { format: { type: "json_schema", name: "brand_sites", strict: true, schema: RESPONSE_SCHEMA } },
-    }),
-    cache: "no-store",
-    signal: AbortSignal.timeout(Math.max(1_000, Math.min(RESOLVE_TIMEOUT_MS, timeoutMs))),
+  const { text, sourceUrls } = await webSearchJson({
+    apiKey,
+    input: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: JSON.stringify({ brands: leads.map(({ key, name, examples }) => ({ key, name, examples })) }) },
+    ],
+    schemaName: "brand_sites",
+    schema: RESPONSE_SCHEMA,
+    timeoutMs: Math.min(RESOLVE_TIMEOUT_MS, timeoutMs),
   });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`OpenAI Responses API ${res.status}: ${body.slice(0, 300)}`);
-  }
-
-  const data = (await res.json()) as {
-    output?: { type?: string; action?: { sources?: { url?: string }[] }; content?: { text?: string }[] }[];
-  };
-  const sourceDomains = new Set<string>();
-  let text = "";
-  for (const item of data.output ?? []) {
-    if (item.type === "web_search_call") {
-      for (const source of item.action?.sources ?? []) if (source.url) sourceDomains.add(registrableDomain(source.url));
-    }
-    if (item.type === "message") text += (item.content ?? []).map((part) => part.text ?? "").join("");
-  }
+  const sourceDomains = new Set(sourceUrls.map(registrableDomain));
 
   let items: unknown[] = [];
   try {

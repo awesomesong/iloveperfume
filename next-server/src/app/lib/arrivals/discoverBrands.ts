@@ -56,7 +56,7 @@ export function aggregateBrands(retailer: Retailer, products: readonly ProductPa
 }
 
 /** 판매처 상품 주소만 남긴다 — 숫자를 뺀 주소 모양이 가장 흔한 것이 상품 주소다 ("/shop_view/3989" 1,000건 vs 안내 페이지 "/1234" 179건) */
-function productShaped(urls: readonly string[]): string[] {
+export function productShaped(urls: readonly string[]): string[] {
   const shape = (url: string) => url.replace(/\d+/g, "N");
   const counts = new Map<string, number>();
   for (const url of urls) counts.set(shape(url), (counts.get(shape(url)) ?? 0) + 1);

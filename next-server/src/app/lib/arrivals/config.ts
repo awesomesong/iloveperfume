@@ -98,6 +98,13 @@ export const BACKFILL_PAGES_BUDGET_MS = 15_000;
 /** 채우기 한 묶음(상품 페이지 열기 + LLM 호출)에 드는 시간 — 남은 시간이 이보다 적으면 새 묶음을 시작하지 않는다 */
 export const BACKFILL_BATCH_BUDGET_MS = 35_000;
 
+/** 판매처에서 공식 사이트를 읽을 수 없는 브랜드의 향수를 찾을 때 1회 실행에 여는 상품 페이지 수 */
+export const RETAILER_PAGES_PER_RUN = 8;
+/** 공식 상품 페이지를 찾는 웹 검색 1회의 시간 한도 */
+export const RETAILER_SEARCH_TIMEOUT_MS = 40_000;
+/** 남은 시간이 이보다 적으면 새 페이지·새 검색을 시작하지 않는다 (마지막 LLM 작성 호출에 쓸 시간) */
+export const RETAILER_RESERVE_MS = 25_000;
+
 /** 수집·작성 뒤 시간이 이만큼 안 지났을 때만 수집 대상 관리(찾기·판정)를 한 단계 진행한다 — 크론 실행 시간 제한(60초) 때문 */
 export const MAINTENANCE_START_LIMIT_MS = 28_000;
 /** 수집 대상 관리 한 단계에 쓰는 시간 */
@@ -161,6 +168,7 @@ export const NON_PERFUME_NAME_WORDS_KO = [
   "세트", "샘플", "증정", "미니어처", "디스커버리", "키트", "리필", "공병", "시향",
   "핸드크림", "핸드워시", "바디", "헤어", "샴푸", "캔들", "향초", "디퓨저", "룸스프레이", "룸미스트",
   "홈프래그런스", "오일버너", "버너블렌드", "인센스스틱", "섬유", "사쉐", "쇼핑백",
+  "센츠", // 퍼퓸그라피의 소분 샘플 상품
 ] as const;
 
 /**
