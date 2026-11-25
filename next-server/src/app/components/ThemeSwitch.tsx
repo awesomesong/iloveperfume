@@ -11,7 +11,7 @@ export default function ThemeSwitch() {
   useEffect(() => { setMounted(true); }, []);
 
   if (!mounted)
-    return <ShapesSkeleton width="22px" height="22px" radius="sm" />;
+    return <ShapesSkeleton width="20px" height="20px" radius="sm" />;
 
   const isDark = resolvedTheme === "dark";
   const toggle = () => setTheme(isDark ? "light" : "dark");

@@ -1,5 +1,6 @@
 import prisma from "@/prisma/db";
 import { buildQueries, collectNews } from "./collectNews";
+import { DUPLICATE_LOOKBACK_DAYS } from "./config";
 import { filterCandidates } from "./filterCandidates";
 import { selectAndSummarize } from "./selectAndSummarize";
 import { fetchOgImage } from "./fetchImage";
@@ -20,9 +21,18 @@ export async function runNewsPipeline(
   options: RunOptions = {},
 ): Promise<PipelineResult & { preview?: SelectedNews[] }> {
   const startedAt = Date.now();
-  const queries = await buildQueries();
-  const collected = await collectNews(queries);
-  const candidates = await filterCandidates(collected);
+  const queries = buildQueries();
+  const { items: collected, failedQueries } = await collectNews(queries);
+
+  // 중복 판별용 최근 글 제목 — 내린 글(HIDDEN)도 포함해 다른 매체가 쓴 같은 소식을 다시 싣지 않는다
+  const lookbackSince = new Date(Date.now() - DUPLICATE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
+  const lookback = await prisma.notice.findMany({
+    where: { createdAt: { gte: lookbackSince } },
+    select: { title: true },
+  });
+  const lookbackTitles = lookback.map((n) => n.title);
+
+  const candidates = await filterCandidates(collected, lookbackTitles);
 
   let selected: SelectedNews[] = [];
   if (candidates.length > 0) {
@@ -31,7 +41,7 @@ export async function runNewsPipeline(
       take: 30,
       select: { title: true },
     });
-    selected = await selectAndSummarize(candidates, recent.map((n) => n.title));
+    selected = await selectAndSummarize(candidates, recent.map((n) => n.title), lookbackTitles);
   }
 
   // 최종 선별된(최대 5건) 기사만 원문에서 og:image를 최선형으로 가져온다 — 실패해도 null로 계속 진행
@@ -51,6 +61,7 @@ export async function runNewsPipeline(
 
   const result: PipelineResult = {
     queries: queries.length,
+    failedQueries,
     collected: collected.length,
     candidates: candidates.length,
     selected: selected.length,

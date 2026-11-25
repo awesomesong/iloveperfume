@@ -22,12 +22,10 @@ import {
   replaceOptimisticMessage,
   compareMessages,
   type MessagesPage,
-  normalizeMessage,
 } from "@/src/app/lib/react-query/chatCache";
 import { useFailedMessages } from "@/src/app/hooks/useFailedMessages";
 import { useAIStream } from "@/src/app/hooks/useAIStream";
 import { useConversationLoading } from "@/src/app/hooks/useConversationLoading";
-import DOMPurify from 'dompurify';
 
 type SeenUser = {
   id: string;
@@ -64,7 +62,7 @@ const areEqual = (prev: MessageBoxProps, next: MessageBoxProps) => {
     prev.showDateDivider === next.showDateDivider &&
     prev.isAIChat === next.isAIChat &&
     prev.conversationId === next.conversationId &&
-    prev.currentUser?.email === next.currentUser?.email &&
+    prev.currentUser?.id === next.currentUser?.id &&
     prev.seenUsersForLastMessage === next.seenUsersForLastMessage // ✅ 참조 비교로 빠른 탈출
   ) {
     return true;
@@ -109,7 +107,7 @@ const areEqual = (prev: MessageBoxProps, next: MessageBoxProps) => {
       p.isWaiting !== n.isWaiting ||
       p.isTyping !== n.isTyping ||
       p.isError !== n.isError ||
-      p.sender?.email !== n.sender?.email ||
+      p.sender?.id !== n.sender?.id ||
       p.sender?.name !== n.sender?.name ||
       p.sender?.image !== n.sender?.image ||
       p.conversation?.isGroup !== n.conversation?.isGroup
@@ -123,7 +121,7 @@ const areEqual = (prev: MessageBoxProps, next: MessageBoxProps) => {
     prev.showDateDivider !== next.showDateDivider ||
     prev.isAIChat !== next.isAIChat ||
     prev.conversationId !== next.conversationId ||
-    prev.currentUser?.email !== next.currentUser?.email
+    prev.currentUser?.id !== next.currentUser?.id
   ) return false;
 
   // 5) seenUsersForLastMessage 배열 내용 비교 (참조가 다를 때만)
@@ -160,20 +158,6 @@ const MessageView: React.FC<MessageBoxProps> = ({
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [seenUsers, setSeenUsers] = useState<SeenUser[]>([]);
 
-  const sanitizedMessageBody = useMemo(() => {
-    if (typeof window === 'undefined') {
-      // SSR에서는 원본 텍스트 반환
-      return data.body || '';
-    }
-
-    try {
-      return DOMPurify.sanitize(data.body || '');
-    } catch (error) {
-      console.warn('DOMPurify 로드 실패:', error);
-      return data.body || '';
-    }
-  }, [data.body]);
-
   const seenIdSetRef = useRef<Set<string>>(new Set());
   const [dotCount, setDotCount] = useState(0);
 
@@ -187,7 +171,8 @@ const MessageView: React.FC<MessageBoxProps> = ({
   const currentUserId = String(currentUser?.id ?? "");
   const senderId = String(data?.sender?.id ?? "");
   const isAIMessage = data.isAIResponse;
-  const isOwn = !isAIMessage && currentUser?.email === data?.sender?.email;
+  // 발신자 id로 판별 (소켓으로 받은 메시지에는 발신자 이메일이 없다)
+  const isOwn = !isAIMessage && !!currentUserId && currentUserId === senderId;
 
   const filteredSeenUsers = useMemo(() => {
     // ✅ 핵심: isLastOwn가 false면 무조건 빈 배열 반환
@@ -274,19 +259,12 @@ const MessageView: React.FC<MessageBoxProps> = ({
     window.dispatchEvent(new CustomEvent("chat:new-content"));
   }, []);
 
-  // ✅ AI 응답 완료 시 다른 브라우저/탭에 전달
-  const handleAIComplete = useCallback((finalMessage: FullMessageType) => {
-    if (socket) {
-      socket.emit("send:message", { newMessage: finalMessage });
-    }
-  }, [socket]);
-
   // AI 스트림 요청 훅
+  // (AI 답변의 다른 탭 전달은 /api/ai/stream이 저장 후 소켓 서버로 직접 보낸다)
   const { requestAI } = useAIStream({
     conversationId,
     aiAgentType: "assistant",
     onNewContent: notifyNewContent,
-    onComplete: handleAIComplete,
   });
 
   const { mutateAsync: resendMessage } = useMutation({
@@ -322,24 +300,7 @@ const MessageView: React.FC<MessageBoxProps> = ({
         });
       }
 
-      // 소켓으로 메시지 브로드캐스트 (소켓 서버가 기대하는 구조로 전송)
-      if (socket && responseData.newMessage) {
-        // ✅ responseData.newMessage.conversation에서 참여자 정보 가져오기
-        const conversation = responseData.newMessage.conversation;
-        const userIds = conversation?.userIds || [];
-
-        // 소켓 전송용 메시지 정규화 (FullMessageType 구조 보장)
-        const socketMessage = normalizeMessage({
-          ...responseData.newMessage,
-          conversation: {
-            isGroup: userIds.length > 2,
-            userIds: userIds,
-          }
-        });
-        socket.emit("send:message", {
-          newMessage: socketMessage,
-        });
-      }
+      // 실시간 전달은 /api/messages가 저장 직후 소켓 서버로 직접 보낸다
     },
     onError: () => {
       // 실패 시 다시 에러 상태로 표시
@@ -623,12 +584,12 @@ const MessageView: React.FC<MessageBoxProps> = ({
                     <span className="text-amber-500 font-medium">{".".repeat(dotCount)}</span>
                   </div>
                 )}
+                {/* 메시지는 HTML로 해석하지 않고 글자 그대로 보여 준다 (태그·외부 이미지·링크가 동작하지 않도록) */}
                 <pre
                   className={clsx("whitespace-pre-wrap break-all min-w-0", isError ? "text-red-800" : "text-[var(--color-text-primary)]")}
-                  dangerouslySetInnerHTML={{
-                    __html: sanitizedMessageBody,
-                  }}
-                />
+                >
+                  {data.body || ''}
+                </pre>
               </div>
             )}
           </div>

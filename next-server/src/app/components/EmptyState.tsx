@@ -32,7 +32,6 @@ const EmptyState = ({ message, isError }: messageProps) => {
           <div className="flex justify-center">
             <AIChatButton aiAgentType="assistant" />
           </div>
-          <div className="line-gradient-deco mt-5 w-24" aria-hidden />
         </div>
       </div>
     </div>

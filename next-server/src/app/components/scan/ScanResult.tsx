@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { resolveImageSrc } from '@/src/app/lib/imageSrc';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { HiOutlineArrowRight, HiOutlineCamera, HiOutlinePlus } from 'react-icons/hi2';
 import Button from '@/src/app/components/Button';
 import ShopLinkCard from './ShopLinkCard';
 import SimilarGallery from './SimilarGallery';
+import ScanSaveNotice, { type ScanOwnership } from './ScanSaveNotice';
 import { useScanPrefillStore } from '@/src/app/store/scanPrefillStore';
 
 interface MatchedFragrance {
@@ -33,9 +35,12 @@ export interface ScanResultData {
 
 interface Props {
   data: ScanResultData;
+  /** 이 스캔이 누구 기록인지 — 저장 안내 줄에 쓴다 */
+  ownership: ScanOwnership;
+  isLoggedIn: boolean;
 }
 
-export default function ScanResult({ data }: Props) {
+export default function ScanResult({ data, ownership, isLoggedIn }: Props) {
   const { brand, name, imageUrl, imageWidth, imageHeight, matchedFragrance } = data;
   const [imgLoaded, setImgLoaded] = useState(false);
   const router = useRouter();
@@ -72,7 +77,7 @@ export default function ScanResult({ data }: Props) {
       FragranceDetail 톤으로 통일 — 카드(border + bg + padding) wrapping 제거.
       그라데이션 헤딩 + border-t 섹션 구분 + 톤 다운된 본문으로 정보 위계 표현.
     */
-    <div className="mx-auto w-full max-w-5xl flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12">
+    <div className="w-full flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12">
       {/* 좌: 이미지 + 액션 버튼 — sticky로 스크롤 중에도 항상 보임 */}
       <div className="w-full max-w-md mx-auto lg:max-w-none lg:w-[400px] lg:mx-0 lg:shrink-0 lg:sticky lg:top-[calc(var(--header-height)+1.5rem)]">
         <div
@@ -123,6 +128,7 @@ export default function ScanResult({ data }: Props) {
             </Button>
           </Link>
         </div>
+        <ScanSaveNotice scanId={data.scanId} ownership={ownership} isLoggedIn={isLoggedIn} />
       </div>
 
       {/* 우: 정보 영역 */}
@@ -181,6 +187,7 @@ export default function ScanResult({ data }: Props) {
                     src={matchedFragrance.images[0]}
                     alt={matchedFragrance.name}
                     fill
+                    unoptimized={resolveImageSrc(matchedFragrance.images[0]).unoptimized}
                     sizes="80px"
                     className="object-contain p-1"
                   />

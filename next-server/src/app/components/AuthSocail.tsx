@@ -3,7 +3,6 @@ import { signIn, useSession } from "next-auth/react";
 import AuthSocialButton from "./AuthSocialButton";
 import { BsGoogle } from 'react-icons/bs';
 import { RiKakaoTalkFill } from "react-icons/ri";
-import { BsFillPersonFill } from "react-icons/bs";
 import toast from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
 import { AuthSocialProps } from "@/src/app/types/common";
@@ -68,26 +67,6 @@ const AuthSocial: React.FC<AuthSocialProps> = ({
         }
     };
 
-    // ✅ 데모 계정 로그인 핸들러 최적화
-    const demoLogin = async () => {
-        onClick(true); // 로딩 시작
-
-        try {
-            const result = await signIn("credentials", {
-                email: "demo@example.com",
-                password: "demo1234!",
-                callbackUrl,
-                redirect: false,
-            });
-
-            await handleLoginResult(result);
-        } catch {
-            toast.error('데모 로그인 중 오류가 발생했습니다.');
-        } finally {
-            onClick(false); // 로딩 종료
-        }
-    };
-
     return (
         <div className="mt-6">
             <div className="relative">
@@ -109,19 +88,6 @@ const AuthSocial: React.FC<AuthSocialProps> = ({
             </div>
 
             <div className="flex flex-col gap-6 mt-6">
-                <div>
-                    <p className="text-sm mb-4 break-keep">
-                        로그인 없이도 체험할 수 있는 <strong className="text-accent">데모 계정</strong>입니다.
-                        개인정보는 저장되지 않으며, 모든 기능을 자유롭게 살펴보실 수 있습니다.
-                    </p>
-                    <AuthSocialButton
-                        icon={BsFillPersonFill}
-                        onClick={demoLogin}
-                        disabled={disabled}
-                    >
-                        데모 계정으로 체험하기
-                    </AuthSocialButton>
-                </div>
                 <AuthSocialButton
                     icon={BsGoogle}
                     onClick={() => socialAction('google')}

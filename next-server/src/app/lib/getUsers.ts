@@ -3,7 +3,6 @@ import { apiFetch } from "@/src/app/utils/apiFetch";
 export type ChatMember = {
     id: string;
     name: string | null;
-    email: string | null;
     image: string | null;
     role: string | null;
 };

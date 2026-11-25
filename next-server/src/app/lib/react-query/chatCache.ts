@@ -222,12 +222,19 @@ const isTop = (arr: FullMessageType[], msg: FullMessageType) => {
  * messages 캐시에 정렬 삽입
  * InfiniteData<{ messages: FullMessageType[]; nextCursor: string | null }>
  * 구조라고 가정하고, 최신 페이지를 pages[0]로 본다.
+ *
+ * keepShownTime: 이미 화면에 있는 메시지(같은 id·clientMessageId)를 교체할 때 표시 시각을 바꾸지 않는다.
+ *   소켓으로 되돌아온 내 메시지가 낙관적 시각(브라우저 시계)을 서버 시각으로 덮으면,
+ *   아직 확정 전인 다음 메시지·AI 대기 메시지보다 늦은 시각이 되어 순서가 뒤집힌다.
+ *   (replaceOptimisticMessage도 같은 이유로 낙관 시각을 유지한다)
  */
 export function upsertMessageSortedInCache(
   qc: QueryClient,
   conversationId: string,
   message: UnnormalizedMessage | FullMessageType,
+  options: { keepShownTime?: boolean } = {},
 ) {
+  const { keepShownTime = false } = options;
   qc.setQueryData(messagesKey(conversationId), (old: MessagesInfinite) => {
     const normalized = normalizeMessage(message);
 
@@ -273,12 +280,14 @@ export function upsertMessageSortedInCache(
         const before = origList[byId];
         if (changed(before, normalized)) {
           list = [...origList];
-          list[byId] = { 
-            ...before, 
+          list[byId] = {
+            ...before,
             ...normalized,
-            // ✅ 2) 서버 시간이 없으면 기존 시간 보존 (null/undefined만 대체)
-            createdAt: normalized.createdAt ?? before.createdAt,
-            serverCreatedAtMs: normalized.serverCreatedAtMs ?? before.serverCreatedAtMs,
+            // ✅ 2) 서버 시간이 없으면 기존 시간 보존 (null/undefined만 대체), keepShownTime이면 항상 보존
+            createdAt: keepShownTime ? before.createdAt : (normalized.createdAt ?? before.createdAt),
+            serverCreatedAtMs: keepShownTime
+              ? before.serverCreatedAtMs
+              : (normalized.serverCreatedAtMs ?? before.serverCreatedAtMs),
             // ✅ 확정 메시지는 에러/대기 상태 제거
             isError: normalized.isError ?? false,
             isWaiting: normalized.isWaiting ?? false,
@@ -295,9 +304,11 @@ export function upsertMessageSortedInCache(
           list[byClient] = { 
             ...before,
             ...normalized,
-            // ✅ 2) 서버 시간이 없으면 낙관 시간 보존 (null/undefined만 대체)
-            createdAt: normalized.createdAt ?? before.createdAt,
-            serverCreatedAtMs: normalized.serverCreatedAtMs ?? before.serverCreatedAtMs,
+            // ✅ 2) 서버 시간이 없으면 낙관 시간 보존 (null/undefined만 대체), keepShownTime이면 항상 보존
+            createdAt: keepShownTime ? before.createdAt : (normalized.createdAt ?? before.createdAt),
+            serverCreatedAtMs: keepShownTime
+              ? before.serverCreatedAtMs
+              : (normalized.serverCreatedAtMs ?? before.serverCreatedAtMs),
             // ✅ 확정 메시지는 에러/대기 상태 제거
             isError: false,
             isWaiting: false,
@@ -345,6 +356,83 @@ export function upsertMessageSortedInCache(
     // 바뀐 페이지가 있으면 pages만 새로 끼워서 반환
     return { ...old, pages };
   });
+}
+
+/**
+ * 소켓 재접속 복구: 서버의 최신 메시지 페이지(GET /api/messages/:id, 커서 없음)를 기존 캐시에 병합한다.
+ * 무한 쿼리 전체를 다시 받지 않으므로, 아직 서버 응답 전인 낙관적 메시지·실패 메시지는 그대로 남는다.
+ *
+ * - 캐시에 없는 메시지만 upsertMessageSortedInCache로 넣는다(서버 시각 기준 정렬).
+ *   이미 있는 메시지(보낸 탭의 내 메시지 등)는 건드리지 않아 표시 시각·순서가 그대로다.
+ * - 끊긴 동안 한 페이지(50건)보다 많이 쌓여 기존 캐시와 이어지지 않으면, 최신 페이지를 첫 페이지로 다시 세운다.
+ *   이전 페이지는 버리고(위로 스크롤하면 커서로 다시 받는다) 서버에 없는 낙관적·실패 메시지만 다시 얹는다.
+ * - 서버의 마지막 메시지가 캐시의 마지막 메시지와 같으면 그 메시지의 읽은 사용자 목록도 서버 값으로 맞춘다.
+ *
+ * 반환: 이번에 새로 들어간 서버 메시지 (읽음 처리 판단용). 캐시가 없으면 아무것도 하지 않는다(첫 조회가 처리).
+ */
+export function mergeLatestMessagesPage(
+  qc: QueryClient,
+  conversationId: string,
+  page: { messages?: FullMessageType[]; nextCursor?: string | null; seenUsersForLastMessage?: MessagesPage["seenUsersForLastMessage"] },
+): FullMessageType[] {
+  const key = messagesKey(conversationId);
+  const old = qc.getQueryData<MessagesInfinite>(key);
+  if (!old?.pages?.length) return [];
+
+  const fresh = (Array.isArray(page?.messages) ? page.messages : []).filter(
+    (m) => m?.id && String(m.conversationId) === String(conversationId),
+  );
+  const freshIds = new Set(fresh.map((m) => String(m.id)));
+  const cachedIds = new Set<string>();
+  for (const p of old.pages) {
+    for (const m of p?.messages ?? []) if (m?.id) cachedIds.add(String(m.id));
+  }
+
+  // 서버 페이지가 전부(다음 커서 없음)이거나 캐시와 겹치는 메시지가 있으면 이어진다
+  const contiguous = !page?.nextCursor || fresh.some((m) => cachedIds.has(String(m.id)));
+
+  let added: FullMessageType[];
+  if (contiguous) {
+    added = fresh.filter((m) => !cachedIds.has(String(m.id)));
+    for (const m of added) {
+      upsertMessageSortedInCache(qc, conversationId, m, { keepShownTime: true });
+    }
+  } else {
+    const oldestFreshMs = fresh.reduce(
+      (min, m) => Math.min(min, asMs(m.serverCreatedAtMs, m.createdAt)),
+      Number.POSITIVE_INFINITY,
+    );
+    const localOnly = (old.pages[0]?.messages ?? []).filter(
+      (m) =>
+        m?.id &&
+        !freshIds.has(String(m.id)) &&
+        (m.isError || m.isWaiting || asMs(m.serverCreatedAtMs, m.createdAt) >= oldestFreshMs),
+    );
+    added = fresh;
+    qc.setQueryData<MessagesInfinite>(key, {
+      pageParams: [null],
+      pages: [{ messages: fresh, nextCursor: page.nextCursor ?? null, seenUsersForLastMessage: [] }],
+    });
+    for (const m of localOnly) {
+      upsertMessageSortedInCache(qc, conversationId, m, { keepShownTime: true });
+    }
+  }
+
+  // 읽은 사용자 목록: 서버의 마지막 메시지가 화면의 마지막 메시지일 때만 서버 값으로 맞춘다 (Body와 같은 정렬 기준)
+  const serverLast = [...fresh].sort(compareMessages).pop();
+  if (serverLast && Array.isArray(page?.seenUsersForLastMessage)) {
+    const seen = page.seenUsersForLastMessage;
+    qc.setQueryData<MessagesInfinite>(key, (cur) => {
+      if (!cur?.pages?.length) return cur;
+      const all = cur.pages.flatMap((p) => p?.messages ?? []);
+      const shownLast = [...all].sort(compareMessages).pop();
+      if (!shownLast || String(shownLast.id) !== String(serverLast.id)) return cur;
+      const first = cur.pages[0];
+      return { ...cur, pages: [{ ...first, seenUsersForLastMessage: seen }, ...cur.pages.slice(1)] };
+    });
+  }
+
+  return added;
 }
 
 

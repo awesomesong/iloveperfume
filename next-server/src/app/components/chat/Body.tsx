@@ -35,7 +35,9 @@ import {
   compareMessages,
   getPendingReply,
   ConversationListData,
+  mergeLatestMessagesPage,
 } from "@/src/app/lib/react-query/chatCache";
+import { SOCKET_EVENTS } from "@/src/app/lib/react-query/utils";
 import { resetSeenUsersForLastMessage, setSeenUsersForLastMessage } from "@/src/app/lib/react-query/chatCache";
 
 interface Props {
@@ -89,6 +91,7 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
     enabled: true,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
+    // 브라우저 네트워크 복구 대신 소켓 재접속 때 최신 페이지만 병합한다 (아래 "소켓 재접속 복구")
     refetchOnReconnect: false,
   });
 
@@ -100,23 +103,18 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
 
   // === 1) readStateMutation: onMutate에서 낙관적 워터마크 반영 유지 ===
   const { mutate: readStateMutation } = useMutation({
+    // 읽음 알림(read:state)은 read-state API가 처리 후 소켓 서버로 직접 보낸다 (수신자는 DB 기준)
     mutationFn: (vars: {
       conversationId: string;
       seenUntilMs: number;
       lastMessageId?: string;
       includeSeenUsers?: boolean;
-      suppressSocketEmit?: boolean;
-    }) => {
-      const payload = { ...vars };
-      delete payload.suppressSocketEmit;
-      return readState(payload);
-    },
+    }) => readState(vars),
     onMutate: async (vars: {
       conversationId: string;
       seenUntilMs: number;
       lastMessageId?: string;
       includeSeenUsers?: boolean;
-      suppressSocketEmit?: boolean;
     }) => {
       const { conversationId: targetConversationId } = vars;
 
@@ -133,10 +131,9 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
         conversationId: targetConversationId,
         includeSeenUsers,
         lastMessageId,
-        suppressSocketEmit,
       } = vars;
 
-      // 총합 갱신 / 소켓 통지 등 기존 코드 유지
+      // 총합 갱신
       const totalUnread = setTotalUnreadFromList(queryClient);
       if (totalUnread !== undefined) setUnreadCount(totalUnread);
 
@@ -148,19 +145,6 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
           lastMessageId,
           data.seenUsers
         );
-      }
-
-      if (socket && !suppressSocketEmit) {
-        // ✅ API에서 전달받은 메시지 발신자 ID 사용 (효율적)
-        const messageSenderId = data.messageSenderId;
-
-        socket?.emit("read:state", {
-          conversationId: targetConversationId,
-          lastMessageId: vars.lastMessageId, // ✅ lastMessageId 포함
-          readerId: session?.user?.id, // ✅ readerId 추가
-          seenUsers: includeSeenUsers ? data.seenUsers : undefined, // ✅ 읽은 사용자 정보 포함
-          messageSenderId, // ✅ API에서 전달받은 메시지 발신자 ID
-        });
       }
     },
     onError: (_err, _vars, context) => {
@@ -368,7 +352,6 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
       seenUntilMs: Date.now(),
       lastMessageId: messageId,
       includeSeenUsers: shouldIncludeSeenUsers,
-      suppressSocketEmit: isSystemMessage,
     });
   }, [conversationId, isAIChat, session?.user?.id, readStateMutation]);
 
@@ -387,12 +370,8 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
     if (!lastMessage?.id) return;
 
     const myId = session?.user?.id;
-    const myMail = session?.user?.email;
     const senderId = getMessageSenderId(lastMessage);
-    const senderMail = lastMessage.sender?.email;
-    const isFromMe =
-      (senderId && myId && String(senderId) === String(myId)) ||
-      (senderMail && myMail && String(senderMail) === String(myMail));
+    const isFromMe = !!senderId && !!myId && String(senderId) === String(myId);
     const isAIResponse = !!lastMessage.isAIResponse;
 
     if (isAIResponse || isFromMe || isAIChat) {
@@ -404,7 +383,7 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
     pendingJoinReadRef.current = false;
     processedConversationRef.current = conversationId;
     processReadState(lastMessage.id, "join:success 후 초기 진입", lastMessage);
-  }, [conversationId, isAIChat, processReadState, session?.user?.email, session?.user?.id]);
+  }, [conversationId, isAIChat, processReadState, session?.user?.id]);
 
   // ✅ 대화방 변경 시 초기 스크롤 플래그 리셋
   useEffect(() => {
@@ -443,19 +422,22 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
   }, [attemptJoinSuccessRead, dataUpdatedAt]);
 
   // === 4) "실시간 수신" : 새 메시지 수신 시 즉시 읽음 처리 ===
+  // 서버는 메시지마다 receive:conversation 하나만 보낸다 (캐시·목록 반영은 SocketState가 같은 이벤트로 처리).
+  // 여기서는 열려 있는 방의 상대방 메시지에 대한 읽음 처리만 한다.
   const handleReceiveMessage = useCallback((m: FullMessageType) => {
+    if (!m?.id) return;
     const cid = String(m.conversationId ?? "");
     if (cid && cid !== String(conversationId)) return;
 
     // ✅ conversationId가 없으면 읽음 처리 스킵
     if (!conversationId) return;
 
+    // 시스템 메시지(나가기 안내 등)는 읽음 처리 대상이 아니다
+    if (m.type === "system") return;
+
     const senderId = getMessageSenderId(m);
-    const senderMail = m.sender?.email;
     const myId = session?.user?.id;
-    const myMail = session?.user?.email;
-    const isFromMe = (senderId && myId && String(senderId) === String(myId))
-      || (senderMail && myMail && String(senderMail) === String(myMail));
+    const isFromMe = !!senderId && !!myId && String(senderId) === String(myId);
     const isAIResponse = !!m.isAIResponse;
 
     // ✅ 내 메시지 / AI는 early return
@@ -464,17 +446,66 @@ const Body = ({ scrollRef, bottomRef, isAIChat }: Props) => {
     // ✅ 여기서만 reset (상대방 새 메시지에 대해서만)
     resetSeenUsersForLastMessage(queryClient, conversationId, m.id);
     processReadState(m.id, "실시간 수신", m);
-  }, [conversationId, queryClient, session?.user?.id, session?.user?.email, isAIChat, processReadState]);
+  }, [conversationId, queryClient, session?.user?.id, isAIChat, processReadState]);
 
   useEffect(() => {
     if (!socket) return undefined;
 
-    socket.off("receive:message", handleReceiveMessage);
-    socket.on("receive:message", handleReceiveMessage);
+    socket.on(SOCKET_EVENTS.RECEIVE_CONVERSATION, handleReceiveMessage);
     return () => {
-      socket.off("receive:message", handleReceiveMessage);
+      socket.off(SOCKET_EVENTS.RECEIVE_CONVERSATION, handleReceiveMessage);
     };
-  }, [socket, handleReceiveMessage, conversationId]);
+  }, [socket, handleReceiveMessage]);
+
+  // === 5) 소켓 연결 시 복구 ===
+  // 서버는 연결 전·끊긴 동안의 메시지를 쌓아 두지 않는다. connect 시점에 이 방의 메시지 캐시가 이미 있으면
+  // (첫 연결 전에 먼저 받았거나, 재접속) 그 사이 메시지가 빠져 있을 수 있으므로 최신 페이지를 DB에서 받아 병합한다.
+  // 캐시가 없으면 첫 조회가 연결 후에 끝나므로 할 일이 없다. 소켓이 이미 연결된 채 이 방에 들어오면 connect 자체가 없다.
+  // (전체를 다시 받지 않아 전송 중인 낙관적 메시지가 사라지지 않는다.)
+  // 브라우저 네트워크 복구(refetchOnReconnect)는 쓰지 않는다 — 네트워크가 돌아오면 소켓도 다시 연결되어 이 경로로 온다.
+  const processReadStateRef = useRef(processReadState);
+  useEffect(() => {
+    processReadStateRef.current = processReadState;
+  }, [processReadState]);
+
+  useEffect(() => {
+    if (!socket || !conversationId) return;
+    let disposed = false;
+
+    const onConnect = async () => {
+      const key = messagesKey(conversationId);
+      if (!queryClient.getQueryData(key)) {
+        // 첫 조회가 진행 중이면 그 DB 읽기가 연결 전에 끝났을 수 있다 → 연결 후에 다시 받는다 (데이터가 없어 지울 것도 없음)
+        if (queryClient.isFetching({ queryKey: key, exact: true }) > 0) {
+          void queryClient.refetchQueries({ queryKey: key, exact: true }).catch(() => {});
+        }
+        return;
+      }
+      try {
+        const page = await getMessages({ conversationId, pageParam: null });
+        if (disposed) return;
+        const added = mergeLatestMessagesPage(queryClient, conversationId, page);
+
+        // 빠졌던 상대방 메시지가 있으면 실시간 수신과 같은 규칙으로 읽음 처리 (가장 최근 1건 기준)
+        const myId = String(session?.user?.id ?? "");
+        const latestFromOther = added
+          .filter((m) => m.type !== "system" && !m.isAIResponse && String(getMessageSenderId(m)) !== myId)
+          .sort(compareMessages)
+          .pop();
+        if (latestFromOther && !isAIChat) {
+          processReadStateRef.current(String(latestFromOther.id), "재접속 복구", latestFromOther);
+        }
+      } catch {
+        // 조회 실패(나간 방 등)는 무시 — 다음 재접속이나 방 재진입 때 다시 맞춘다
+      }
+    };
+
+    socket.on("connect", onConnect);
+    return () => {
+      disposed = true;
+      socket.off("connect", onConnect);
+    };
+  }, [socket, conversationId, queryClient, session?.user?.id, isAIChat]);
 
 
   // 채팅방 참여 & 미참여 (beforeunload 이벤트)

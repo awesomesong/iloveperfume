@@ -20,10 +20,12 @@
 
 | | 라이트 | 다크 |
 |--|--------|------|
-| primary | `#1a1a2e` | `#f0ece6` ✅ |
-| secondary | `#52526e` | `#b0a8a0` ✅ |
+| primary | `#1a1a2e` | `#d6d2cc` ✅ |
+| secondary | `#52526e` | `#a09a93` ✅ |
 
-> **WCAG AA 확인값** — primary: 라이트 15:1 / 다크 14:1 ✅ · secondary: 라이트 7:1 / 다크 8.9:1 ✅
+> **WCAG AA 확인값** — primary: 라이트 15:1 / 다크 12.55:1 ✅ · secondary: 라이트 7:1 / 다크 6.78:1 ✅
+>
+> **다크 글자색 원칙**: 순백에 가까운 글자(`#f0ece6`, 16:1)는 어두운 배경에서 번져 보여 눈이 피로하다. 본문 글자는 대비 11~13:1 범위로 낮춰 쓴다. `#f0ece6`은 버튼 배경·로고·내 메시지 말풍선 글자처럼 지정된 곳에만 쓴다.
 
 ---
 
@@ -67,6 +69,10 @@
 | 호버 그림자 | `var(--color-shadow-hover)` |
 | 헤더 배경 | `var(--header-bg)` |
 | 안 읽은 배지 | `--unread-badge-bg` / `--unread-badge-text` |
+| 솔리드 액센트 (흰 글자용) | `--color-accent-solid` | 라이트 `#3d3d8f` / 다크 `#4466cc` — 제출 버튼 배경 |
+| 액센트 위 글자 | `--color-on-accent` | 라이트 `#ffffff` / 다크 `#111110` — `var(--color-accent)` 배경 위 글자·아이콘 |
+| 온라인 상태 점 | `--color-status-online` | `#4ade80` (장식, `aria-hidden`) |
+| 슬라이더 좌우 버튼 | `--slider-nav-bg` / `--slider-nav-bg-hover` / `--slider-nav-icon` | `.slider-nav-btn` 클래스로 사용 |
 | 사이드바 hover/active | `--color-sidebar-state-bg` | 라이트 `var(--color-accent-pale)` = `#eaeaf8` / 다크 `rgba(61,61,143,0.30)` (인디고 틴트) |
 
 > **사이드바 active 구분 원칙**: 인디고 틴트 배경 + `box-shadow: inset 3px 0 0 var(--color-accent)` 좌측 바로 명확히 표시.
@@ -88,7 +94,7 @@
 
 ```tsx
 // SVG fill 대신 반드시 className으로 색상 지정
-// text-[var(--color-text-primary)] — 라이트 #1a1a2e / 다크 #f0ece6 (자동 전환)
+// text-[var(--color-text-primary)] — 라이트 #1a1a2e / 다크 #d6d2cc (자동 전환)
 <HiChevronLeft size={32} className="text-[var(--color-text-primary)]" />
 <HiPhoto size={30} className="text-[var(--color-text-primary)]" />
 
@@ -109,45 +115,45 @@
 |--------|------|-----------|---------|
 | `text-gradient-scent` | **페이지 대표 제목** (H2 강조 헤딩) | `#2d2040` | `#f5f0e8` |
 | `text-gradient-ilp` | 카드 제목·서브 타이틀·강조 인라인 | `var(--color-text-primary)` | `var(--color-text-primary)` |
-| `text-gradient-logo` | 로고 전용 (`AnimatedLogo`) | `#2a2840` | `#f0ece6` |
-| `text-gradient-memories` | 채팅·메모리 사이드바 제목 | `#6b5b95` | `#c8b4ff` |
+| `text-gradient-logo` | 로고 전용 (`AnimatedLogo`) — 현재 미사용 | `#2a2840` | `#f0ece6` |
+| `text-gradient-memories` | 채팅·메모리 사이드바 제목 — 현재 미사용 | `#6b5b95` | `#c8b4ff` |
 
 > 클래스 이름은 유지 (기존 컴포넌트 호환). **`-webkit-text-fill-color: currentColor`** 로 동작.  
-> `text-gradient-scent`는 반드시 `page-title-gradient`와 함께 사용 — 폰트 사이즈·자간 자동 적용.
+> 페이지 대표 제목은 **`PageIntro` 컴포넌트**로 통일한다 (6-1 참고). `text-gradient-scent`는 메인 쇼케이스처럼 큰 강조 헤딩에만 쓴다.
 
 ```tsx
-// 페이지 H2 제목 표준 패턴
-<h2 className="text-gradient-scent page-title-gradient">향수 컬렉션</h2>
+// 페이지 제목 표준 패턴
+<PageIntro title="향수 컬렉션" description="한 줄 설명" />
 ```
 
 ### 2-2. 배경 색상 클래스
 
 | 클래스 | 용도 | 색상 |
 |--------|------|------|
-| `bg-gradient-ilp` | 아이콘·배지 배경 | `var(--color-lavender)` |
-| `bg-gradient-ilp-avatar` | 아바타 배경 | 라이트: `var(--color-lavender)` / 다크: `#4455b8` |
-| `line-gradient-deco` | 섹션 구분 가로선 | `var(--color-lavender-border)` |
+| `bg-gradient-ilp` | 아이콘·배지 배경 | `var(--color-accent)` |
+| `bg-gradient-ilp-avatar` | 아바타 배경 (AI 아바타 포함) | 라이트: `var(--color-accent)` / 다크: `var(--color-avatar-dark-bg)` `#4455b8` |
+| `line-gradient-deco` | 섹션 구분 가로선 | `var(--color-accent-border)` |
 | `footer-deco-line` | 푸터 상단 구분선 | `var(--color-card-border)` |
-| `product-fragrance-divider` | 향수 섹션 내 구분선 | `var(--color-lavender-border)` |
-| `ilp-deco-line` | 히어로 섹션 브랜드명 하단 장식선 | `var(--color-lavender-border)` |
+| `product-fragrance-divider` | 향수 섹션 내 구분선 | `var(--color-accent-border)` |
+| `slider-nav-btn` | 이미지 슬라이더 좌우 버튼 | 라이트: 어두운 원 + 흰 아이콘 / 다크: 밝은 원 + 어두운 아이콘 |
 
 ### 2-3. 버튼 색상 (Button.tsx `variant="ilp"`)
 
 ```
-배경: bg-[#1a1825]  dark:bg-[#f0ece6]
-텍스트: text-white  dark:text-[#1a1825]
+배경: bg-[var(--color-accent-solid)]   (라이트 #3d3d8f / 다크 #4466cc)
+텍스트: text-white
 ```
 
-라이트 대비: 흰 텍스트 on `#1a1825` → **17.5:1** ✅  
-다크 대비: `#1a1825` on `#f0ece6` → **14.8:1** ✅
+라이트 대비: 흰 텍스트 on `#3d3d8f` → **9.28:1** ✅  
+다크 대비: 흰 텍스트 on `#4466cc` → **5.23:1** ✅
 
 ### 2-4. CTA 카드 버튼 배경 (ScanClient 등)
 
 ```tsx
 // ✅ 솔리드 카드 배경 패턴
 style={{
-  background: 'var(--color-lavender-pale)',
-  border: '1px solid var(--color-lavender-border)',
+  background: 'var(--color-accent-pale)',
+  border: '1px solid var(--color-accent-border)',
   boxShadow: '0 2px 12px var(--color-shadow-soft)',
 }}
 // 텍스트: className="text-text-primary" / "text-secondary"
@@ -167,21 +173,21 @@ import Button, { FormSubmitActions } from "@/src/app/components/Button";
 
 | variant | 용도 | 스타일 |
 |---------|------|--------|
-| `"ilp"` | **주요 CTA** (제출·분석·등록) | 다크 솔리드 배경, 흰 텍스트 |
+| `"ilp"` | **주요 CTA** (제출·분석·등록) | 인디고 솔리드 배경, 흰 텍스트 |
 | `"ghostLavender"` | **보조 CTA** (취소·다시선택·뒤로) | 투명 배경, 뉴트럴 보더·텍스트 |
 
 **실제 색상 (Button.tsx)**
 
 ```
-ilp 배경:     bg-[#1a1825]  dark:bg-[#f0ece6]
-ilp 텍스트:   text-white    dark:text-[#1a1825]
+ilp 배경:     bg-[var(--color-accent-solid)]  (라이트 #3d3d8f / 다크 #4466cc)
+ilp 텍스트:   text-white
 
-ghost 텍스트: var(--color-text-primary)  (라이트 #1a1a2e / 다크 #f0ece6)
+ghost 텍스트: var(--color-text-primary)  (라이트 #1a1a2e / 다크 #d6d2cc)
 ghost 보더:   라이트 rgba(60,58,52,0.65)  /  다크 rgba(176,168,160,0.60)
 ghost hover 보더: 라이트 rgba(60,58,52,0.90)  /  다크 rgba(200,195,188,0.45)
 ```
 
-**WCAG 대비** — ilp 흰 텍스트 on `#1a1825`: **17.5:1** ✅ / ghost 텍스트 라이트: 17.5:1 / 다크: 14.3:1 ✅
+**WCAG 대비** — ilp 흰 텍스트: 라이트 **9.28:1** / 다크 **5.23:1** ✅ / ghost 텍스트 라이트: 17.5:1 / 다크: 14.3:1 ✅
 
 ### 3-2. size prop
 
@@ -249,15 +255,39 @@ function contrast(hex1, hex2) {
 |------|--------|--------|------|
 | 라이트 page `#f7f5f2` | primary `#1a1a2e` | 15:1 | ✅ AA |
 | 라이트 page `#f7f5f2` | secondary `#52526e` | 7:1 | ✅ AA |
-| 다크 page `#111110` | primary `#f0ece6` | 15.3:1 | ✅ AA |
-| 다크 page `#111110` | secondary `#b0a8a0` | 9.9:1 | ✅ AA |
+| 다크 page `#111110` | primary `#d6d2cc` | 12.55:1 | ✅ AA |
+| 다크 page `#111110` | secondary `#a09a93` | 6.78:1 | ✅ AA |
+| 다크 card `#1a1a18` | primary `#d6d2cc` | 11.58:1 | ✅ AA |
+| 다크 card `#1a1a18` | secondary `#a09a93` | 6.26:1 | ✅ AA |
+| 라이트 향 화면 판 `--blend-plate` = accent-pale `#eaeaf8` | primary `#1a1a2e` | 14.31:1 | ✅ AA |
+| 라이트 향 화면 판 `--blend-plate` = accent-pale `#eaeaf8` | secondary `#52526e` (계열 이름·개수·검색 안내) | 6.31:1 | ✅ AA |
+| 다크 향 화면 판 `--blend-plate` = accent-pale `#222228` | primary `#d6d2cc` | 10.51:1 | ✅ AA |
+| 다크 향 화면 판 `--blend-plate` = accent-pale `#222228` | secondary `#a09a93` (계열 이름·개수·검색 안내) | 5.68:1 | ✅ AA |
+| 라이트 accent-pale `#eaeaf8` | `--blend-accent-text` = accent `#3d3d8f` (＋·돋보기·칩 글자) | 7.79:1 | ✅ AA |
+| 다크 accent-pale `#222228` | `--blend-accent-text` = accent-light `#9da4e0` (＋·돋보기·칩 글자) | 6.64:1 | ✅ AA |
+| 다크 accent-pale `#222228` | (쓰지 않음) accent `#7a80cc` 글자 | 4.36:1 | ❌ 글자 기준 미달 → 다크는 accent-light |
+| 라이트 page `#f7f5f2` | `--blend-accent-text` `#3d3d8f` (단계 글자·소제목 개수·고른 향 이름·지금 층 이름) | 8.53:1 | ✅ AA |
+| 다크 page `#111110` | `--blend-accent-text` `#9da4e0` (같은 곳) | 7.94:1 | ✅ AA |
+| 라이트 `--color-accent-solid` `#3d3d8f` | 고른 향 체크 아이콘 `white` | 9.28:1 | ✅ (아이콘 3:1) |
+| 다크 `--color-accent-solid` `#4466cc` | 고른 향 체크 아이콘 `white` | 5.23:1 | ✅ (아이콘 3:1) |
+| 라이트 `--color-accent-solid` `#3d3d8f` | 계열 고른 개수 배지 숫자 `white` (12px 굵게) | 9.28:1 | ✅ AA |
+| 다크 `--color-accent-solid` `#4466cc` | 계열 고른 개수 배지 숫자 `white` (12px 굵게) | 5.23:1 | ✅ AA |
+| 라이트 page `#f7f5f2` | 고른 향 동그라미 `--color-accent-solid` `#3d3d8f` (상태 표시) | 8.53:1 | ✅ (비텍스트 3:1) |
+| 다크 page `#111110` | 고른 향 동그라미 `--color-accent-solid` `#4466cc` (상태 표시) | 3.62:1 | ✅ (비텍스트 3:1) |
+
+> 향 고르기 화면(`/blend?step=base`)은 2026-11-25 남색 계열로 바꾼 뒤 브라우저에서 계산된 색을 읽어 라이트·다크 모두 다시 쟀다 — 단계 글자·돋보기·검색 안내·계열(고른 것·나머지·개수)·소제목 개수·고른 향 이름·지금 층 이름·칩·＋ 11곳 모두 통과(가장 낮은 값 라이트 6.31 / 다크 5.68).
+> 안 고른 향의 연한 남색 동그라미(`--color-accent-pale`)는 배경과 1.10:1(다크 1.19:1)이지만 장식이다. 누르는 곳임을 알려 주는 것은 ＋ 아이콘(7.79:1 / 6.64:1)이라 WCAG 1.4.11(비텍스트 3:1)을 만족한다. 이 판을 ＋ 없이 단독 표시로 쓰지 않는다.
 
 #### 버튼
 
 | 배경 | 텍스트 | 대비율 | 기준 |
 |------|--------|--------|------|
-| ilp 라이트 `#1a1825` | `white` | 17.5:1 | ✅ AA |
-| ilp 다크 `#f0ece6` | `#1a1825` | 14.8:1 | ✅ AA |
+| ilp 라이트 `#3d3d8f` | `white` | 9.28:1 | ✅ AA |
+| ilp 다크 `#4466cc` | `white` | 5.23:1 | ✅ AA |
+| 다크 `var(--color-accent)` `#7a80cc` | `white` | 3.63:1 | ❌ 사용 금지 — `--color-on-accent` 사용 |
+| 다크 `var(--color-accent)` `#7a80cc` | `--color-on-accent` `#111110` | 5.21:1 | ✅ AA |
+| 슬라이더 버튼 라이트 `#1a1210` | `white` | 18.45:1 | ✅ AA |
+| 슬라이더 버튼 다크 `#f8f6f3` | `#2d1e18` | 14.86:1 | ✅ AA |
 
 #### 공통 카드 border
 
@@ -277,7 +307,7 @@ function contrast(hex1, hex2) {
 | **hero** | 라이트 | 인디고 그라데이션 `#3d3d8f` | `white` | 9.28:1 ✅ | 최저가·주요 CTA 배지 |
 | **hero** | 다크 | 인디고 그라데이션 `#3d3d8f` | `white` | 10.2:1 ✅ | 최저가·주요 CTA 배지 |
 | **filled** | 라이트 | `--color-accent-pale` `#eaeaf8` | `--color-text-primary` `#1a1a2e` | 15:1 ✅ | 활성 필터·강조 배지 |
-| **filled** | 다크 | `--color-accent-light` `#9da4e0` | `#1a1a18` | 7.95:1 ✅ | 활성 필터·정품 매칭 |
+| **filled** | 다크 | `--color-accent-light` `#9da4e0` | `#1a1a18` | 7.32:1 ✅ | 활성 필터·정품 매칭 |
 | **outline** | 라이트 | transparent | `--color-accent-muted` `#6868a8` + `accent-border` | 5.2:1 ✅ | 비활성 필터·보조 배지 |
 | **outline** | 다크 | transparent | `--color-accent-light` `#9da4e0` + `accent-border` | 6.36:1 ✅ | 비활성 필터·보조 배지 |
 
@@ -288,9 +318,9 @@ function contrast(hex1, hex2) {
 | 라이트 own `#7a80cc` | primary `#1a1a2e` | 4.70:1 | ✅ AA |
 | 라이트 own `#7a80cc` | page bg `#f7f5f2` | 3.33:1 | ✅ UI구분 |
 | 라이트 other/ai `#fffcfa` | primary `#1a1a2e` | 16.70:1 | ✅ AA |
-| 다크 own `#5c64a4` | primary `#f0ece6` | 4.68:1 | ✅ AA |
+| 다크 own `#5c64a4` | `--chat-bubble-own-text` `#f0ece6` | 4.68:1 | ✅ AA (본문색 `#d6d2cc`는 3.66:1 미달 — 사용 금지) |
 | 다크 own `#5c64a4` | page bg `#111110` | 3.53:1 | ✅ UI구분 |
-| 다크 other/ai `#1a1a18` | primary `#f0ece6` | 14.81:1 | ✅ AA |
+| 다크 other/ai `#1a1a18` | primary `#d6d2cc` | 11.58:1 | ✅ AA |
 
 #### 구매처 행 (ShopLinkCard — 배경 `--color-accent-pale`)
 
@@ -317,7 +347,7 @@ function contrast(hex1, hex2) {
 | 라이트 active `#eaeaf8` | page `#f7f5f2` | 1.10:1 | 좌측 바 8.35:1로 WCAG 충족 |
 | 라이트 active `#eaeaf8` | text `#1a1a2e` | 14.31:1 | ✅ AA |
 | 다크 active `rgba(61,61,143,0.30)` ≈ `#222238` | page `#111110` | 1.32:1 | 좌측 바 4.90:1로 WCAG 충족 |
-| 다크 active `rgba(61,61,143,0.30)` ≈ `#222238` | text `#f0ece6` | 12.5:1 | ✅ AA |
+| 다크 active `rgba(61,61,143,0.30)` ≈ `#222238` | text `#d6d2cc` | 10.30:1 | ✅ AA |
 | 좌측 바 라이트 `#3d3d8f` | page `#f7f5f2` | 8.35:1 | ✅ 주 인디케이터 |
 | 좌측 바 다크 `#7a80cc` | page `#111110` | 4.90:1 | ✅ 주 인디케이터 |
 | `--color-accent-interactive` 다크 `#7a80cc` | page `#111110` | 4.90:1 | ✅ AA |
@@ -337,7 +367,7 @@ function contrast(hex1, hex2) {
 | 배경 | 텍스트/아이콘 | 대비율 | 기준 |
 |------|--------------|--------|------|
 | 전송버튼 라이트 `#3d3d8f` | `white` | 9.28:1 | ✅ AA |
-| 전송버튼 다크 `#7a80cc` | `#111110` | 4.90:1 | ✅ AA |
+| 전송버튼 다크 `#7a80cc` | `#111110` | 5.21:1 | ✅ AA |
 | 그룹아이콘 다크 `#4455b8` | `white` | 7.52:1 | ✅ AA |
 
 ---
@@ -377,6 +407,8 @@ function contrast(hex1, hex2) {
 | 이미지 (fallback 포함) | `FallbackNextImage` — blob URL은 `<img>` 직접 |
 | 이미지 슬라이더 | `ImageSlider` |
 | 풀스크린 로딩 | `<PointsLoading loadingMessage="..." />` |
+| 버튼 안 로딩 | `<InlineSpinner />` from `@/src/app/components/InlineSpinner` (글자색을 따름) |
+| 페이지 머리 | `PageIntro` from `@/src/app/components/PageIntro` |
 | 모달 제목 | `.modal-title` (text-gradient-ilp 포함) |
 | 모달 설명 | `.modal-description` |
 | 입력 필드 | `TextField` from `@/src/app/components/TextField` |
@@ -437,17 +469,133 @@ function contrast(hex1, hex2) {
 | 요소 | 클래스 / 컴포넌트 | 규칙 |
 |------|-------------------|------|
 | 페이지 | `.fragrance-list-page` | `.news-page`와 같은 폭·여백(최대 1440px, 좌우 16px → 32px) |
-| 탭 | `TextTabs` | 전체 / 신제품 / 직접 등록. 탭 값이 `GET /api/fragrance?source=`로 이어진다(신제품 = `AI_AGENT`, 직접 등록 = `USER`) |
+| 탭 | `TextTabs` | 전체 / 신제품 / 직접 등록. 탭 값이 `GET /api/fragrance?source=`로 이어진다(신제품 = `AI_AGENT`, 직접 등록 = `USER`). 신제품 탭은 수집된 향수 가운데 공식 사이트에 처음 등장한 지 60일 이내인 것만 보여준다 — 기존 향수 채우기로 들어온 예전 향수는 전체 탭에만 나온다 |
 | 그리드 | `ul.fragrance-list` | `auto-fill` 그리드. 카드 최소 폭 150px·간격 12px → 768px부터 180px·20px |
-| 카드 | `FragranceListCard` (`.fragrance-list-card` + `.product-fragrance-card` + `.product-fragrance-card-layout`) | 첫 이미지(3:4, `object-contain`) → 브랜드(`.product-fragrance-brand`) → 이름(`.product-fragrance-name`) → 수집된 향수만 `.meta-line` "신제품". hover는 그림자만(이동 없음), 포커스는 액센트 외곽선 |
-| 이미지 | `FallbackNextImage` | 수집된 향수는 공식 사이트 이미지를 재호스팅 없이 링크한다 — 호스트는 `next.config.js` `remotePatterns`에 등록(`cdn.shopify.com`) |
+| 카드 | `FragranceCard` (`.fragrance-list-card` + `.product-fragrance-card` + `.product-fragrance-card-layout`) — 향수 만들기 결과도 같은 카드를 쓴다 | 첫 이미지(3:4, `object-contain`) → 브랜드(`.product-fragrance-brand`) → 이름(`.product-fragrance-name`) → 신제품(`isNewArrival` — 처음 등장한 지 60일 이내인 수집 향수)만 `.meta-line` "신제품". hover는 그림자만(이동 없음), 포커스는 액센트 외곽선 |
+| 이미지 | `FallbackNextImage` | 수집된 향수는 공식 사이트 이미지를 재호스팅 없이 링크한다 — `image-hosts.json`에 없는 호스트는 `next/image` 최적화 없이 원본 주소로 그린다(`resolveImageSrc`). `next/image`로 향수 이미지를 직접 그릴 때도 `unoptimized={resolveImageSrc(src).unoptimized}`를 넘긴다 |
 | 스켈레톤 | `FragranceCardSkeleton` × 12 | 같은 `.fragrance-list` 그리드 안에 그린다 |
 
 상세(`FragranceDetail`)에서 수집된 향수(`source = AI_AGENT`)는:
 
-- 작성자 자리에 `.meta-line`으로 "브랜드 공식 사이트 정보를 바탕으로 자동 수집"을 적는다.
+- 작성자 자리에 `.meta-line`으로 "브랜드 공식 사이트 정보를 바탕으로 자동 수집"을 적는다. 출처가 언론의 출시 기사면 "언론 보도를 바탕으로 자동 수집"으로 적는다.
 - 설명·노트를 HTML로 해석하지 않고 글자 그대로 그린다(`dangerouslySetInnerHTML` 금지 — 외부에서 온 글).
-- 구매처(`ShopLinkCard`) 맨 위에 "공식 사이트에서 보기" 행을 둔다. 행 스타일·대비는 4-1 "구매처 행"과 같다.
+- 구매처(`ShopLinkCard`) 맨 위에 "공식 사이트에서 보기" 행을 둔다. 출처가 출시 기사면 행 이름은 "출시 기사 보기"다(기사를 공식 사이트라고 적지 않는다). 행 스타일·대비는 4-1 "구매처 행"과 같다.
+
+---
+
+## 6-3. 나만의 향수 만들기 패턴 (`/blend`)
+
+> 병 고르기: 큰 미리보기 하나 + 선택지 한 줄. 향 고르기는 아래 "향 고르기" 참고.
+> 병 그림은 실제 향수병 구조(두꺼운 유리·짧은 목·큰 뚜껑·가득 찬 액체)를 Apple 구매 화면의 제품 이미지처럼 선 없이 빛과 그림자로 그린다. 사물을 그리는 값이라 9절 허용 예외다.
+
+| 요소 | 클래스 / 컴포넌트 | 규칙 |
+|------|-------------------|------|
+| 배치 | `.blend-picker` (`BottlePicker`) | 모바일: 제목 → 미리보기 → 병 선택지 → 향수 색 → 버튼. 768px부터 왼쪽 미리보기 / 오른쪽 제목·병 선택지·향수 색·버튼. 모바일에서는 떠 있는 채팅 버튼(`.chat-fab`)을 숨긴다(색 견본·버튼을 가림) |
+| 제목 | `PageIntro` + `.blend-picker__head` | 한 문장으로 쓴다("…골라 주세요."). 항상 왼쪽 정렬 |
+| 미리보기 | `BottlePreview` (`.blend-preview`) | Apple 구매 화면처럼 테두리 없는 옅은 회색 판(18px). 배경은 `color-mix(in srgb, var(--color-text-primary) 5%, var(--bg-page))`(다크 7%) — 글자가 없는 장식 판. 세 단계가 같은 컴포넌트를 쓴다 |
+| 선택지 | `fieldset.blend-options` > `BottleOption` | 라디오 버튼 묶음. 모바일은 가로로 넘기고 오른쪽 끝 칸이 잘려 보인다. 768px부터 4열 격자 |
+| 선택지 칸 | `.blend-option__card` | 병 그림 + 이름 전체(자르지 않는다). 선택: 액센트 보더 + 굵은 이름. 포커스: 액센트 외곽선 |
+| 향수 색 | `PerfumeColorPicker` (`fieldset.blend-colors`) | 라디오 버튼 묶음. 위에 "향수 색 [고른 색 이름]" 한 줄(13px → 14px 보조색, 이름은 굵게), 아래 색 견본 표 12개씩 네 줄(Apple 구매 화면의 색상 선택 근거). 견본: 모바일 22px·간격 6px → 768px부터 26px·8px, 누르는 영역은 간격까지 넓힌다. 고른 견본은 글자색(`--color-text-primary`) 고리 — 견본 색과 부딪혀 강조색(남색)을 쓰지 않는다. 포커스는 액센트 외곽선 |
+| 버튼 | `BlendStepActions` | `ghostLavender`(랜덤) + `ilp`(다음, `flex-1`) |
+
+병 그림 (`BottleSvg` + `BottleDefs`, 색은 `.blend-bottle`·`.blend-bottle-defs`의 `--blend-*` 변수 — 라이트·다크 두 벌):
+
+| 부분 | 그리는 법 |
+|------|-----------|
+| 구조 | 바깥 윤곽 → 가장자리(커팅 면) → 정면 유리 → 안쪽 공간(유리벽 14, 어깨 18, 바닥 유리 28) → 액체. 모든 병이 같은 바닥선에 서고 높이는 병마다 다르다 |
+| 가장자리 | 각진 병(`kind: "cut"`)은 모서리를 깎고 비스듬한 면으로 나눈다 — 빛(왼쪽 위)을 향한 면은 밝고 등진 면은 짙다. 면이 만나는 곳마다 가는 밝은 선. 둥근 병(`kind: "round"`)은 같은 밝기 변화를 대각선 그라데이션 하나로 잇는다 |
+| 정면 유리 | 뒤 배경이 비치는 색(라이트는 밝은 회색, 다크는 어두운 회색)에 양끝만 짙게 |
+| 액체 | 맑은 금빛 — 향수 목록 사진(투명 유리 16개) 중 12개가 무색~옅은 노랑이라 이를 따른다. 어깨 바로 아래까지 가득. 벽에 닿는 양끝은 아주 짙고 가운데는 밝게, 위는 맑고 아래는 짙게. 수면은 벽을 타고 살짝 올라온 얇은 면 |
+| 바닥 유리 | 색 없이 맑게 둔다(액체 색을 비치게 하는 그라데이션은 넣지 않는다). 오목한 밑면만 곡선 한 줄로 보인다 |
+| 반사 | 경계 없이 번지는 타원 반사만 쓴다. **또렷한 세로 띠·가운데 분사 관·굴절로 꺾인 선은 쓰지 않는다**(줄무늬처럼 보여 어색함). 반사는 액체가 가장 좁은 곳 안쪽에 둬 병 밖으로 나가지 않게 한다 |
+| 목·뚜껑 | 짧은 유리 목 + 두 단 금색 고리 + 윗모서리를 깎은 검은 광택 뚜껑(아래에 금색 띠, 다크는 그래파이트). 뚜껑 폭은 몸통의 40%쯤 |
+| 바닥 | 빛 반대쪽(오른쪽)으로 지는 회색 그림자 + 맞닿은 그림자. 액체 색이 바닥에 번지는 빛은 넣지 않는다(얼룩처럼 보임) |
+| 라벨 | 없다(브랜드명을 넣지 않는다) |
+
+향수 색 (`src/app/lib/blend/perfumeColors.ts`):
+
+- 색은 **액체에만** 입힌다. 유리·가장자리·뚜껑은 그대로 둔다 — 유리까지 칠하면 플라스틱처럼 보인다(실제 색 있는 향수도 유리는 맑고 액체만 물든다).
+- 색은 **큰 미리보기 병에만** 입힌다(`BottleSvg`의 `tint`). 선택지 칸의 작은 병은 기본 색 그대로 — 화면이 한 색으로 뒤덮이지 않게.
+- 48가지: 12가지 색 계열(가로) × 옅은·맑은·선명한·짙은 4단계(세로). 색마다 기준 색 하나만 적고, 액체의 명암 여섯 단계(`--blend-liquid-*`)는 `liquidRamp`가 만든다. 기본 색(샴페인)은 병 그림의 원래 색이라 덮어쓰지 않는다.
+- 색을 입힌 병은 액체 그라데이션 다섯 개(`LiquidGradients`)만 자기 svg 안에 한 벌 더 둔다. 나머지는 `BottleDefs`를 함께 쓴다.
+- 기준 색 hex는 사물(향수 액체)을 그리는 값이라 9절 허용 예외다.
+
+가볍게 그리는 규칙:
+
+- 흐림 필터(`filter`)·마스크·`clipPath`·`mix-blend-mode`를 쓰지 않는다 — 도형과 그라데이션만(병 하나에 도형 30~40개).
+- 그라데이션은 `BottleDefs`가 페이지에 한 번만 두고 모든 병이 `url(#blend-…)`로 함께 쓴다. `/blend` 밖에서 `BottleSvg`를 쓰려면 그 페이지에도 `BottleDefs`를 둔다.
+- 이미지 파일은 없다. 윤곽·면·액체 경로는 `bottleShapes.ts`가 모듈을 불러올 때 한 번 계산한다.
+
+병 모양은 `src/app/lib/blend/bottleShapes.ts`의 `SPECS`에 오른쪽 절반 윤곽(각진 병은 꼭짓점, 둥근 병은 곡선)과 뚜껑 크기만 적으면 된다 — 안쪽으로 줄인 윤곽·커팅 면·액체는 자동으로 계산된다. 선택지 칸의 작은 병도 같은 그림을 쓴다. 글자가 없는 장식 그림이라 대비 기준은 적용하지 않는다.
+
+### 향 고르기 (`ScentPicker`)
+
+> 실제 향수처럼 처음 향(탑) → 중심 향(미들) → 남는 향(베이스) 순서로 한 층씩 고른다(향수 공방 방식). 층마다 1~2가지, 세 층 모두 하나 이상.
+> 세 층이 같은 화면을 쓰고, **세 층 모두 같은 계열 10개·향 전부를 보여 준다**(2026-11-25). 처음엔 층마다 그 층에 흔한 향만 보여 줬는데, 단계마다 왼쪽 목록이 바뀌어 헷갈리고(중심 향은 계열 2개뿐), 사이트 향수 106개의 TOP/HEART/BASE 노트를 대 보니 약 25%가 그 향의 흔한 층이 아닌 곳에 쓰여(우디를 HEART에 40회, 꽃을 TOP에 26회 등) 막을 근거가 없었다. 대신 층을 열면 그 층에 가장 많이 쓰는 계열을 먼저 보여 준다(`ScentLayer.defaultFamilyId`: TOP 시트러스 87회, HEART 플로럴 133회, BASE 우디 119회). 한 향은 한 층에만 담는다. 주소는 층별로 `?top=&middle=&base=`, 층이 없던 옛 공유 링크 `?notes=`는 향마다 흔한 층(`LAYER_BY_NOTE_ID`)으로 나눠 연다. 새 색은 없다.
+> **구조는 국내 쇼핑 앱의 카테고리 화면을 따른다**: 왼쪽 세로 목록에서 계열을 고르면 오른쪽에 그 계열의 향이 나온다(2026-11-25 컬리·올리브영·무신사 모바일 화면 확인). 선·배경 띠로 영역을 나누지 않고 자리로 나눈다. 오른쪽은 컬리처럼 고른 계열만 보여 준다.
+> **색은 대표색(남색) 한 가지 계열로 맞춘다**(2026-11-25): 판은 `--color-accent-pale`(사이드바 선택 바탕과 같다), 강조 글자·아이콘은 `--blend-accent-text`(라이트 `--color-accent`, 다크 `--color-accent-light` — 다크 연한 판 위에서 `--color-accent`는 4.36:1이라 글자 기준 4.5:1에 못 미친다). 보통 글자는 primary·secondary 그대로 두고, 남색은 위치·고른 것·누르는 곳에만 쓴다. 병 미리보기 판은 세 단계가 같이 쓰는 장식 판이라 회색 그대로.
+
+| 요소 | 클래스 / 컴포넌트 | 규칙 |
+|------|-------------------|------|
+| 배치 | `.blend-scent` | 화면 높이를 채운다(`100dvh` − 헤더 − 페이지 여백, 최소 30rem). 위(제목·검색·고른 향)와 아래(버튼)는 고정, 가운데 [계열 \| 향] 두 칸만 각자 스크롤. 모바일: 제목 → 검색 → 지금 층 고른 향 한 줄 → [계열 \| 향](화면 끝까지) → 버튼(왼쪽 칸 `aside`를 `display: contents`로 풀어 자리를 나눈다). 768px부터 왼쪽(병·세 층 표·버튼) / 오른쪽(제목·검색·[계열 \| 향]), 최대 1100px |
+| 제목 | `PageIntro`(`eyebrow`) + `.blend-scent__head` | 위 작은 줄 "2 / 3 · 중심 향"(13px `--blend-accent-text` 굵게), 아래 굵기 500 제목 한 문장. 고를 개수는 제목에 넣는다: "처음 뿌렸을 때 날 향을 한두 가지 골라 주세요." / "향의 중심이 될 향을 한두 가지 골라 주세요." / "오래 남을 향을 한두 가지 골라 주세요." |
+| 검색 | `.blend-search` | 연한 남색 칸(`--blend-plate` = `--color-accent-pale`, 둥근 8px, 768px부터 최대 26rem) + 남색 돋보기(`--blend-accent-text`). 안내 글자는 보조색. 포커스 시 `--color-accent` 1.5px 안쪽 테두리. 글자가 있으면 오른쪽 지우기(×). 이름·다른 표기·영문 id로 거른다. 띄어쓰기 무시. 글자 16px(iOS 확대 방지). 검색 중에는 오른쪽에 "검색 결과 N가지" + 계열별 작은 이름(13px 보조색) 아래 맞는 향, 왼쪽은 아무 계열도 고르지 않은 상태. 없으면 "‘검색어’에 맞는 향이 없어요." |
+| 계열 목록 | `ScentFamilyNav` (`nav.blend-family-nav`) | 왼쪽 세로 목록(모바일 7rem → 768px부터 10rem). 판 색 `--blend-plate`(`--color-accent-pale`). 한 칸 = 이름(15px) + 향 개수(12px "16가지"), 보조색. 고른 계열은 `--bg-page` 바탕 + primary 굵게(`aria-current`)만 — 오른쪽 칸과 이어 붙은 것처럼 보인다. 무신사·올리브영·컬리 카테고리의 활성 칸이 모두 흰 바탕 + 검정 굵은 글자이고 옆 막대·브랜드색 글자가 없어서 그대로 따른다(2026-11-25 확인, 왼쪽 막대 + 남색 글자는 "AI 티가 난다"로 반려). 고른 향이 든 계열은 칸 오른쪽 위에 고른 개수 배지(지름 20px 알약, `--color-accent-solid` 바탕 + 흰 12px 굵은 숫자 — 향 줄 ✓ 동그라미와 같은 색) — 숫자로 개수를 알리는 것은 무신사 필터 탭("추천 1"), 자리는 컬리 카테고리의 오른쪽 위 "N" 표시를 따랐다(2026-11-25 확인). 이름 뒤에 숫자만 붙이면 이름과 섞여 읽혀서, 점은 뜻이 드러나지 않아서 쓰지 않는다. 배지 자리를 위해 칸 오른쪽 여백 1.75rem, 모바일 목록 폭 7rem(가장 긴 이름 "그린·허브"·"스파이시"가 한 줄에 들어간다). 화면 읽기 프로그램은 "우디, 고른 향 1가지, 전체 18가지"로 읽는다(숨김 글자). 누르면 검색을 비우고 그 계열 맨 위부터 보여 준다(주소는 바꾸지 않는다) |
+| 향 목록 | `.blend-scent__list` | 위에 붙는 소제목 "시트러스 16가지"(15px 굵게 + 13px `--blend-accent-text`). 모바일 한 줄에 하나 → 768px부터 `auto-fill` 최소 11rem |
+| 향 줄 | `ScentOption` (`.blend-scent-option__label`) | 체크박스. 한 줄(최소 48px) = 이름 전체(16px, 어절 단위 줄바꿈) 왼쪽 + 표시 동그라미(28px) 오른쪽 + 아래 가는 선(`--color-card-border`). 색은 대표색(남색)으로 "다음"(`ilp`) 버튼과 맞춘다. 안 고른 줄: `--color-accent-pale` 동그라미 + ＋(`HiPlus`, `--blend-accent-text`) — 빈 동그라미만 있으면 누르는 곳인지 몰라서 쇼핑 앱의 "담기"처럼 보이게 한다. hover 시 `color-mix(in srgb, var(--color-accent) 22%, var(--bg-page))`. 고른 줄: `--color-accent-solid`로 채운 동그라미 + 흰 체크(`HiCheck`, `ilp` 버튼 글자와 같음) + 이름 `--blend-accent-text` 굵게. 다른 층에 담은 향: 동그라미 대신 그 층 이름("처음 향", 13px)을 쓰고 이름·층 이름 모두 보조색, 누르면 토스트 "이미 처음 향에 고른 향이에요."(3번째 선택과 같이 칸을 비활성으로 만들지 않는다) |
+| 고른 향 | `ScentPyramid` (`dl.blend-pyramid`, `currentLayerId`·`onRemove`) | 층마다 한 줄: 왼쪽 층 이름(보조색), 오른쪽 고른 향. 지금 층은 층 이름과 개수("처음 향 1/2")를 `--blend-accent-text` 굵게 쓰고, 고른 향을 칩(× 누르면 뺀다)으로 — 테두리 없이 `--color-accent-pale` 바탕 + `--blend-accent-text` 글자, hover는 향 줄 동그라미와 같은 색. 안 고른 층은 뿌린 뒤 언제 나는 향인지(`ScentLayer.hint`, 보조색): "뿌리자마자 나는 향" / "30분쯤 지나 나는 향" / "몇 시간 뒤까지 남는 향"(향수 노트 안내 글의 탑 5~20분·미들 15~30분 뒤부터·베이스 몇 시간 이상을 어림으로). 모바일에서는 검색창 바로 아래에 지금 층 줄만 보인다 |
+| 버튼 | `BlendStepActions` | `ghostLavender` "이전" + `ilp` "다음". 그 층에 0개로 다음, 3번째 선택은 토스트로 알린다("처음 향은 2가지까지 고를 수 있어요.", 칸을 비활성으로 만들지 않는다) |
+
+모바일 아래 버튼과 겹치지 않게 이 화면에서만 떠 있는 채팅 버튼(`.chat-fab`)을 숨긴다.
+향 목록은 `src/app/lib/blend/scentNotes.ts`의 `SCENT_FAMILIES`에 있다. 층은 계열 기준(시트러스·프루티·그린·아쿠아 → 처음 향, 플로럴·스파이시 → 중심 향, 우디·스위트·머스크·레진 → 남는 향)이고, 후추·생강만 처음 향으로 옮긴다(`LAYER_OVERRIDES`).
+
+### 결과 (`BlendResult`)
+
+> 고른 향과 비슷한 실제 향수를 보여준다(Parfumo ScentMix 결과 목록 근거). 새 색·새 카드 스타일은 없다.
+
+| 요소 | 클래스 / 컴포넌트 | 규칙 |
+|------|-------------------|------|
+| 배치 | `.blend-result` | 모바일: 제목 → 작은 병·고른 향 한 줄 → 추천 향수 → 공유 → 버튼. 768px부터 왼쪽(병·고른 향·버튼, 화면에 붙어 따라옴) / 오른쪽(제목·추천 향수) |
+| 제목 | `PageIntro` + `.blend-result__head` | "고른 향과 비슷한 향수를 찾았어요." |
+| 고른 향 | `ScentPyramid` | 향 고르기와 같은 글자 표 세 줄. 모바일은 작은 병 옆에서 남은 폭을 다 쓴다 |
+| 추천 향수 | `ul.fragrance-list` > `BlendResultCard` | 6-2 카드(`FragranceCard`)를 그대로 쓰고 이름 아래 이유 한 줄(`.blend-result-card__reason`, 13px 보조색) — 겹친 향 이름을 쉼표로 잇고, 겹친 향이 없으면 "○○ 계열". 가운뎃점(`.meta-line`)은 좁은 칸에서 줄 앞에 걸려 쓰지 않는다. 최대 4개, 모바일 2열 → 768px부터 4열 |
+| 불러오는 중 / 실패 / 없음 | `FragranceCardSkeleton` × 4 / `StatusMessage` | 없음: "비슷한 향수를 찾지 못했어요." |
+| 공유 | `BlendShareButton` (`.blend-result__actions` 첫 줄) | 이 화면의 주요 버튼이라 `ilp` 전체 폭 "결과 공유하기" + `HiArrowUpOnSquare`. 기기 공유 시트(`navigator.share`)가 있으면 띄우고, 없거나 실패하면 링크 복사 → "링크를 복사했어요." 시트를 닫은 것은 실패로 보지 않는다 |
+| 버튼 | `BlendStepActions` (`nextVariant="ghostLavender"`) | 공유 아래 한 줄: `ghostLavender` "이전"(향 고르기로) + `ghostLavender` "다시 만들기". 좁은 왼쪽 칸에서도 한 줄에 들어가게 짧게 쓴다 |
+
+추천 순위는 `POST /api/blend/recommend`(`src/app/lib/blend/recommendFragrances.ts`)가 정한다: 겹치는 향 수 → 겹치는 계열 수 → 향수 노트 중 고른 향의 비율.
+
+### 주소에 담는 상태
+
+단계와 고른 값은 쿼리스트링에 있다 — 새로고침하거나 주소를 보내도 같은 화면이 나온다. 읽기·쓰기는 `src/app/lib/blend/blendParams.ts` 한 곳에서 한다.
+
+| 값 | 예 | 규칙 |
+|----|-----|------|
+| `step` | `top`, `middle`, `base`, `result` | 병 단계는 생략. 빈 층이 있는데 `result`면 그 층 고르기를 연다 |
+| `bottle` | `sphere` | 모르는 모양이면 기본 병(`cylinder`) |
+| `color` | `rose` | 향수 색. 기본 색(`champagne`)이면 생략. 모르는 색이면 기본 색 |
+| `notes` | `bergamot,jasmine,vanilla` | 쉼표로 잇는다(세 층 함께). 모르는 향·중복은 버리고 층마다 2개까지 |
+
+- 병·향을 고를 때는 주소만 바꾸고(`replaceState`) 기록을 쌓지 않는다. 화면도 다시 그리지 않는다.
+- 단계를 넘길 때는 기록을 쌓는다(`pushState`) — 브라우저 뒤로 가기로 이전 단계에 간다. 이때 고른 값은 방금 것을 그대로 쓴다.
+- 잘못된 값이 든 주소는 화면만 고쳐 보여주고, 처음 고를 때 주소도 정리된다.
+- 다른 페이지에 갔다가 뒤로·앞으로 가기로 돌아오면 주소를 읽어 그 단계를 연다(Next가 넘겨주는 첫 서버 값은 처음 들어올 때의 값이라 쓰지 않는다). 다른 페이지로 떠날 때는 그 페이지 주소를 건드리지 않는다.
+- 결과 주소는 링크 미리보기 제목도 바꾼다(`generateMetadata`): "베르가못, 자스민, 바닐라로 만든 나만의 향수". 공유 시트 제목과 같은 문장(`blendResultTitle`)이고, 조사 "로/으로"는 마지막 향 이름의 받침으로 고른다. 미리보기 이미지는 사이트 공통 이미지를 쓴다.
+
+---
+
+## 6-4. 내 스캔 기록 패턴 (`/profile`)
+
+> 직접 찍은 사진이라 비율이 제각각이고 배경이 지저분하다. 향수 카드(6-2)의 세로 사진 칸·테두리 대신 정사각형 사진 격자와 글자 위계만 쓴다. 새 색은 없다.
+
+| 요소 | 클래스 / 컴포넌트 | 규칙 |
+|------|-------------------|------|
+| 영역 | `MyScanList` (`section.scan-history`) | 프로필 정보 아래, 위에 가는 선(`--color-card-border`). 최대 1440px. 제목 "내가 스캔한 향수" 옆에 전체 개수 |
+| 격자 | `ul.scan-history__grid` | `auto-fill`로 사진 최소 크기만 정한다: 모바일 136px·간격 12px(320px 이상 2열, 더 좁으면 1열) → 768px부터 200px·16px(768px 3열, 1024px 4열, 1280px 5열, 1440px 6열) |
+| 사진 | `.scan-history__thumb` | 정사각형, 가운데를 채워 자른다(`object-cover`), 모서리 12px, 불러오는 동안 `--color-accent-pale` |
+| 글자 | `.scan-history__name` → `.scan-history__meta` × 2 | 이름(14px·500·primary, 자르지 않고 줄바꿈) → 브랜드 → 날짜(13px 보조색). 브랜드와 날짜는 가운뎃점으로 잇지 않고 줄을 나눈다(좁은 칸에서 점이 줄 앞에 걸림). 날짜는 `formatNewsTime` |
+| 링크 | `.scan-history__link` | 스캔 결과로 간다. hover는 이름 밑줄만, 포커스는 액센트 외곽선 |
+| 없음 | — | "아직 스캔한 향수가 없어요. 향수 스캔하기" |
 
 ---
 
@@ -532,12 +680,20 @@ import PointsLoading from "@/src/app/components/PointsLoading";
 - [ ] 배경·텍스트에 그라데이션 사용 (`bg-gradient-to-*`, `linear-gradient`, `background-clip: text`)
 - [ ] `text-black/40` 또는 `text-white/40` 이하 opacity 텍스트 (비장식 요소)
 - [ ] 버튼·링크 텍스트에 이모지 삽입
-- [ ] 즉석 `animate-spin` spinner (PointsLoading 사용)
+- [ ] 즉석 `animate-spin` spinner (풀스크린은 `PointsLoading`, 버튼 안은 `InlineSpinner`)
 - [ ] ghostLavender 버튼을 어두운 오버레이 안에 절대 배치
 - [ ] `text-stone-*` `text-neutral-*` 등 임의 Tailwind 색 사용 (디자인 토큰 사용)
-- [ ] 페이지 대표 H2 제목에 `text-gradient-scent` 미적용
+- [ ] 새 페이지 대표 제목을 `PageIntro` 없이 직접 스타일링
 - [ ] 채팅·사이드바 아이콘에 `fill="url(#ilp-nav-gradient)"` 사용 (`className="text-[var(--color-text-primary)]"` 사용)
 - [ ] 채팅 말풍선에 하드코딩 hex 사용 (`var(--chat-bubble-own/ai/other)` 사용)
 - [ ] 새 배경색 추가 시 WCAG 대비율 미검증 (4-0 검증 함수로 확인 후 4-1 표에 기록)
 
 하나라도 해당하면 수정.
+
+**허용 예외** — 아래는 브랜드 색이 아니라 사물을 그리는 값이라 hex·그라데이션을 그대로 둔다.
+- 이미지 미리보기 고정 검정 배경 (`#0a0a0a`, 8절 미리보기 패턴)
+- 메인 `FeatureShowcase`의 휴대폰 기기 목업 (본체·유리 반사 그라데이션)
+- 향수 만들기 병 그림 `BottleSvg`·`BottleDefs` (유리·액체·금속 그라데이션, `.blend-bottle`·`.blend-bottle-defs`의 `--blend-*` 값)
+- 향수 만들기 향수 색 48가지의 기준 색 (`perfumeColors.ts`의 hex — 향수 액체 색)
+
+**기존 페이지 제목 전환 현황** — `PageIntro` 적용: `/news`. 미적용(순차 전환 대상): 향수 등록·수정, 스캔, 스캔 결과, 가이드, 메인 컬렉션(`ProductFragrance`).

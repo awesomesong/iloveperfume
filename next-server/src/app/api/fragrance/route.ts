@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '../../lib/apiAuth';
 import { generateBrandIndexSlug } from '../../lib/fragranceSlug';
-import { isFragranceSource } from '../../types/fragrance';
+import { isFragranceSource, newArrivalSince } from '../../types/fragrance';
 
 export async function GET(req: NextRequest) {
     try {
@@ -11,14 +11,17 @@ export async function GET(req: NextRequest) {
         const cursor = cursorParam ? cursorParam : null;
         const limit = 12;
 
-        // 출처 필터(선택) — 없으면 직접 등록·수집 향수를 모두 돌려준다
+        // 출처 필터(선택) — 없으면 직접 등록·수집 향수를 모두 돌려준다.
+        // AI_AGENT는 "신제품" 탭이다: 수집분 가운데 처음 등장한 지 얼마 안 된 것만 (기존 향수 채우기로 들어온 예전 향수는 전체에만 나온다)
         const sourceParam = req.nextUrl.searchParams.get('source');
         if (sourceParam && !isFragranceSource(sourceParam)) {
             return NextResponse.json({ message: '잘못된 출처 값입니다.' }, { status: 400 });
         }
 
         const fragrances = await prisma.fragrance.findMany({
-            ...(sourceParam && isFragranceSource(sourceParam) && { where: { source: sourceParam } }),
+            ...(sourceParam && isFragranceSource(sourceParam) && {
+                where: { source: sourceParam, ...(sourceParam === 'AI_AGENT' && { firstSeenAt: { gte: newArrivalSince() } }) },
+            }),
             include: {
                 author: { select: { id: true, name: true, email: true, image: true, profileImage: true, role: true } }
             },

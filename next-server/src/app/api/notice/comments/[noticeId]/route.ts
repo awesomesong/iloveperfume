@@ -1,6 +1,7 @@
 import { requireUser } from '@/src/app/lib/apiAuth';
 import prisma from '../../../../../../prisma/db';
 import { NextRequest, NextResponse } from "next/server";
+import { queueSocketEvents } from '@/src/app/lib/socketServer/emitSocketEvents';
 
 interface ParamsProp {
     params: Promise<{
@@ -80,8 +81,23 @@ export async function POST(
                 noticeId: noticeId,
                 text,
                 authorEmail: user.email,
-            }
+            },
+            include: {
+                author: { select: { id: true, name: true, email: true, image: true, profileImage: true, role: true } },
+            },
         });
+
+        // 다른 접속자 화면에 새 댓글 반영 (작성자 화면은 이미 반영함)
+        if (newComment.noticeId) {
+            queueSocketEvents([
+                {
+                    kind: 'broadcast',
+                    event: 'notice:comment:new',
+                    payload: { noticeId: newComment.noticeId, comment: newComment },
+                    exceptUserIds: [user.id],
+                },
+            ]);
+        }
         return NextResponse.json({newComment}, {status: 200});
 
     } catch {

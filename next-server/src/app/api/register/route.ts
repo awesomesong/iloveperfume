@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import prisma from '@/prisma/db';
 import { NextResponse } from 'next/server';
+import { getSocketServerUrl } from '@/src/app/lib/socketServer/socketServerUrl';
 
 export async function POST(req: Request){
     try{
@@ -39,7 +40,7 @@ export async function POST(req: Request){
 
         // ✅ 새 사용자 등록 시 Socket.IO 서버로 HTTP POST 알림
         try {
-            const socketServerUrl = 'https://socket-server-muddy-shadow-6983.fly.dev';
+            const socketServerUrl = getSocketServerUrl();
             const notifyUrl = `${socketServerUrl}/api/user-registered`;
             
             const response = await fetch(notifyUrl, {

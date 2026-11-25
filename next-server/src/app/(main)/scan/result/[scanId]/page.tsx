@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import prisma from '@/prisma/db';
 import ScanResult from '@/src/app/components/scan/ScanResult';
 import { getCachedKoreanName } from '@/src/app/lib/scan/koreanName';
+import { getCurrentUser } from '@/src/app/lib/session';
 
 type Props = {
   params: Promise<{ scanId: string }>;
@@ -46,8 +47,12 @@ export default async function ScanResultPage({ params }: Props) {
   // 네이버 쇼핑 검색 링크용 한글 이름 (스캔 시점에 생성해 둠 — 없으면 영문 이름 사용)
   const koreanName = await getCachedKoreanName(scan.brand, scan.name);
 
+  // 저장 안내 줄용 — 이메일은 화면으로 내려보내지 않고 누구 기록인지만 넘긴다
+  const viewerEmail = (await getCurrentUser())?.email || null;
+  const ownership = !scan.userEmail ? 'none' : scan.userEmail === viewerEmail ? 'mine' : 'other';
+
   return (
-    <div className="px-4 pt-8 pb-4 md:p-8 max-w-[1440px] w-full mx-auto">
+    <div className="px-4 pt-8 pb-4 md:p-8 w-full">
       <div className="text-center">
         {/* Brand — label 역할: 흐리게, 굵기 없이, 자간 넓게 */}
         <p className="text-[13px] lg:text-sm font-normal tracking-[0.3em] uppercase text-fg-secondary mb-2">
@@ -72,6 +77,8 @@ export default async function ScanResultPage({ params }: Props) {
             matchedFragrance: matched,
             koreanName,
           }}
+          ownership={ownership}
+          isLoggedIn={!!viewerEmail}
         />
       </section>
     </div>

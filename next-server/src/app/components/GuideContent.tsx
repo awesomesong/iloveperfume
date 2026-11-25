@@ -10,7 +10,7 @@ const ON_THIS_PAGE = [
   { href: '#overview', label: 'I Love Perfume란?' },
   { href: '#features', label: '주요 기능' },
   { href: '#preview', label: '반응형 레이아웃' },
-  { href: '#howto', label: '로그인 · 데모 계정 안내' },
+  { href: '#howto', label: '로그인 안내' },
   { href: '#main-gallery', label: '메인 화면 & 시그니처 향수 갤러리' },
   { href: '#fragrance-guide', label: '향수 등록 안내' },
   { href: '#fragrance-detail', label: '향수 상세 페이지 & 리뷰' },
@@ -732,7 +732,7 @@ export default function GuideContent({
         </p>
 
         <div
-          className="mt-8 h-px w-full max-w-xs [background:linear-gradient(90deg,var(--color-accent-border)_0%,transparent_100%)]"
+          className="mt-8 h-px w-full max-w-xs bg-[var(--color-accent-border)]"
         />
 
         <div
@@ -823,7 +823,7 @@ export default function GuideContent({
                   >
                     <div className="flex items-start gap-3">
                       <span
-                        className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-base [background:linear-gradient(135deg,var(--color-accent-pale)_0%,var(--color-ivory-soft)_100%)]"
+                        className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-base bg-[var(--color-accent-pale)]"
                       >
                         {icon}
                       </span>
@@ -866,11 +866,9 @@ export default function GuideContent({
             </section>
 
             <section id="howto" className="scroll-mt-[var(--guide-scroll-offset)]">
-              <SectionLabel index="04" title="로그인 · 데모 계정 안내" />
+              <SectionLabel index="04" title="로그인 안내" />
               <p className="guide-section-intro">
                 회원가입 없이도 향수 목록과 공지사항을 자유롭게 열람할 수 있으며, 향수 등록 및 채팅 기능을 이용하려면 로그인이 필요합니다.
-                <br/>
-                별도 회원가입 없이 바로 체험할 수 있는 데모 계정을 제공합니다.
               </p>
               <ol className="relative space-y-0">
                 {steps.map(({ step, title, desc, image }, i) => (
@@ -887,7 +885,7 @@ export default function GuideContent({
                       </span>
                       {i < steps.length - 1 && (
                         <div
-                          className="w-px flex-1 my-1 [background:linear-gradient(180deg,var(--color-accent-border)_0%,transparent_100%)] min-h-[32px]"
+                          className="w-px flex-1 my-1 bg-[var(--color-accent-border)] min-h-[32px]"
                         />
                       )}
                     </div>
@@ -1122,7 +1120,7 @@ export default function GuideContent({
                 'rounded-2xl border border-[var(--color-accent-border)]',
                 isOnThisPageSticky
                   ? 'max-lg:rounded-none max-lg:border-0 max-lg:border-b max-lg:border-[var(--header-border)] max-lg:bg-[var(--header-bg)] max-lg:backdrop-blur-md max-lg:py-1.5 max-lg:px-4 max-lg:md:px-8 max-lg:max-w-[1440px] max-lg:mx-auto'
-                  : 'max-lg:py-2 max-lg:px-3 max-lg:md:py-2.5 max-lg:md:px-4 [background:linear-gradient(135deg,rgba(176,148,224,0.06)_0%,transparent_100%)]',
+                  : 'max-lg:py-2 max-lg:px-3 max-lg:md:py-2.5 max-lg:md:px-4',
               )}
             >
               <p

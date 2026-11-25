@@ -12,12 +12,14 @@
  * - 여러 단어가 한 덩어리로 굳은 것만 구로 적는다(예: "tonka bean" → 통카빈).
  *   나머지는 단어별 표기를 띄어 이어 붙인다(예: green + apple → "그린 애플").
  */
+import { stripAccents } from "./text";
+
 const MATERIAL_TERMS: readonly (readonly [en: string, ko: string])[] = [
   // 시트러스
-  ["bergamot", "베르가못"],
+  ["bergamot|bergamote", "베르가못"],
   ["lemon", "레몬"],
   ["lime", "라임"],
-  ["mandarin", "만다린"],
+  ["mandarin|mandarine", "만다린"],
   ["tangerine", "탠저린"],
   ["clementine", "클레멘타인"],
   ["orange", "오렌지"],
@@ -33,8 +35,8 @@ const MATERIAL_TERMS: readonly (readonly [en: string, ko: string])[] = [
 
   // 플로럴
   ["rose", "로즈"],
-  ["jasmine", "자스민"],
-  ["tuberose", "튜베로즈"],
+  ["jasmine|jasmin", "자스민"],
+  ["tuberose|tubereuse", "튜베로즈"],
   ["iris", "아이리스"],
   ["orris", "오리스"],
   ["violet", "바이올렛"],
@@ -102,13 +104,14 @@ const MATERIAL_TERMS: readonly (readonly [en: string, ko: string])[] = [
 
   // 스파이스·허브
   ["pepper|peppercorn", "페퍼"],
+  ["baie rose|baies rose", "핑크 페퍼"], // 프랑스어 표기 (pink pepper)
   ["chili|chilli", "칠리"],
-  ["cardamom", "카다멈"],
+  ["cardamom|cardamome", "카다멈"],
   ["cinnamon", "시나몬"],
   ["clove", "클로브"],
   ["nutmeg", "넛맥"],
   ["ginger", "진저"],
-  ["saffron", "사프란"],
+  ["saffron|safran", "사프란"],
   ["coriander", "코리앤더"],
   ["cumin", "커민"],
   ["anise", "아니스"],
@@ -137,11 +140,11 @@ const MATERIAL_TERMS: readonly (readonly [en: string, ko: string])[] = [
   ["rice", "라이스"],
 
   // 우드·이끼
-  ["sandalwood", "샌달우드"],
-  ["cedar", "시더"],
+  ["sandalwood|santal", "샌달우드"],
+  ["cedar|cedre", "시더"],
   ["cedarwood", "시더우드"],
   ["vetiver|vetyver", "베티버"],
-  ["patchouli", "패출리"],
+  ["patchouli|patchouly", "패출리"],
   ["oud|oudh", "오드"],
   ["agarwood", "아가우드"],
   ["guaiac|gaiac", "가이악"],
@@ -179,9 +182,9 @@ const MATERIAL_TERMS: readonly (readonly [en: string, ko: string])[] = [
   ["akigalawood", "아키갈라우드"],
 
   // 레진·발삼
-  ["amber", "앰버"],
+  ["amber|ambre", "앰버"],
   ["ambergris", "앰버그리스"],
-  ["incense", "인센스"],
+  ["incense|encens", "인센스"],
   ["frankincense", "프랑킨센스"],
   ["olibanum", "올리바넘"],
   ["myrrh", "미르"],
@@ -200,7 +203,7 @@ const MATERIAL_TERMS: readonly (readonly [en: string, ko: string])[] = [
   ["tar", "타르"],
 
   // 구르망·술·가죽
-  ["vanilla", "바닐라"],
+  ["vanilla|vanille", "바닐라"],
   ["bourbon", "버번"],
   ["tonka bean|tonka", "통카빈"],
   ["caramel", "카라멜"],
@@ -222,14 +225,14 @@ const MATERIAL_TERMS: readonly (readonly [en: string, ko: string])[] = [
   ["champagne", "샴페인"],
   ["wine", "와인"],
   ["tobacco", "토바코"],
-  ["leather", "레더"],
+  ["leather|cuir", "레더"],
   ["suede", "스웨이드"],
   ["salt", "솔트"],
   ["sea salt", "씨 솔트"],
   ["seaweed", "해조류"],
 
   // 머스크·합성 원료
-  ["musk", "머스크"],
+  ["musk|musc", "머스크"],
   ["skin musk", "스킨 머스크"],
   ["ambrette", "암브레트"],
   ["ambroxan|ambroxon|ambrox", "암브록산"],
@@ -346,9 +349,7 @@ const MAX_PHRASE_WORDS = Math.max(...[...TERM_MAP.keys()].map((key) => key.split
 
 /** 악센트·대소문자·기호를 무시한 단어 목록 (추출 방식 단어 제외) */
 export function noteWords(text: string): string[] {
-  return text
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
+  return stripAccents(text)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .split(" ")

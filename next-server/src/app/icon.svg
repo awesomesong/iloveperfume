@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5555aa"/>
+      <stop offset="1" stop-color="#3d3d8f"/>
+    </linearGradient>
+    <clipPath id="glass"><path d="M170 221H340L358 239V403L340 421H170L152 403V239Z"/></clipPath>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <ellipse cx="256" cy="450" rx="118" ry="9" fill="#1a1a2e" opacity=".25"/>
+  <path transform="translate(0 -173)" d="M256 360C212 328 192 304 192 282C192 262 207 248 225 248C240 248 251 257 256 270C261 257 272 248 287 248C305 248 320 262 320 282C320 304 300 328 256 360Z" fill="none" stroke="#ffffff" stroke-width="20" stroke-linejoin="round"/>
+  <rect x="224" y="187" width="64" height="18" fill="#ffffff"/>
+  <path d="M162 205H348L374 231V411L348 437H162L136 411V231Z" fill="#ffffff"/>
+  <g clip-path="url(#glass)">
+    <rect x="150" y="219" width="210" height="204" fill="#eaeaf8"/>
+    <rect x="150" y="300" width="210" height="123" fill="#c0c0e0"/>
+    <rect x="150" y="300" width="210" height="4" fill="#ffffff" opacity=".7"/>
+  </g>
+  <rect x="168" y="238" width="12" height="164" rx="6" fill="#ffffff" opacity=".85"/>
+</svg>

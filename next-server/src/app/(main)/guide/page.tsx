@@ -8,12 +8,12 @@ import GuideContent, {
 export const metadata: Metadata = {
   title: 'I Love Perfume 소개 및 이용 안내',
   description:
-    'I Love Perfume는 향수를 수집하고 기록하는 프론트엔드 포트폴리오 사이트입니다. 서비스 소개와 이용 방법을 안내합니다.',
+    'I Love Perfume는 향수 정보와 리뷰, 판매처별 최저가를 한곳에서 확인하는 서비스입니다. 서비스 소개와 이용 방법을 안내합니다.',
   openGraph: {
     title: 'I Love Perfume 소개 및 이용 안내',
     description:
-      'I Love Perfume는 향수를 수집하고 기록하는 프론트엔드 포트폴리오 사이트입니다. 서비스 소개와 이용 방법을 안내합니다.',
-    url: "/notice",
+      'I Love Perfume는 향수 정보와 리뷰, 판매처별 최저가를 한곳에서 확인하는 서비스입니다. 서비스 소개와 이용 방법을 안내합니다.',
+    url: "/guide",
     images: [
       {
         url: '/image/metadata/guide.png',
@@ -63,13 +63,13 @@ const features = [
   },
   {
     icon: '🔐',
-    title: '간편 로그인 & 데모 계정',
-    desc: 'Google·카카오 OAuth와 이메일/비밀번호(Credentials) 로그인을 지원하며, 별도 회원가입 없이 바로 체험할 수 있는 데모 계정을 제공합니다. 모든 기능은 NextAuth 기반 JWT 세션으로 보호되어 안전하게 이용할 수 있습니다.',
+    title: '간편 로그인',
+    desc: 'Google·카카오 OAuth와 이메일/비밀번호(Credentials) 로그인을 지원합니다. 모든 기능은 NextAuth 기반 JWT 세션으로 보호되어 안전하게 이용할 수 있습니다.',
   },
 ];
 
 const steps: loginStep[] = [
-  { step: '01', title: '로그인 · 데모 체험', desc: '데모 계정 버튼을 누르면 별도 가입 없이 바로 이용할 수 있으며, Google·카카오 소셜 로그인 또는 이메일/비밀번호로도 로그인할 수 있습니다.', image: { src: '/image/notice/auth/signin.png', alt: '로그인 화면' } },
+  { step: '01', title: '로그인', desc: 'Google·카카오 소셜 로그인 또는 이메일/비밀번호로 로그인할 수 있습니다.', image: { src: '/image/notice/auth/signin.png', alt: '로그인 화면' } },
   { step: '02', title: '계정 등록(회원가입)', desc: '이메일과 비밀번호를 입력해 계정을 만들 수 있습니다.', image: { src: '/image/notice/auth/signup.png', alt: '계정등록(회원가입) 화면' } },
 ];
 
@@ -103,7 +103,7 @@ const fragranceGuideSteps: FragranceGuideStep[] = [
   {
     step: '01',
     title: '향수 정보 추가 버튼의 위치 확인',
-    desc: '메인 페이지(첫 화면)에서 "향수 정보 추가" 버튼을 확인합니다. 데스크탑에서는 목록 우측 상단에, 모바일에서는 갤러리 제목 아래(필터 영역 위)에 있으며, 데모 계정이나 등록된 이메일 및 소셜로그인(Google·카카오)으로 로그인한 경우에만 표시됩니다.',
+    desc: '메인 페이지(첫 화면)에서 "향수 정보 추가" 버튼을 확인합니다. 데스크탑에서는 목록 우측 상단에, 모바일에서는 갤러리 제목 아래(필터 영역 위)에 있으며, 등록된 이메일 및 소셜로그인(Google·카카오)으로 로그인한 경우에만 표시됩니다.',
     webImg: { src: '/image/notice/fragrance/main_fragrance_web.png', alt: '메인 페이지 — 데스크탑' },
     mobileImg: { src: '/image/notice/fragrance/main_fragrance_mobile.png', alt: '메인 페이지 — 모바일' },
   },
