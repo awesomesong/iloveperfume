@@ -49,9 +49,3 @@ export function buildFallbackSearchUrl(query: string): string {
 export function buildNaverSearchUrl(name: string, koreanName?: string | null): string {
   return buildFallbackSearchUrl((koreanName || name).trim());
 }
-
-/** 쿠팡 검색 결과 URL — 네이버와 같은 검색어(한글 이름 우선 + "향수")를 쓴다. */
-export function buildCoupangSearchUrl(name: string, koreanName?: string | null): string {
-  const query = normalizeQuery((koreanName || name).trim());
-  return `https://www.coupang.com/np/search?q=${encodeURIComponent(query)}`;
-}
