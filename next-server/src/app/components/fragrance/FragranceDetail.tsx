@@ -121,7 +121,7 @@ export default function FragranceDetail({ slug, fragrance: initialFragrance, kor
                 </FragranceMotionWrapper>
               )}
 
-              {/* 구매처 — 공식 사이트(있으면) + 네이버 쇼핑·쿠팡 검색 링크 (스캔 결과와 같은 컴포넌트) */}
+              {/* 구매처 — 공식 사이트(있으면) + 네이버 쇼핑 검색 링크 (스캔 결과와 같은 컴포넌트) */}
               <div className="pt-8 border-t border-[var(--color-card-border)]">
                 <ShopLinkCard
                   name={fragrance.name}

@@ -1,5 +1,5 @@
 import { HiChevronRight } from 'react-icons/hi2';
-import { buildCoupangSearchUrl, buildNaverSearchUrl } from '@/src/app/lib/scan/naverShopping';
+import { buildNaverSearchUrl } from '@/src/app/lib/scan/naverShopping';
 
 interface Props {
   /** 향수 이름 (영문 원문) */
@@ -35,6 +35,7 @@ function toHttpUrl(value?: string | null): string | null {
  *   페이지 배경과의 차이는 1.10~1.19:1로 장식 수준 — 링크 식별은 판매처 이름·화살표 글자가 담당.
  *
  * 올리브영은 백화점 브랜드(샤넬 등)를 팔지 않아 검색 결과가 비는 경우가 많아 넣지 않았다.
+ * 쿠팡도 향수 이름 검색 결과가 엉뚱하게 나오는 경우가 많아 뺐다.
  */
 export default function ShopLinkCard({ name, koreanName, officialUrl, officialUrlIsArticle = false }: Props) {
   const officialHref = toHttpUrl(officialUrl);
@@ -42,7 +43,6 @@ export default function ShopLinkCard({ name, koreanName, officialUrl, officialUr
   const shops = [
     ...(officialHref ? [{ label: officialLabel, action: '바로가기', href: officialHref }] : []),
     { label: '네이버 쇼핑', action: '가격 비교', href: buildNaverSearchUrl(name, koreanName) },
-    { label: '쿠팡', action: '검색', href: buildCoupangSearchUrl(name, koreanName) },
   ];
 
   return (
